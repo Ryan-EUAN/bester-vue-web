@@ -54,6 +54,7 @@ import { ElButton, ElNotification } from 'element-plus';
 // import LoginMobileView from '@/views/auth/loginMobile.vue'
 import loginPCView from '@/views/auth/loginPC.vue';
 import type { HeadUserInfoModal } from '../model/headInfo';
+import AuthApi from '../services/auth';
 
 const dialogLoginVisible = ref<boolean>(false);
 const current = ref<string[]>([]);
@@ -121,7 +122,9 @@ const onSearch = (value: string) => {
     console.log('搜索内容', value);
 }
 //退出登陆方法
-const logOut = () => {
+const logOut = async () => {
+    let res = await AuthApi.LOG_OUT_API();    
+    if (res.code != 200) return alert(res.message);
     localStorage.removeItem('token')
     localStorage.removeItem('userInfo')
     userInfo.value = {

@@ -1,5 +1,6 @@
 import axios from "axios";
 import { ElNotification } from "element-plus";
+import token from "./token";
 
 // 创建axios实例
 const service = axios.create({
@@ -14,7 +15,7 @@ service.interceptors.request.use(
   config => {
     // 在发送请求之前做些什么
     // 例如：如果需要token验证，可以在这里添加token
-    // config.headers['Authorization'] = 'Bearer ' + getToken();
+    config.headers['Authorization'] = token.getToken();
     return config;
   },
   error => {
@@ -44,6 +45,15 @@ service.interceptors.response.use(
     }
   },
   error => {
+    if (error.response.status === 401) {
+      ElNotification({
+        title: '鉴权失败',
+        message: '登录过期，请重新登录',
+        type: 'error',
+        showClose: false,
+        duration: 2500
+      })
+    }
     console.log('请求错误：', error.message || error);
     return Promise.reject(error);
   }

@@ -3,9 +3,16 @@
     <div class="view_component">
         <RouterView />
     </div>
+    <a-flex justify="center" gap="small" style="margin-top: 5vh;">
+        <div>
+            Bester乐于分享 - HappyToShare © {{ '2024 - ' + new Date().getFullYear() }}
+        </div>
+        <a href='https://beian.miit.gov.cn' target="_blank">蜀ICP备2025119347号</a>
+    </a-flex>
 </template>
 <script setup lang="ts">
 import HeadComponent from '@/components/HeadComponent.vue';
+
 </script>
 <style lang="less" scoped>
 .head_component {
