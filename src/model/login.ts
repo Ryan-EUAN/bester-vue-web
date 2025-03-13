@@ -2,6 +2,10 @@ export interface LoginModel {
     username: string,
     password: string
 }
+export interface LoginEmailModel {
+    email: string,
+    code: string
+}
 export interface AuthResponse {
     token: string,
     info: UserInfoModel

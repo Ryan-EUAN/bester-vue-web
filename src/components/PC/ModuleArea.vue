@@ -1,0 +1,328 @@
+<template>
+    <div class="module-area-wrapper">
+        <!-- 标题栏 -->
+        <div class="area-header">
+            <div class="title-line">
+                <span class="title-text">{{ titleText }}</span>
+            </div>
+            <a-tooltip :title="isCollapsed ? '展开' : '折叠'">
+                <a-button type="text" class="collapse-btn" @click="toggleCollapse">
+                    <template #icon>
+                        <MinusOutlined v-if="!isCollapsed" />
+                        <PlusOutlined v-else />
+                    </template>
+                </a-button>
+            </a-tooltip>
+        </div>
+
+        <!-- 内容区域 - 添加 transition -->
+        <transition 
+            name="collapse-transition"
+            @enter="handleEnter"
+            @after-enter="handleAfterEnter"
+            @leave="handleLeave">
+            <div class="module-content" v-if="!isCollapsed">
+                <a-flex wrap="wrap" :gap="16">
+                    <div v-for="(item, index) in moduleList" 
+                        :key="index" 
+                        class="module-item"
+                        @click="handleNavigate(item.path)">
+                        <a-flex gap="middle" class="item-container">
+                            <!-- 左侧图标 -->
+                            <div class="icon-wrapper">
+                                <img :src="item.icon" class="module-icon" />
+                            </div>
+                            <!-- 右侧内容区 -->
+                            <a-flex vertical justify="space-between" class="content-wrapper">
+                                <!-- 标题行 -->
+                                <a-flex align="center" gap="small" class="title-row">
+                                    <span class="module-name">{{ item.name }}</span>
+                                    <span v-if="item.count" class="count">({{ item.count }})</span>
+                                </a-flex>
+                                <!-- 信息行 -->
+                                <a-flex justify="space-between" align="center" class="info-row">
+                                    <span class="stats">主题: {{ item.topics }}, 帖数: {{ item.posts }}</span>
+                                    <span class="last-post">{{ item.lastPost }}</span>
+                                </a-flex>
+                            </a-flex>
+                        </a-flex>
+                    </div>
+                </a-flex>
+            </div>
+        </transition>
+    </div>
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue';
+import { PlusOutlined, MinusOutlined } from '@ant-design/icons-vue';
+import { useRouter } from 'vue-router';
+import { Tooltip as ATooltip } from 'ant-design-vue';  // 新增导入
+
+const router = useRouter();
+
+// 折叠状态
+const isCollapsed = ref(false);
+const titleText = ref('ALTV-GTA5共享区');
+
+// 切换折叠状态
+const toggleCollapse = () => {
+    isCollapsed.value = !isCollapsed.value;
+};
+
+interface ModuleItem {
+    name: string;
+    icon: string;
+    count?: string;
+    topics: string;
+    posts: string;
+    lastPost: string;
+    path: string;
+}
+
+const handleNavigate = (path: string) => {
+    console.log('路径=', path);
+    router.push(path);
+};
+
+const moduleList = ref<ModuleItem[]>([
+    {
+        name: '免费资源',
+        icon: 'https://cdn-icons-png.flaticon.com/128/2965/2965300.png',
+        count: '23',
+        topics: '9120',
+        posts: '7万',
+        lastPost: '1小时前',
+        path: '/free-resources'
+    },
+    {
+        name: '共享教程',
+        icon: 'https://cdn-icons-png.flaticon.com/128/2965/2965295.png',
+        count: '7',
+        topics: '227',
+        posts: '1万',
+        lastPost: '11小时前',
+        path: '/shared-tutorials'
+    },
+    {
+        name: '问题互助',
+        icon: 'https://cdn-icons-png.flaticon.com/128/1356/1356479.png',
+        topics: '779',
+        posts: '2407',
+        lastPost: '6天前',
+        path: '/help-center'
+    },
+    {
+        name: 'GPT问答',
+        icon: 'https://cdn-icons-png.flaticon.com/128/8766/8766366.png',
+        topics: '1091',
+        posts: '3682',
+        lastPost: '昨天 23:45',
+        path: '/gpt-qa'
+    },
+    {
+        name: '开服宣传',
+        icon: 'https://cdn-icons-png.flaticon.com/128/1055/1055687.png',
+        topics: '141',
+        posts: '284',
+        lastPost: '前天 23:10',
+        path: '/server-promotion'
+    },
+    {
+        name: '图床外链',
+        icon: 'https://cdn-icons-png.flaticon.com/128/1375/1375106.png',
+        topics: '147',
+        posts: '172',
+        lastPost: '6天前',
+        path: '/image-hosting'
+    }
+]);
+
+// 添加动画处理函数
+const handleEnter = (el: Element) => {
+    const height = el.scrollHeight;
+    (el as HTMLElement).style.height = '0px';
+    (el as HTMLElement).style.opacity = '0';
+    requestAnimationFrame(() => {
+        (el as HTMLElement).style.height = `${height}px`;
+        (el as HTMLElement).style.opacity = '1';
+    });
+};
+
+const handleAfterEnter = (el: Element) => {
+    (el as HTMLElement).style.height = '';
+    (el as HTMLElement).style.opacity = '';
+};
+
+const handleLeave = (el: Element) => {
+    const height = el.scrollHeight;
+    (el as HTMLElement).style.height = `${height}px`;
+    (el as HTMLElement).style.opacity = '1';
+    requestAnimationFrame(() => {
+        (el as HTMLElement).style.height = '0px';
+        (el as HTMLElement).style.opacity = '0';
+    });
+};
+</script>
+
+<style scoped lang="scss">
+.module-area-wrapper {
+    margin-top: 1vh;
+    border: 0.05vw solid #e8e8e8;
+    border-radius: 0.4vw;
+    margin-bottom: 1vh;
+    background: #fff;
+
+    .area-header {
+        position: relative;
+        padding: 1vh 1vw;
+        border-bottom: 0.05vw solid #e8e8e8;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #fafafa;
+        border-radius: 0.4vw 0.4vw 0 0;
+
+        .title-line {
+            position: relative;
+            flex: 1;
+
+            &::before {
+                content: '';
+                position: absolute;
+                left: -1vw;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 0.2vw;
+                height: 2vh;
+                background: #1890ff;
+                border-radius: 0 0.1vw 0.1vw 0;
+            }
+
+            .title-text {
+                font-size: 0.9vw;
+                font-weight: bold;
+                color: #333;
+                margin-left: 0.2vw;
+            }
+        }
+
+        .collapse-btn {
+            padding: 0.4vh 0.4vw;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            &:hover {
+                background: #e6f7ff;
+            }
+
+            :deep(.anticon) {
+                font-size: 1rem;
+            }
+        }
+    }
+
+    .module-content {
+        padding: 16px;
+        
+        :deep(.ant-flex) {
+            width: 100%;
+        }
+    }
+}
+
+// 添加过渡动画样式
+.collapse-transition-enter-active,
+.collapse-transition-leave-active {
+    transition: all 0.3s ease-in-out;
+    overflow: hidden;
+}
+
+.collapse-transition-enter-from,
+.collapse-transition-leave-to {
+    opacity: 0;
+    height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.module-item {
+    width: calc(25% - 12px);  // 一行四个，考虑间距
+    background: #f8f8f8;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    overflow: hidden;
+
+    &:hover {
+        background: #f0f0f0;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .item-container {
+        padding: 12px;
+    }
+
+    .icon-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        
+        .module-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 6px;
+            object-fit: cover;
+        }
+    }
+
+    .content-wrapper {
+        flex: 1;
+        min-width: 0; // 防止文本溢出
+
+        .title-row {
+            margin-bottom: 4px;
+
+            .module-name {
+                font-size: 0.9rem;
+                font-weight: 600;
+                color: #333;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .count {
+                font-size: 0.7rem;
+                color: #ff6b6b;
+                flex-shrink: 0;
+            }
+        }
+
+        .info-row {
+            font-size: 0.7rem;
+            color: #666;
+
+            .stats {
+                color: #888;
+            }
+
+            .last-post {
+                color: #999;
+                font-size: 0.65rem;
+            }
+        }
+    }
+}
+
+// 折叠状态下的样式
+.module-area-wrapper:has(.module-content[style*="display: none"]) {
+    .area-header {
+        border-bottom: none;
+        border-radius: 0.4vw;
+    }
+}
+</style>

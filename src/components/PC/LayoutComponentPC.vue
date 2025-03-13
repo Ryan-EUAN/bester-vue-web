@@ -11,13 +11,13 @@
     </a-flex>
 </template>
 <script setup lang="ts">
-import HeadComponent from '@/components/HeadComponent.vue';
+import HeadComponent from '@/components/PC/HeadComponent.vue';
 
 </script>
 <style lang="less" scoped>
 .head_component {
     width: 100%;
-    height: 20vh;
+    height: 25vh;
 }
 
 .view_component {

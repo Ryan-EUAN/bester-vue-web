@@ -49,12 +49,12 @@ import { onBeforeMount, onMounted, ref, h, onBeforeUnmount } from 'vue';
 // import type { CSSProperties } from 'vue';
 import * as icons from '@ant-design/icons-vue';
 import type { MenuProps } from 'ant-design-vue';
-import WebHeadApi from '../services/web-head'
+import WebHeadApi from '../../services/web-head'
 import { ElButton, ElNotification } from 'element-plus';
 // import LoginMobileView from '@/views/auth/loginMobile.vue'
 import loginPCView from '@/views/auth/loginPC.vue';
-import type { HeadUserInfoModal } from '../model/headInfo';
-import AuthApi from '../services/auth';
+import type { HeadUserInfoModal } from '../../model/headInfo';
+import AuthApi from '../../services/auth';
 
 const dialogLoginVisible = ref<boolean>(false);
 const current = ref<string[]>([]);
@@ -123,7 +123,7 @@ const onSearch = (value: string) => {
 }
 //退出登陆方法
 const logOut = async () => {
-    let res = await AuthApi.LOG_OUT_API();    
+    let res = await AuthApi.LOG_OUT_API();
     if (res.code != 200) return alert(res.message);
     localStorage.removeItem('token')
     localStorage.removeItem('userInfo')

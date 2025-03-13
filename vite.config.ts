@@ -23,10 +23,10 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        // target: 'http://localhost:8888',
-        target: 'http://123.60.24.41:8888',
+        target: 'http://localhost:8888',
+        // target: 'http://123.60.24.41:8888',
         changeOrigin: true,
-        rewrite: path => path.replace(/^\/api/, '')
+        rewrite: path => path.replace(/^\/api/, '/api')
       }
     }
   }

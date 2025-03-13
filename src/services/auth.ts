@@ -1,4 +1,4 @@
-import type { LoginModel, AuthResponse } from '../model/login.ts'
+import type { LoginModel, AuthResponse, LoginEmailModel } from '../model/login.ts'
 import type { Result } from '../model/result.ts'
 import http from './request.ts'
 
@@ -50,6 +50,33 @@ async function LOG_OUT_API(): Promise<Result<any>> {
   }) as Result<any>
 }
 
+/**
+ * 异步函数，用于通过用户的电子邮件地址获取代码。
+ * 
+ * @param {string} email - 用户的电子邮件地址。
+ * @returns {Promise<Result<any>>} - 返回一个Promise对象，该对象解析为包含结果的Result类型。
+ * 
+ * 该函数通过HTTP GET请求向指定的URL发送请求，URL包含用户的电子邮件地址作为查询参数。
+ * 请求的URL格式为：'/auth/user/logout?email=' + email。
+ * 请求方法为GET。
+ * 返回的结果被断言为Result类型。
+ */
+async function GET_CODE_API(email: string): Promise<Result<any>> {
+  return await http({
+    url: '/auth/user/sendCode?email=' + email,
+    method: 'get',
+  }) as Result<any>
+}
+
+async function LOGIN_EMAIL_API(data: LoginEmailModel): Promise<Result<any>> {
+  return await http({
+    url: '/auth/user/loginEmail',
+    method: 'post',
+    data
+  }) as Result<any>
+}
+
+
 export default {
-  LOGIN_API, REGISTER_API, LOG_OUT_API
+  LOGIN_API, REGISTER_API, LOG_OUT_API, GET_CODE_API, LOGIN_EMAIL_API
 }

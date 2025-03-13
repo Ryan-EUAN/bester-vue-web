@@ -48,7 +48,7 @@ onBeforeUnmount(() => {
 </script>
 <style lang="scss" scoped>
 .el-card {
-    width: 25vw;
+    width: 30vw;
     position: fixed;
     right: 2vw;
     top: 50%;

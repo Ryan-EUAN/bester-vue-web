@@ -1,21 +1,25 @@
 import { createRouter, createWebHashHistory } from 'vue-router';
 import type { RouteRecordRaw } from 'vue-router';
-import LayoutComponent from '../components/LayoutComponent.vue';
-import Home from '../views/home/index.vue';
 
+import LayoutComponentMobile from '../components/Mobile/LayoutComponentMobile.vue';
+import LayoutComponentPC from '../components/PC/LayoutComponentPC.vue';
+import HomeMobile from '@/views/home/Mobile.vue'
+import HomePC from '@/views/home/PC.vue'
 import Login from '@/views/auth/login.vue';
 import Register from '@/views/auth/register.vue'
+
+const isMobile = window.innerWidth <= 768
 
 const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
     redirect: '/home',
-    component: LayoutComponent,
+    component: isMobile ? LayoutComponentMobile : LayoutComponentPC,
     children: [
       {
         path: '/home',
         name: 'Home',
-        component: Home,
+        component: isMobile ? HomeMobile : HomePC,
       }
     ]
   },

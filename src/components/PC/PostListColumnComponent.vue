@@ -23,8 +23,8 @@
 <script setup lang="ts">
 import { ElText } from "element-plus";
 import { onMounted, ref, watch } from "vue";
-import ranking from '../services/ranking'
-import type { ListInfoType } from "../model/listInfo";
+import ranking from '../../services/ranking'
+import type { ListInfoType } from "../../model/listInfo";
 
 const props = defineProps(["tabsId", "listInfo", "type"])
 
