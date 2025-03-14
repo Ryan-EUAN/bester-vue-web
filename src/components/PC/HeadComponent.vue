@@ -108,7 +108,7 @@ onUnmounted(() => {
   }
 
   // 确保导航组件在背景层上方
-  :deep(NavigationComponent) {
+  :deep(.NavigationComponent) {
     position: relative;
     z-index: 1;
   }

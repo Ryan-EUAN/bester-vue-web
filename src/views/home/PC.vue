@@ -193,24 +193,24 @@ onMounted(() => {
 
 :deep(.el-carousel__indicators) {
     transform: translateY(1.5rem);
+}
 
-    .el-carousel__button {
-        width: 2rem;
-        height: 0.2rem;
-        border-radius: 0.1rem;
-        background-color: rgba(255, 255, 255, 0.7);
-        transition: all 0.3s ease;
+:deep(.el-carousel__button) {
+    width: 2rem;
+    height: 0.2rem;
+    border-radius: 0.1rem;
+    background-color: rgba(255, 255, 255, 0.7);
+    transition: all 0.3s ease;
 
-        &:hover {
-            background-color: white;
-        }
+    &:hover {
+        background-color: white;
     }
 }
 
 :deep(.el-carousel__arrow) {
     background-color: rgba(0, 0, 0, 0.3);
     border: 2px solid rgba(255, 255, 255, 0.7);
-
+    
     &:hover {
         background-color: rgba(0, 0, 0, 0.6);
     }
