@@ -63,7 +63,7 @@ const router = useRouter();
 
 // 折叠状态
 const isCollapsed = ref(false);
-const titleText = ref('ALTV-GTA5共享区');
+const titleText = ref('共享区');
 
 // 切换折叠状态
 const toggleCollapse = () => {
