@@ -10,10 +10,7 @@
   ],
   "compilerOptions": {
     "baseUrl": ".",
-    "types": [
-      "node",
-      "vue-router"
-    ],
+    "types": ["node"],
     "paths": {
       "@/*": [
         "src/*"
