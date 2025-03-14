@@ -11,7 +11,8 @@
   "compilerOptions": {
     "baseUrl": ".",
     "types": [
-      "node"
+      "node",
+      "vue-router"
     ],
     "paths": {
       "@/*": [

@@ -1,6 +1,6 @@
 import type { HeadNavInfoModal } from '../model/headInfo.ts'
 import type { Result } from '../model/result.ts'
-import http from './request.ts'
+import http from './request'
 
 async function GET_HEAD_INFO_API(): Promise<Result<HeadNavInfoModal[]>> {
     return await http({

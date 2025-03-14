@@ -1,4 +1,4 @@
-import http from './request.ts'
+import http from './request'
 import type { Result } from '../model/result.ts'
 
 // 金币排行榜

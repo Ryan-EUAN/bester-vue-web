@@ -1,6 +1,6 @@
-import type { LoginModel, AuthResponse, LoginEmailModel } from '../model/login.ts'
-import type { Result } from '../model/result.ts'
-import http from './request.ts'
+import type { LoginModel, AuthResponse, LoginEmailModel } from '../model/login'
+import type { Result } from '../model/result'
+import http from './request'
 
 /**
  * 异步登录API函数，用于用户登录验证。
