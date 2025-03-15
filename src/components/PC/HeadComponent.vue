@@ -1,7 +1,7 @@
 <template>
   <div class="box" ref="boxRef" @mousemove="handleMouseMove" @mouseleave="handleMouseLeave">
     <div class="background-layer" ref="backgroundRef"></div>
-    <NavigationComponent />
+    <NavigationComponent @openLogin="$emit('openLogin')" />
   </div>
 </template>
 
@@ -12,6 +12,8 @@ import NavigationComponent from '@/components/PC/NavigationComponent.vue';
 const boxRef = ref<HTMLElement | null>(null);
 const backgroundRef = ref<HTMLElement | null>(null);
 let rafId: number | null = null;
+
+defineEmits(['openLogin']);
 
 // 处理鼠标移出事件
 const handleMouseLeave = () => {
@@ -67,7 +69,7 @@ onUnmounted(() => {
   display: flex;
   justify-content: center;
   overflow: hidden;
-  perspective: 1000px;
+  perspective: 100vw;
   transform-style: preserve-3d;
 
   // 背景层

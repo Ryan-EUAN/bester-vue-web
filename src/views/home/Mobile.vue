@@ -466,11 +466,11 @@ onUnmounted(() => {
 }
 
 .hot-posts {
-    padding: 2vmin;
+    // padding: 2vmin;
 
     .post-card {
         width: 100%;
-        border-radius: 2vmin;
+        border-radius: 1vmin;
         overflow: hidden;
         background: #fff;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);

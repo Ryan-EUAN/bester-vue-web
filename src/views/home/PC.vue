@@ -1,50 +1,50 @@
 <template>
-    <a-flex gap="large">
-        <ElCarousel height="45vh" style="width: 26vw;border-radius: 0.3rem;" :interval="4000" :autoplay="true"
-            indicator-position="outside" arrow="hover" trigger="click">
-            <ElCarouselItem v-for="(item, index) in carouselList" :key="index" @click="handleCarouselClick(item.link ? item.link : '')"
-                class="carousel-item-wrapper">
-                <div class="carousel-item">
-                    <el-image :src="item.imageUrl ? item.imageUrl : ''" fit="cover" class="carousel-image">
-                        <template #error>
-                            <div class="image-error">
-                                <el-icon>
-                                    <Picture />
-                                </el-icon>
-                            </div>
-                        </template>
-                    </el-image>
-                    <div class="item-info">
-                        <h3>{{ item.title }}</h3>
-                        <p>{{ item.description }}</p>
+        <a-flex gap="large">
+            <ElCarousel class="banner-carousel" :interval="4000" :autoplay="true"
+                indicator-position="outside" arrow="hover" trigger="click">
+                <ElCarouselItem v-for="(item, index) in carouselList" :key="index"
+                    @click="handleCarouselClick(item.link ? item.link : '')" class="carousel-item-wrapper">
+                    <div class="carousel-item">
+                        <el-image :src="item.imageUrl ? item.imageUrl : ''" fit="cover" class="carousel-image">
+                            <template #error>
+                                <div class="image-error">
+                                    <el-icon>
+                                        <Picture />
+                                    </el-icon>
+                                </div>
+                            </template>
+                        </el-image>
+                        <div class="item-info">
+                            <h3>{{ item.title }}</h3>
+                            <p>{{ item.description }}</p>
+                        </div>
                     </div>
-                </div>
-            </ElCarouselItem>
-        </ElCarousel>
-        <a-tabs v-model:activeKey="blogKey" type="card" size="small">
-            <a-tab-pane v-for="blog in blogTabsInfos" :key="blog.id" :tab="blog.label">
-                <PostListColumnComponent :tabsId="blog.id" type="blog" />
-            </a-tab-pane>
-        </a-tabs>
-        <a-tabs v-model:activeKey="userKey" type="card" size="small" style="width: 15vw;">
-            <a-tab-pane v-for="user in userTabsInfos" :key="user.id" :tab="user.label">
-                <PostListColumnComponent :tabsId="user.id" type="user" />
-            </a-tab-pane>
-        </a-tabs>
-    </a-flex>
-    <WebsiteInformation style="margin: 1vh 0;" />
-    <a-flex gap="small" style="margin-top: 1vh;">
-        <VerticalRunningLantern style="width: 30vw;" />
-        <a-tabs v-model:activeKey="blogKey" type="card" size="small">
-            <a-tab-pane v-for="blog in blogTabsInfos" :key="blog.id" :tab="blog.label">
-                <PostListColumnComponent :tabsId="blog.id" type="blog" />
-            </a-tab-pane>
-        </a-tabs>
-    </a-flex>
-    <ModuleArea />
-    <ModuleArea />
-    <ModuleArea />
-    <OnlineMembershipModule />
+                </ElCarouselItem>
+            </ElCarousel>
+            <a-tabs v-model:activeKey="blogKey" type="card" size="small">
+                <a-tab-pane v-for="blog in blogTabsInfos" :key="blog.id" :tab="blog.label">
+                    <PostListColumnComponent :tabsId="blog.id" type="blog" />
+                </a-tab-pane>
+            </a-tabs>
+            <a-tabs v-model:activeKey="userKey" type="card" size="small" style="width: 15vw;">
+                <a-tab-pane v-for="user in userTabsInfos" :key="user.id" :tab="user.label">
+                    <PostListColumnComponent :tabsId="user.id" type="user" />
+                </a-tab-pane>
+            </a-tabs>
+        </a-flex>
+        <WebsiteInformation />
+        <a-flex gap="small" style="margin-top: 1vh;">
+            <VerticalRunningLantern style="width: 30vw;" />
+            <a-tabs v-model:activeKey="blogKey" type="card" size="small">
+                <a-tab-pane v-for="blog in blogTabsInfos" :key="blog.id" :tab="blog.label">
+                    <PostListColumnComponent :tabsId="blog.id" type="blog" />
+                </a-tab-pane>
+            </a-tabs>
+        </a-flex>
+        <ModuleArea />
+        <ModuleArea />
+        <ModuleArea />
+        <OnlineMembershipModule />
 </template>
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
@@ -118,12 +118,18 @@ onMounted(() => {
 })
 </script>
 <style lang="less" scoped>
+.banner-carousel {
+    width: 26vw;
+    height: 45vh;
+    border-radius: 0.3vw;
+}
+
 .carousel-item-wrapper {
     cursor: pointer;
     transition: transform 0.3s ease;
 
     &:hover {
-        transform: scale(1.01);  // 添加轻微的悬浮效果
+        transform: scale(1.01); // 添加轻微的悬浮效果
     }
 }
 
@@ -132,7 +138,7 @@ onMounted(() => {
     height: 100%;
     position: relative;
     overflow: hidden;
-    border-radius: 0.3rem;
+    border-radius: 0.3vw;
 
     .carousel-image {
         width: 100%;
@@ -149,7 +155,7 @@ onMounted(() => {
         left: 0;
         right: 0;
         bottom: 0;
-        padding: 1.5rem;
+        padding: 1.5vw;
         user-select: none;
         background: linear-gradient(to top,
                 rgba(0, 0, 0, 0.8) 0%,
@@ -160,15 +166,15 @@ onMounted(() => {
         transition: transform 0.3s ease;
 
         h3 {
-            font-size: 1.4rem;
+            font-size: 1.4vw;
             font-weight: bold;
             margin: 0;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.5vw;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
         }
 
         p {
-            font-size: 1rem;
+            font-size: 1vw;
             margin: 0;
             opacity: 0.9;
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
@@ -210,7 +216,7 @@ onMounted(() => {
 :deep(.el-carousel__arrow) {
     background-color: rgba(0, 0, 0, 0.3);
     border: 2px solid rgba(255, 255, 255, 0.7);
-    
+
     &:hover {
         background-color: rgba(0, 0, 0, 0.6);
     }
@@ -267,5 +273,15 @@ onMounted(() => {
 
 :deep .slick-thumb li.slick-active img {
     filter: grayscale(0%);
+}
+
+:deep(.el-dialog) {
+    border-radius: 0.5vw;
+    overflow: hidden;
+}
+
+// 确保弹窗在最顶层
+:deep(.el-dialog__wrapper) {
+    z-index: 2000;
 }
 </style>

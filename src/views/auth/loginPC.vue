@@ -110,7 +110,7 @@ const loginMethod = async () => {
     })
     emits('LoginSuccess')
 }
-
+//邮箱登录方法
 async function loginEmailMethod() {
     let login_email_api = await AuthApi.LOGIN_EMAIL_API(formEmail.value);
     localStorage.setItem('token', login_email_api.data.token)
@@ -180,7 +180,7 @@ onBeforeUnmount(() => {
 </script>
 <style lang="scss" scoped>
 .el-form {
-    margin: 1vw 3vw;
+    margin: 1vh 1vw;
 }
 
 .tab_box_css {

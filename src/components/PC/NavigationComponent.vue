@@ -1,28 +1,27 @@
 <template>
-    <a-flex justify="space-between" style="color: white;width: 80%;margin-top: 1vh;">
+    <a-flex justify="space-between" class="nav-container">
         <a-flex>
             <a-menu v-model:selectedKeys="current" mode="horizontal" :items="items" theme="dark" class="menu"
                 @select="handleSelect" />
         </a-flex>
         <a-flex gap="small">
-            <a-input-search v-model:value="searchValue" placeholder="" style="width: 16vw" @search="onSearch" />
+            <a-input-search v-model:value="searchValue" placeholder="" class="search-input" @search="onSearch" />
             <a-popover placement="bottom" v-if="userInfo.id == 0">
                 <template #title>
-                    <span>登录后你可以：</span>
+                    <span class="popover-title">登录后你可以：</span>
                 </template>
                 <template #content>
-                    <a-flex wrap="wrap" gap="small" justify="center" style="font-size: 0.8rem;width: 18vw;">
+                    <a-flex wrap="wrap" gap="small" justify="center" class="login-popover">
                         <a-space size="small" v-for="p in LoginPopover" :key="p.label">
                             <component :is="renderIcon(p.icon)" />
                             <div>{{ p.label }}</div>
                         </a-space>
-                        <el-button color="#00aee0" style="width: 12vw;"
-                            @click="dialogLoginVisible = true">立即登录</el-button>
-                        <a-flex>首次使用？<span style="color:#00aee0;cursor: pointer;"
-                                @click="dialogLoginVisible = true">点我注册</span></a-flex>
+                        <el-button color="#00aee0" class="login-btn"
+                            @click="$emit('openLogin')">立即登录</el-button>
+                        <a-flex class="register-text">首次使用？<span @click="$emit('openLogin')">点我注册</span></a-flex>
                     </a-flex>
                 </template>
-                <a-avatar :src="userInfo.avatar" :size="35" class="login_css" @click="dialogLoginVisible = true">
+                <a-avatar :src="userInfo.avatar" size="2.5vw" class="login-avatar" @click="$emit('openLogin')">
                     {{ userInfo.name }}
                 </a-avatar>
             </a-popover>
@@ -39,10 +38,10 @@
             </a-popover>
         </a-flex>
     </a-flex>
-    <el-dialog v-model="dialogLoginVisible" width="35vw" :close-on-click-modal="false" :align-center="true"
+    <!-- <el-dialog v-model="dialogLoginVisible" width="35vw" :close-on-click-modal="false" :align-center="true"
         style="border-radius: 0.5vw;">
         <loginPCView @LoginSuccess="dialogLoginVisible = false, LoadUserInfo()" />
-    </el-dialog>
+    </el-dialog> -->
 </template>
 <script setup lang="ts">
 import { onBeforeMount, onMounted, ref, h, onBeforeUnmount } from 'vue';
@@ -51,12 +50,11 @@ import * as icons from '@ant-design/icons-vue';
 import type { MenuProps } from 'ant-design-vue';
 import WebHeadApi from '../../services/web-head'
 import { ElButton, ElNotification } from 'element-plus';
-// import LoginMobileView from '@/views/auth/loginMobile.vue'
-import loginPCView from '@/views/auth/loginPC.vue';
 import type { HeadUserInfoModal } from '../../model/headInfo';
 import AuthApi from '../../services/auth';
 
-const dialogLoginVisible = ref<boolean>(false);
+const emits = defineEmits(['openLogin']);
+
 const current = ref<string[]>([]);
 const items = ref<MenuProps['items']>([]);
 const searchValue = ref('');
@@ -193,12 +191,55 @@ onBeforeUnmount(() => {
 })
 </script>
 <style lang="less" scoped>
+.nav-container {
+    color: white;
+    width: 80vw;
+    margin-top: 1vh;
+}
+
 .menu {
     border-radius: 2rem;
     overflow: hidden;
     height: 4vh;
     line-height: 4vh;
     font-weight: bold;
+}
+
+.search-input {
+    width: 16vw;
+}
+
+.login-popover {
+    font-size: 0.875rem;
+    width: 18vw;
+}
+
+.login-btn {
+    width: 12vw;
+}
+
+.register-text {
+    font-size: 0.875rem;
+    span {
+        color: #00aee0;
+        cursor: pointer;
+        margin-left: 0.5vw;
+    }
+}
+
+.login-avatar {
+    background-color: #00aeec;
+    font-weight: bold;
+    cursor: pointer;
+
+    &:hover {
+        opacity: 0.9;
+    }
+}
+
+:deep(.ant-menu-item) {
+    padding: 0 1.5vw !important;
+    font-size: 1rem;
 }
 
 .login_css {
