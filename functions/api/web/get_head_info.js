@@ -1,4 +1,6 @@
 export async function onRequest(context) {
+    console.log(`请求地址${context.params.id}`);
+
     const { request } = context;
     const response = await context.next();
 
