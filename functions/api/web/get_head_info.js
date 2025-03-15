@@ -1,14 +1,13 @@
 export async function onRequest({ request, params, env }) {
-    if (request.method === 'OPTIONS') {
-        return new Response(null, {
+    return new Response(
+        null,
+        {
             headers: {
+                'content-type': 'application/json; charset=UTF-8',
                 'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'GET, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type',
-                'Access-Control-Max-Age': '86400',
             },
-        });
-    }
+        }
+    );
 
     // const { request } = context;
     // const response = await context.next();
