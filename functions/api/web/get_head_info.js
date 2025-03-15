@@ -1,6 +1,14 @@
-export async function onRequest(context) {
-    return new Response(`请求地址${context.params.id}`);
-    // console.log(`请求地址${context.params.id}`);
+export async function onRequest({ request, params, env }) {
+    if (request.method === 'OPTIONS') {
+        return new Response(null, {
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET, OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type',
+                'Access-Control-Max-Age': '86400',
+            },
+        });
+    }
 
     // const { request } = context;
     // const response = await context.next();
