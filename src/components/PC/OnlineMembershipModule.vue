@@ -35,8 +35,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import { UserOutlined, CrownOutlined, StarOutlined, GoldOutlined, PlusOutlined, MinusOutlined } from '@ant-design/icons-vue';
+import ModuleApi from '../../services/module';
+import { message } from 'ant-design-vue';
 
 const isCollapsed = ref(false);
 const titleText = ref('在线会员');
@@ -47,37 +49,63 @@ const memberTypes = ref([
         name: '管理员',
         icon: UserOutlined,
         color: '#1890ff',
-        count: 2
+        count: 0
     },
     {
         name: '版主',
         icon: CrownOutlined,
         color: '#fadb14',
-        count: 5
+        count: 0
     },
     {
         name: '超级版主',
         icon: StarOutlined,
         color: '#fa541c',
-        count: 1
+        count: 0
     },
     {
         name: '普通用户',
         icon: UserOutlined,
         color: '#52c41a',
-        count: 120
+        count: 0
     },
     {
         name: 'VIP',
         icon: GoldOutlined,
         color: '#722ed1',
-        count: 30
+        count: 0
     }
 ]);
 
 // 统计数据
-const invisibleCount = ref(15);
-const guestCount = ref(50);
+const invisibleCount = ref(0);
+const guestCount = ref(0);
+
+// 获取在线会员数据
+const getOnlineMembers = async () => {
+    try {
+        const res = await ModuleApi.GET_ONLINE_MEMBERS_API();
+        if (res.code === 200 && Array.isArray(res.data)) {
+            // 更新会员类型数据的count
+            memberTypes.value.forEach(memberType => {
+                const matchedData = res.data.find((item: { label: string; value: number }) => item.label === memberType.name);
+                if (matchedData) {
+                    memberType.count = matchedData.value;
+                }
+            });
+
+            // 更新隐身和游客数量
+            const invisibleData = res.data.find((item: { label: string; value: number }) => item.label === "隐身人数");
+            const guestData = res.data.find((item: { label: string; value: number }) => item.label === "游客人数");
+
+            invisibleCount.value = invisibleData?.value ?? 0;
+            guestCount.value = guestData?.value ?? 0;
+        }
+    } catch (error) {
+        console.error('获取在线会员数据出错:', error);
+        message.error('获取在线会员数据失败');
+    }
+};
 
 // 计算总在线人数
 const totalOnline = computed(() => {
@@ -95,6 +123,11 @@ const statistics = computed(() => [
 const toggleCollapse = () => {
     isCollapsed.value = !isCollapsed.value;
 };
+
+// 组件挂载时获取数据
+onMounted(async () => {
+    await getOnlineMembers();
+});
 </script>
 
 <style scoped lang="scss">

@@ -3,7 +3,7 @@
         <!-- 标题栏 -->
         <div class="area-header">
             <div class="title-line">
-                <span class="title-text">{{ titleText }}</span>
+                <span class="title-text">{{ props.titleText }}</span>
             </div>
             <a-tooltip :title="isCollapsed ? '展开' : '折叠'">
                 <a-button type="text" class="collapse-btn" @click="toggleCollapse">
@@ -16,16 +16,11 @@
         </div>
 
         <!-- 内容区域 - 添加 transition -->
-        <transition 
-            name="collapse-transition"
-            @enter="handleEnter"
-            @after-enter="handleAfterEnter"
+        <transition name="collapse-transition" @enter="handleEnter" @after-enter="handleAfterEnter"
             @leave="handleLeave">
             <div class="module-content" v-if="!isCollapsed">
                 <a-flex wrap="wrap" :gap="16">
-                    <div v-for="(item, index) in moduleList" 
-                        :key="index" 
-                        class="module-item"
+                    <div v-for="(item, index) in props.moduleList" :key="index" class="module-item"
                         @click="handleNavigate(item.path)">
                         <a-flex gap="middle" class="item-container">
                             <!-- 左侧图标 -->
@@ -60,83 +55,20 @@ import { useRouter } from 'vue-router';
 import { Tooltip as ATooltip } from 'ant-design-vue';  // 新增导入
 
 const router = useRouter();
+const props = defineProps(["titleText", "moduleList"])
 
 // 折叠状态
 const isCollapsed = ref(false);
-const titleText = ref('共享区');
 
 // 切换折叠状态
 const toggleCollapse = () => {
     isCollapsed.value = !isCollapsed.value;
 };
 
-interface ModuleItem {
-    name: string;
-    icon: string;
-    count?: string;
-    topics: string;
-    posts: string;
-    lastPost: string;
-    path: string;
-}
-
 const handleNavigate = (path: string) => {
     console.log('路径=', path);
     router.push(path);
 };
-
-const moduleList = ref<ModuleItem[]>([
-    {
-        name: '免费资源',
-        icon: 'https://cdn-icons-png.flaticon.com/128/2965/2965300.png',
-        count: '23',
-        topics: '9120',
-        posts: '7万',
-        lastPost: '1小时前',
-        path: '/free-resources'
-    },
-    {
-        name: '共享教程',
-        icon: 'https://cdn-icons-png.flaticon.com/128/2965/2965295.png',
-        count: '7',
-        topics: '227',
-        posts: '1万',
-        lastPost: '11小时前',
-        path: '/shared-tutorials'
-    },
-    {
-        name: '问题互助',
-        icon: 'https://cdn-icons-png.flaticon.com/128/1356/1356479.png',
-        topics: '779',
-        posts: '2407',
-        lastPost: '6天前',
-        path: '/help-center'
-    },
-    {
-        name: 'GPT问答',
-        icon: 'https://cdn-icons-png.flaticon.com/128/8766/8766366.png',
-        topics: '1091',
-        posts: '3682',
-        lastPost: '昨天 23:45',
-        path: '/gpt-qa'
-    },
-    {
-        name: '开服宣传',
-        icon: 'https://cdn-icons-png.flaticon.com/128/1055/1055687.png',
-        topics: '141',
-        posts: '284',
-        lastPost: '前天 23:10',
-        path: '/server-promotion'
-    },
-    {
-        name: '图床外链',
-        icon: 'https://cdn-icons-png.flaticon.com/128/1375/1375106.png',
-        topics: '147',
-        posts: '172',
-        lastPost: '6天前',
-        path: '/image-hosting'
-    }
-]);
 
 // 添加动画处理函数
 const handleEnter = (el: Element) => {
@@ -165,7 +97,7 @@ const handleLeave = (el: Element) => {
 };
 </script>
 
-<style scoped lang="scss">
+<style lang="less" scoped>
 .module-area-wrapper {
     margin-top: 1vh;
     border: 0.05vw solid #e8e8e8;
@@ -226,9 +158,18 @@ const handleLeave = (el: Element) => {
 
     .module-content {
         padding: 16px;
-        
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
         :deep(.ant-flex) {
             width: 100%;
+        }
+
+        .module-card {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+            &:hover {
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
         }
     }
 }
@@ -249,7 +190,7 @@ const handleLeave = (el: Element) => {
 }
 
 .module-item {
-    width: calc(25% - 12px);  // 一行四个，考虑间距
+    width: calc(25% - 12px); // 一行四个，考虑间距
     background: #f8f8f8;
     border-radius: 8px;
     cursor: pointer;
@@ -270,7 +211,7 @@ const handleLeave = (el: Element) => {
         display: flex;
         align-items: center;
         justify-content: center;
-        
+
         .module-icon {
             width: 2.5rem;
             height: 2.5rem;

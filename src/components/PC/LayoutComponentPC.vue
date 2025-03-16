@@ -1,25 +1,17 @@
 <template>
     <div class="layout-container">
-        <HeadComponent @openLogin="showLoginDialog" style="height: 30vh;"/>
+        <HeadComponent @openLogin="showLoginDialog" style="height: 30vh;" />
         <div class="main-content">
             <router-view />
         </div>
 
         <!-- 登录弹窗 -->
-        <el-dialog 
-            v-model="dialogLoginVisible" 
-            width="35vw" 
-            :close-on-click-modal="false" 
-            :align-center="true"
-            class="login-dialog"
-            destroy-on-close
-        >
-            <loginPCView 
-                @LoginSuccess="handleLoginSuccess" 
-            />
+        <el-dialog v-model="dialogLoginVisible" width="35vw" :close-on-click-modal="false" :align-center="true"
+            class="login-dialog" destroy-on-close>
+            <loginPCView @LoginSuccess="handleLoginSuccess" />
         </el-dialog>
     </div>
-    <a-flex justify="center" gap="small" style="margin-top: 5vh;">
+    <a-flex justify="center" gap="small">
         <div>
             Bester乐于分享 - HappyToShare © {{ '2024 - ' + new Date().getFullYear() }}
         </div>
@@ -38,7 +30,6 @@ const dialogLoginVisible = ref<boolean>(false);
 
 // 显示登录弹窗
 const showLoginDialog = () => {
-    console.log('显示登录弹窗');
     dialogLoginVisible.value = true;
 };
 

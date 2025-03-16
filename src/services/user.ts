@@ -12,7 +12,7 @@ import http from './request'
  */
 async function GET_USER_INFO_API(): Promise<Result<any>> {
     return await http({
-        url: '/user/info',
+        url: '/user/current',
         method: 'get'
     }) as Result<any>
 }

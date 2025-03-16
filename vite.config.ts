@@ -1,8 +1,8 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import path from 'node:path'
+import { resolve } from 'path'
 
-// https://vite.dev/config/
+// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [vue()],
   base: './',
@@ -17,14 +17,13 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src')
+      '@': resolve(__dirname, 'src')
     }
   },
   server: {
     proxy: {
       '/api': {
-        // target: 'http://localhost',
-        target: 'http://123.60.24.41',
+        target: process.env.VITE_API_BASE_URL,
         changeOrigin: true,
         rewrite: path => path.replace(/^\/api/, '/api')
       }

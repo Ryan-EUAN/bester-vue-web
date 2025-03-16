@@ -1,50 +1,53 @@
 <template>
-        <a-flex gap="large">
-            <ElCarousel class="banner-carousel" :interval="4000" :autoplay="true"
-                indicator-position="outside" arrow="hover" trigger="click">
-                <ElCarouselItem v-for="(item, index) in carouselList" :key="index"
-                    @click="handleCarouselClick(item.link ? item.link : '')" class="carousel-item-wrapper">
-                    <div class="carousel-item">
-                        <el-image :src="item.imageUrl ? item.imageUrl : ''" fit="cover" class="carousel-image">
-                            <template #error>
-                                <div class="image-error">
-                                    <el-icon>
-                                        <Picture />
-                                    </el-icon>
-                                </div>
-                            </template>
-                        </el-image>
-                        <div class="item-info">
-                            <h3>{{ item.title }}</h3>
-                            <p>{{ item.description }}</p>
-                        </div>
+    <a-flex gap="large">
+        <ElCarousel class="banner-carousel" :interval="3000" :autoplay="true" indicator-position="outside" arrow="hover"
+            trigger="click">
+            <ElCarouselItem v-for="(item, index) in carouselList" :key="index"
+                @click="handleCarouselClick(item.link ? item.link : '')" class="carousel-item-wrapper">
+                <div class="carousel-item">
+                    <el-image :src="item.imageUrl ? item.imageUrl : ''" fit="cover" class="carousel-image">
+                        <template #error>
+                            <div class="image-error">
+                                <el-icon>
+                                    <Picture />
+                                </el-icon>
+                            </div>
+                        </template>
+                    </el-image>
+                    <div class="item-info">
+                        <h3>{{ item.description }}</h3>
+                        <p>{{ item.title }}</p>
                     </div>
-                </ElCarouselItem>
-            </ElCarousel>
-            <a-tabs v-model:activeKey="blogKey" type="card" size="small">
-                <a-tab-pane v-for="blog in blogTabsInfos" :key="blog.id" :tab="blog.label">
-                    <PostListColumnComponent :tabsId="blog.id" type="blog" />
-                </a-tab-pane>
-            </a-tabs>
-            <a-tabs v-model:activeKey="userKey" type="card" size="small" style="width: 15vw;">
-                <a-tab-pane v-for="user in userTabsInfos" :key="user.id" :tab="user.label">
-                    <PostListColumnComponent :tabsId="user.id" type="user" />
-                </a-tab-pane>
-            </a-tabs>
-        </a-flex>
-        <WebsiteInformation />
-        <a-flex gap="small" style="margin-top: 1vh;">
-            <VerticalRunningLantern style="width: 30vw;" />
-            <a-tabs v-model:activeKey="blogKey" type="card" size="small">
-                <a-tab-pane v-for="blog in blogTabsInfos" :key="blog.id" :tab="blog.label">
-                    <PostListColumnComponent :tabsId="blog.id" type="blog" />
-                </a-tab-pane>
-            </a-tabs>
-        </a-flex>
-        <ModuleArea />
-        <ModuleArea />
-        <ModuleArea />
-        <OnlineMembershipModule />
+                </div>
+            </ElCarouselItem>
+        </ElCarousel>
+        <a-tabs v-model:activeKey="blogKey" type="card" size="small">
+            <a-tab-pane v-for="blog in blogTabsInfos" :key="blog.id" :tab="blog.label">
+                <PostListColumnComponent :tabsId="blog.id" type="blog" />
+            </a-tab-pane>
+        </a-tabs>
+        <a-tabs v-model:activeKey="userKey" type="card" size="small" style="width: 15vw;">
+            <a-tab-pane v-for="user in userTabsInfos" :key="user.id" :tab="user.label">
+                <PostListColumnComponent :tabsId="user.id" type="user" />
+            </a-tab-pane>
+        </a-tabs>
+    </a-flex>
+    <WebsiteInformation />
+    <a-flex gap="small" style="margin-top: 1vh;">
+        <VerticalRunningLantern style="width: 30vw;" />
+        <a-tabs v-model:activeKey="blogKey" type="card" size="small">
+            <a-tab-pane v-for="blog in blogTabsInfos" :key="blog.id" :tab="blog.label">
+                <PostListColumnComponent :tabsId="blog.id" type="blog" />
+            </a-tab-pane>
+        </a-tabs>
+    </a-flex>
+    <ModuleArea 
+        v-for="(moduleData, index) in moduleList" 
+        :key="index"
+        :titleText="moduleData.title"
+        :moduleList="moduleData.plateInfos"
+    />
+    <OnlineMembershipModule />
 </template>
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
@@ -55,40 +58,40 @@ import OnlineMembershipModule from '@/components/PC/OnlineMembershipModule.vue';
 import WebsiteInformation from '@/components/PC/WebsiteInformation.vue';
 import { Picture } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router';
+import CarouselApi from '../../services/carousel';
+import type { CarouselItem } from '../../services/carousel';
+import ModuleApi from '../../services/module';
+import type { ModuleData } from '../../services/module';
+import { ElMessage } from 'element-plus';
 
-interface CarouselItem {
-    imageUrl: string
-    title: string
-    description: string
-    link?: string
-}
+const carouselList = ref<CarouselItem[]>([]);
+const moduleList = ref<ModuleData[]>([]);
 
-const carouselList = ref<CarouselItem[]>([
-    {
-        imageUrl: 'https://wallpaperaccess.com/full/1087589.jpg',
-        title: 'GTA5 RPG服务器',
-        description: '体验真实的洛圣都生活',
-        link: '/rpg'
-    },
-    {
-        imageUrl: 'https://wallpaperaccess.com/full/1087594.jpg',
-        title: '赛车竞速模式',
-        description: '极速与激情的完美演绎',
-        link: '/racing'
-    },
-    {
-        imageUrl: 'https://wallpaperaccess.com/full/1656574.jpg',
-        title: '最新MOD资源',
-        description: '丰富的MOD让游戏更精彩',
-        link: '/mods'
-    },
-    {
-        imageUrl: 'https://wallpaperaccess.com/full/1087598.jpg',
-        title: '社区活动',
-        description: '加入我们的精彩活动',
-        link: '/events'
+const getCarouselData = async () => {
+    try {
+        const res = await CarouselApi.GET_TOP_CAROUSEL_API();
+        if (res.code === 200 && res.data?.length > 0) {  // 确保有数据才更新
+            carouselList.value = res.data;
+        }
+    } catch (error) {
+        console.error('获取轮播图数据出错:', error);
+        // 发生错误时保持使用默认数据
     }
-])
+};
+
+const getModuleData = async () => {
+    try {
+        const res = await ModuleApi.GET_MODULE_DATA_API();
+        if (res.code === 200 && res.data?.length > 0) {
+            moduleList.value = res.data;
+        } else {
+            ElMessage.error(res.message || '获取模块数据失败');
+        }
+    } catch (error) {
+        console.error('获取模块数据出错:', error);
+        ElMessage.error('获取模块数据失败');
+    }
+};
 
 const blogTabsInfos = ref([
     { label: '最新主题', id: 'latest_theme' },
@@ -113,8 +116,9 @@ const handleCarouselClick = (link: string) => {
     }
 };
 
-onMounted(() => {
-
+onMounted(async () => {
+    await getCarouselData();
+    await getModuleData();
 })
 </script>
 <style lang="less" scoped>
@@ -122,6 +126,7 @@ onMounted(() => {
     width: 26vw;
     height: 45vh;
     border-radius: 0.3vw;
+    overflow: hidden;
 }
 
 .carousel-item-wrapper {

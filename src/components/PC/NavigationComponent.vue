@@ -16,8 +16,7 @@
                             <component :is="renderIcon(p.icon)" />
                             <div>{{ p.label }}</div>
                         </a-space>
-                        <el-button color="#00aee0" class="login-btn"
-                            @click="$emit('openLogin')">立即登录</el-button>
+                        <el-button color="#00aee0" class="login-btn" @click="$emit('openLogin')">立即登录</el-button>
                         <a-flex class="register-text">首次使用？<span @click="$emit('openLogin')">点我注册</span></a-flex>
                     </a-flex>
                 </template>
@@ -27,10 +26,67 @@
             </a-popover>
             <a-popover placement="bottom" v-else>
                 <template #content>
-                    <a-flex vertical wrap="wrap" gap="small" style="font-size: 0.8rem;width: 10vw;text-align: center;">
-                        <div>用户信息：{{ userInfo.name }}</div>
-                        <el-button color="#00aee0" style="width: 8vw;margin: 0 auto;" @click="logOut">退出登录</el-button>
-                    </a-flex>
+                    <a-card class="user-card" :bordered="false">
+                        <div class="avatar-wrapper">
+                            <a-avatar :size="50" :src="userInfo.avatar" />
+                        </div>
+                        <a-space direction="vertical" class="card-content">
+                            <div class="user-info">
+                                <div class="user-name">{{ userInfo.name }}</div>
+                                <a-space align="center" class="currency-info">
+                                    <span class="currency-item">
+                                        <crown-outlined class="icon" />
+                                        <span>{{ userInfo.hardCurrency || 869 }}</span>
+                                    </span>
+                                    <a-divider type="vertical" />
+                                    <span class="currency-item">
+                                        <gift-outlined class="icon" />
+                                        <span>{{ userInfo.bCurrency || 0 }}</span>
+                                    </span>
+                                </a-space>
+                            </div>
+                            <div class="level-progress">
+                                <a-progress :percent="70" :stroke-width="4" :show-info="false" status="active"
+                                    class="progress-bar" />
+                                <div class="level-text">
+                                    <trophy-outlined class="icon" />
+                                    <span>Lv.{{ userInfo.nextLevel || 5 }}</span>
+                                    <span class="growth-text">还需{{ userInfo.needGrowth || 3770 }}成长值</span>
+                                </div>
+                            </div>
+                            <div class="stats-container">
+                                <div class="stat-item">
+                                    <div class="number">{{ userInfo.following || 13 }}</div>
+                                    <div class="label">关注</div>
+                                </div>
+                                <a-divider type="vertical" />
+                                <div class="stat-item">
+                                    <div class="number">{{ userInfo.followers || 0 }}</div>
+                                    <div class="label">粉丝</div>
+                                </div>
+                                <a-divider type="vertical" />
+                                <div class="stat-item">
+                                    <div class="number">{{ userInfo.dynamics || 0 }}</div>
+                                    <div class="label">动态</div>
+                                </div>
+                            </div>
+                            <a-menu class="action-menu" :bordered="false">
+                                <a-menu-item key="profile" @click="goToPersonal">
+                                    <user-outlined />个人中心
+                                </a-menu-item>
+                                <a-menu-item key="posts">
+                                    <file-outlined />投稿管理
+                                </a-menu-item>
+                                <a-menu-item key="recommend">
+                                    <star-outlined />推荐服务
+                                </a-menu-item>
+                                <a-menu-divider />
+                                <a-menu-item key="logout" danger @click="logOut">
+                                    <logout-outlined />退出登录
+                                </a-menu-item>
+                            </a-menu>
+                        </a-space>
+                    </a-card>
                 </template>
                 <a-avatar :src="userInfo.avatar" :size="35" class="login_css">
                     {{ userInfo.name }}
@@ -38,10 +94,6 @@
             </a-popover>
         </a-flex>
     </a-flex>
-    <!-- <el-dialog v-model="dialogLoginVisible" width="35vw" :close-on-click-modal="false" :align-center="true"
-        style="border-radius: 0.5vw;">
-        <loginPCView @LoginSuccess="dialogLoginVisible = false, LoadUserInfo()" />
-    </el-dialog> -->
 </template>
 <script setup lang="ts">
 import { onBeforeMount, onMounted, ref, h, onBeforeUnmount } from 'vue';
@@ -52,6 +104,16 @@ import WebHeadApi from '../../services/web-head'
 import { ElButton, ElNotification } from 'element-plus';
 import type { HeadUserInfoModal } from '../../model/headInfo';
 import AuthApi from '../../services/auth';
+import {
+    UserOutlined,
+    FileOutlined,
+    StarOutlined,
+    LogoutOutlined,
+    CrownOutlined,
+    GiftOutlined,
+    TrophyOutlined
+} from '@ant-design/icons-vue';
+import { useRouter } from 'vue-router';
 
 const emits = defineEmits(['openLogin']);
 
@@ -62,7 +124,14 @@ const isMobile = ref<boolean>(window.innerWidth <= 768);
 const userInfo = ref<HeadUserInfoModal>({
     id: 0,
     name: "登录",
-    avatar: ''
+    avatar: '',
+    hardCurrency: 0,
+    bCurrency: 0,
+    nextLevel: 0,
+    needGrowth: 0,
+    following: 0,
+    followers: 0,
+    dynamics: 0
 });
 
 const LoginPopover = [
@@ -128,7 +197,14 @@ const logOut = async () => {
     userInfo.value = {
         id: 0,
         avatar: "",
-        name: "登录"
+        name: "登录",
+        hardCurrency: 0,
+        bCurrency: 0,
+        nextLevel: 0,
+        needGrowth: 0,
+        following: 0,
+        followers: 0,
+        dynamics: 0
     }
     ElNotification({
         title: '鉴权系统',
@@ -177,6 +253,13 @@ function LoadUserInfo() {
     }
 }
 
+const router = useRouter();
+
+// 跳转到个人中心
+const goToPersonal = () => {
+    router.push('/personal');
+};
+
 onBeforeMount(() => {
     // console.log('before时间', new Date().toLocaleTimeString());
     navigationInit()
@@ -220,6 +303,7 @@ onBeforeUnmount(() => {
 
 .register-text {
     font-size: 0.875rem;
+
     span {
         color: #00aee0;
         cursor: pointer;
@@ -250,5 +334,143 @@ onBeforeUnmount(() => {
 .login_css:hover {
     opacity: 0.9;
     cursor: pointer;
+}
+
+.user-card {
+    width: 15vw;
+    text-align: center;
+    position: relative;
+    background: #fff;
+    border-radius: 0.8vw;
+    box-shadow: 0 0.2vh 1vh rgba(0, 0, 0, 0.1);
+
+    .avatar-wrapper {
+        position: absolute;
+        left: 50%;
+        top: 0;
+        transform: translate(-50%, -50%);
+        background: #fff;
+        padding: 0.1vw;
+        border-radius: 50%;
+        box-shadow: 0 0.2vh 0.5vh rgba(0, 0, 0, 0.1);
+        z-index: 1;
+
+        :deep(.ant-avatar) {
+            width: 3.5vw;
+            height: 3.5vw;
+            border: 0.15vw solid #fff;
+        }
+    }
+
+    .card-content {
+        padding-top: 1vh;
+    }
+
+    .user-info {
+        text-align: center;
+        margin-bottom: 1vh;
+
+        .user-name {
+            font-size: 1.2vw;
+            font-weight: bold;
+            margin-bottom: 0.5vh;
+            color: #333;
+        }
+
+        .currency-info {
+            .currency-item {
+                display: flex;
+                align-items: center;
+                gap: 0.3vw;
+                color: #666;
+                font-size: 0.8vw;
+
+                .icon {
+                    color: #ffd700;
+                }
+            }
+        }
+    }
+
+    .level-progress {
+
+        .progress-bar {
+            :deep(.ant-progress-bg) {
+                background: linear-gradient(90deg, #00a1d6 0%, #00b5e5 100%);
+            }
+        }
+
+        .level-text {
+            display: flex;
+            align-items: center;
+            gap: 0.5vw;
+            font-size: 0.7vw;
+            color: #666;
+
+            .icon {
+                color: #00a1d6;
+            }
+
+            .growth-text {
+                margin-left: auto;
+                color: #999;
+            }
+        }
+    }
+
+    .stats-container {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        padding: 1vh 0;
+        border-top: 0.05vw solid #f0f0f0;
+        border-bottom: 0.05vw solid #f0f0f0;
+
+        .stat-item {
+            text-align: center;
+
+            .number {
+                font-size: 1vw;
+                font-weight: bold;
+                color: #333;
+            }
+
+            .label {
+                font-size: 0.7vw;
+                color: #999;
+            }
+        }
+
+        :deep(.ant-divider) {
+            height: 2vh;
+            border-color: #f0f0f0;
+        }
+    }
+
+    .action-menu {
+        width: 15vw;
+        margin: 1vh -1.2vw -1.2vw;
+        border: none;
+
+        :deep(.ant-menu-item) {
+            height: 4vh;
+            line-height: 4vh;
+            padding: 0 1.2vw;
+            margin: 0;
+            font-size: 0.8vw;
+
+            &:hover {
+                background: #f5f5f5;
+            }
+
+            .anticon {
+                margin-right: 0.8vw;
+            }
+
+            &.ant-menu-item-danger {
+                color: #ff4d4f;
+            }
+        }
+    }
 }
 </style>
