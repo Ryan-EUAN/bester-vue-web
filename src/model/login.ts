@@ -8,7 +8,8 @@ export interface LoginEmailModel {
 }
 export interface AuthResponse {
     token: string,
-    info: UserInfoModel
+    info: UserInfoModel,
+    expireTime: number
 }
 export interface UserInfoModel {
     id: number,

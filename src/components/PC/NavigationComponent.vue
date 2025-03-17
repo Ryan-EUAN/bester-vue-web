@@ -2,7 +2,7 @@
     <a-flex justify="space-between" class="nav-container">
         <a-flex>
             <a-menu v-model:selectedKeys="current" mode="horizontal" :items="items" theme="dark" class="menu"
-                @select="handleSelect" />
+                @click="handleSelect" />
         </a-flex>
         <a-flex gap="small">
             <a-input-search v-model:value="searchValue" placeholder="" class="search-input" @search="onSearch" />
@@ -28,7 +28,7 @@
                 <template #content>
                     <a-card class="user-card" :bordered="false">
                         <div class="avatar-wrapper">
-                            <a-avatar :size="50" :src="userInfo.avatar" />
+                            <a-avatar :size="50" :src="userInfo.avatar || '/default-avatar.png'" />
                         </div>
                         <a-space direction="vertical" class="card-content">
                             <div class="user-info">
@@ -56,7 +56,7 @@
                             </div>
                             <div class="stats-container">
                                 <div class="stat-item">
-                                    <div class="number">{{ userInfo.following || 13 }}</div>
+                                    <div class="number">{{ userInfo.following || 0 }}</div>
                                     <div class="label">关注</div>
                                 </div>
                                 <a-divider type="vertical" />
@@ -66,7 +66,7 @@
                                 </div>
                                 <a-divider type="vertical" />
                                 <div class="stat-item">
-                                    <div class="number">{{ userInfo.dynamics || 0 }}</div>
+                                    <div class="number">{{ userInfo.posts || 0 }}</div>
                                     <div class="label">动态</div>
                                 </div>
                             </div>
@@ -131,7 +131,7 @@ const userInfo = ref<HeadUserInfoModal>({
     needGrowth: 0,
     following: 0,
     followers: 0,
-    dynamics: 0
+    posts: 0
 });
 
 const LoginPopover = [
@@ -182,7 +182,7 @@ const handleSelect = ({ key }: { key: string }) => {
         path = items.value?.find(item => item.key == key).path;
     }
     //路由跳转
-    console.log('路径=', path);
+    router.push("/" + path)
 };
 //搜索方法
 const onSearch = (value: string) => {
@@ -204,7 +204,7 @@ const logOut = async () => {
         needGrowth: 0,
         following: 0,
         followers: 0,
-        dynamics: 0
+        posts: 0
     }
     ElNotification({
         title: '鉴权系统',
@@ -260,6 +260,22 @@ const goToPersonal = () => {
     router.push('/personal');
 };
 
+// 从localStorage获取用户信息
+const getUserInfoFromStorage = () => {
+    const storedInfo = localStorage.getItem('userInfo');
+    if (storedInfo) {
+        userInfo.value = JSON.parse(storedInfo);
+    }
+};
+
+// 监听登录事件
+const handleLoginSuccess = () => {
+    getUserInfoFromStorage();
+};
+
+// 创建自定义事件监听器
+window.addEventListener('loginSuccess', handleLoginSuccess);
+
 onBeforeMount(() => {
     // console.log('before时间', new Date().toLocaleTimeString());
     navigationInit()
@@ -267,10 +283,13 @@ onBeforeMount(() => {
 onMounted(() => {
     // console.log('mounted时间', new Date().toLocaleTimeString());
     window.addEventListener('resize', updateMobile)
-    LoadUserInfo()
+    getUserInfoFromStorage()
+    // 监听用户信息更新事件
+    window.addEventListener('userInfoUpdated', getUserInfoFromStorage)
 })
 onBeforeUnmount(() => {
     window.removeEventListener('resize', updateMobile)
+    window.removeEventListener('userInfoUpdated', getUserInfoFromStorage)
 })
 </script>
 <style lang="less" scoped>

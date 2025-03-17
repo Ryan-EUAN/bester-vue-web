@@ -26,5 +26,5 @@ export interface HeadUserInfoModal {
     /** 粉丝数量 */
     followers: number,
     /** 动态数量 */
-    dynamics: number
+    posts: number
 }

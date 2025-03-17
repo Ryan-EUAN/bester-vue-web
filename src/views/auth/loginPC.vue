@@ -78,6 +78,7 @@ import { ref, onMounted, onBeforeUnmount } from 'vue'
 import type { LoginEmailModel, LoginModel } from '../../model/login'
 import AuthApi from '../../services/auth'
 import { ElButton, ElNotification, ElPopover } from 'element-plus'
+import { useRoute, useRouter } from 'vue-router'
 
 const emits = defineEmits(["LoginSuccess"])
 
@@ -97,35 +98,90 @@ const formEmail = ref<LoginEmailModel>({
 })
 //每秒定时器
 const timer = ref()
+const route = useRoute()
+const router = useRouter()
+
 //登录方法
 const loginMethod = async () => {
     let login_api = await AuthApi.LOGIN_API(form.value)
+    
+    // 存储token
     localStorage.setItem('token', login_api.data.token)
+    
+    // 存储用户信息
     localStorage.setItem('userInfo', JSON.stringify(login_api.data.info))
+    
+    // 保存 token 过期时间
+    if (login_api.data.expireTime) {
+        localStorage.setItem('tokenExpire', login_api.data.expireTime.toString())
+    } else {
+        const defaultExpireTime = new Date().getTime() + 24 * 60 * 60 * 1000
+        localStorage.setItem('tokenExpire', defaultExpireTime.toString())
+    }
+    
     ElNotification({
         title: '鉴权系统',
         message: '登录成功',
         type: 'success',
         duration: 2000,
     })
-    emits('LoginSuccess')
+    
+    // 触发全局登录成功事件
+    window.dispatchEvent(new Event('userInfoUpdated'))
+    
+    // 检查是否有重定向地址
+    const redirect = route.query.redirect as string
+    if (redirect) {
+        router.push(redirect)
+    } else {
+        emits('LoginSuccess')
+    }
 }
+
 //邮箱登录方法
 async function loginEmailMethod() {
-    let login_email_api = await AuthApi.LOGIN_EMAIL_API(formEmail.value);
+    let login_email_api = await AuthApi.LOGIN_EMAIL_API(formEmail.value)
+    
+    // 存储token
     localStorage.setItem('token', login_email_api.data.token)
+    
+    // 存储用户信息
     localStorage.setItem('userInfo', JSON.stringify(login_email_api.data.info))
+    
+    // 保存 token 过期时间
+    if (login_email_api.data.expireTime) {
+        // 确保存储为字符串格式
+        localStorage.setItem('tokenExpire', login_email_api.data.expireTime.toString())
+        console.log('存储令牌过期时间:', login_email_api.data.expireTime)
+    } else {
+        // 如果后端没有返回过期时间，设置默认过期时间（例如24小时后）
+        const defaultExpireTime = new Date().getTime() + 24 * 60 * 60 * 1000
+        localStorage.setItem('tokenExpire', defaultExpireTime.toString())
+        console.log('设置默认令牌过期时间:', defaultExpireTime)
+    }
+    
     ElNotification({
         title: '鉴权系统',
         message: '登录成功',
         type: 'success',
         duration: 2000,
     })
+    
+    // 触发全局登录成功事件
+    window.dispatchEvent(new Event('userInfoUpdated'))
+    
     formEmail.value = {
         email: '',
         code: ''
     }
-    emits('LoginSuccess')
+    
+    // 检查是否有重定向地址
+    const redirect = route.query.redirect as string
+    if (redirect) {
+        router.push(redirect)
+    } else {
+        emits('LoginSuccess')
+    }
 }
 
 function getCode() {

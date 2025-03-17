@@ -5,7 +5,11 @@
                 <a-input v-model:value="profileForm.username" disabled />
             </a-form-item>
             <a-form-item label="真实姓名">
-                <a-input v-model:value="profileForm.realName" disabled />
+                <a-input placeholder="未实名认证" disabled v-if="!profileForm.realName" />
+                <a-input v-model:value="profileForm.realName" disabled v-else />
+            </a-form-item>
+            <a-form-item label="昵称">
+                <a-input v-model:value="profileForm.nickName" />
             </a-form-item>
             <a-form-item label="性别" name="gender">
                 <a-radio-group v-model:value="profileForm.gender">
@@ -14,8 +18,8 @@
                 </a-radio-group>
             </a-form-item>
             <a-form-item label="生日" name="birthday">
-                <a-date-picker v-model:value="profileForm.birthday" :disabledDate="disabledDate" format="YYYY-MM-DD"
-                    @change="handleDateChange" />
+                <a-date-picker v-model:value="profileForm.birthday" :disabledDate="disabledDate" format="YYYY年MM月DD日"
+                    :locale="locale" @change="handleDateChange" />
             </a-form-item>
             <a-form-item label="出生地" name="birthplace">
                 <a-cascader v-model:value="profileForm.birthplace" :options="regionOptions" placeholder="请选择出生地" />
@@ -23,10 +27,9 @@
             <a-form-item label="居住地" name="residence">
                 <a-cascader v-model:value="profileForm.residence" :options="regionOptions" placeholder="请选择居住地" />
             </a-form-item>
-            <a-form-item label="手机" name="phone" :rules="[
-                { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号' }
-            ]">
-                <a-input v-model:value="profileForm.phone" />
+            <a-form-item label="手机" name="phone">
+                <a-input placeholder="未绑定手机" disabled v-if="!profileForm.phone" />
+                <a-input v-model:value="profileForm.phone" disabled v-else />
             </a-form-item>
             <a-form-item label="QQ" name="qq" :rules="[
                 { pattern: /^\d{5,11}$/, message: '请输入正确的QQ号' }
@@ -42,10 +45,7 @@
                 <a-textarea v-model:value="profileForm.signature" :rows="4" :maxLength="200" show-count />
             </a-form-item>
             <a-form-item :wrapper-col="{ offset: 4 }">
-                <a-space>
-                    <a-button type="primary" @click="handleSubmit">保存修改</a-button>
-                    <a-button type="primary" @click="router.push('/')">返回主页</a-button>
-                </a-space>
+                <a-button type="primary" @click="handleSubmit">保存修改</a-button>
             </a-form-item>
         </a-form>
     </div>
@@ -59,17 +59,28 @@ import type { ProfileForm } from '@/types/personal';
 import { regionOptions } from '@/utils/constants';
 import dayjs from 'dayjs';
 import type { Dayjs } from 'dayjs';
-import router from '@/router';
+import 'dayjs/locale/zh-cn';
+import locale from 'ant-design-vue/es/date-picker/locale/zh_CN';
 
 // 修改 profileForm 的类型定义
 interface ProfileFormState extends Omit<ProfileForm, 'birthday' | 'gender'> {
-    birthday: dayjs.Dayjs | null;
+    username: string;
+    realName: string;
+    nickName: string;
     gender: 0 | 1;
+    birthday: dayjs.Dayjs | null;
+    birthplace: string[];
+    residence: string[];
+    phone: string;
+    qq: string;
+    email: string;
+    signature: string;
 }
 
 const profileForm = ref<ProfileFormState>({
     username: '',
     realName: '',
+    nickName: '',
     gender: 1,
     birthday: null,
     birthplace: [],
@@ -108,7 +119,6 @@ const getProfile = async () => {
         if (res.code === 200) {
             profileForm.value = {
                 ...res.data,
-                realName: res.data.realName || '未实名认证',
                 birthday: res.data.birthday ? dayjs(res.data.birthday) : null
             };
         }
@@ -137,6 +147,7 @@ const handleSubmit = async () => {
 
 onMounted(() => {
     getProfile();
+    dayjs.locale('zh-cn');
 });
 </script>
 

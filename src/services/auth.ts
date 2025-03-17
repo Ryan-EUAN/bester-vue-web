@@ -76,7 +76,14 @@ async function LOGIN_EMAIL_API(data: LoginEmailModel): Promise<Result<any>> {
   }) as Result<any>
 }
 
+// 添加验证 token 的接口
+async function CHECK_TOKEN_API(): Promise<Result<{ valid: boolean; expireTime: number }>> {
+    return await http({
+        url: '/auth/user/check-token',
+        method: 'GET'
+    }) as Result<{ valid: boolean; expireTime: number }>
+}
 
 export default {
-  LOGIN_API, REGISTER_API, LOG_OUT_API, GET_CODE_API, LOGIN_EMAIL_API
+  LOGIN_API, REGISTER_API, LOG_OUT_API, GET_CODE_API, LOGIN_EMAIL_API, CHECK_TOKEN_API
 }

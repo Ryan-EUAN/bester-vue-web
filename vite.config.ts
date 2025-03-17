@@ -10,22 +10,18 @@ export default defineConfig({
     outDir: 'dist',
     assetsDir: 'assets'
   },
-  define: {
-    'process.env': {
-      API_BASE_URL: JSON.stringify('http://localhost:8888')
-    }
-  },
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src')
     }
   },
   server: {
+    port: 5173,
     proxy: {
       '/api': {
-        target: 'http://localhost:8888',
+        target: 'http://localhost',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '')
+        rewrite: (path) => path.replace(/^\/api/, '/api')
       }
     }
   }

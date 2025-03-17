@@ -5,7 +5,7 @@ import router from '@/router';
 
 // 创建 axios 实例
 const request = axios.create({
-    baseURL: '/api', // 从环境变量获取基础URL
+    baseURL: '/api',  // 确保这里是 /api
     timeout: 15000, // 请求超时时间
     headers: {
         'Content-Type': 'application/json'
@@ -29,7 +29,23 @@ request.interceptors.response.use(
     (response: AxiosResponse) => {
         const { data } = response;
         
-        // 这里可以根据后端的响应结构进行调整
+        // 处理 token 过期情况
+        if (data.code === 401) {
+            // 清除本地存储
+            localStorage.removeItem('token');
+            localStorage.removeItem('userInfo');
+            localStorage.removeItem('tokenExpire');
+            
+            // 触发登录窗口
+            window.dispatchEvent(new CustomEvent('showLoginModal', { 
+                detail: { 
+                    message: '登录已过期，请重新登录'
+                }
+            }));
+            
+            return Promise.reject(new Error(data.message || '登录已过期'));
+        }
+        
         if (data.code === 200) {
             return data;
         }
@@ -38,6 +54,21 @@ request.interceptors.response.use(
         return Promise.reject(new Error(data.message || '请求失败'));
     },
     (error: any) => {
+        // 处理 401 错误
+        if (error.response && error.response.status === 401) {
+            // 清除本地存储
+            localStorage.removeItem('token');
+            localStorage.removeItem('userInfo');
+            localStorage.removeItem('tokenExpire');
+            
+            // 触发登录窗口
+            window.dispatchEvent(new CustomEvent('showLoginModal', { 
+                detail: { 
+                    message: '登录已过期，请重新登录'
+                }
+            }));
+        }
+        
         handleRequestError(error);
         return Promise.reject(error);
     }

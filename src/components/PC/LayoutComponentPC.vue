@@ -1,15 +1,18 @@
 <template>
     <div class="layout-container">
-        <HeadComponent @openLogin="showLoginDialog" style="height: 30vh;" />
+        <HeadComponent @openLogin="showLoginDialog" style="height: 15vh;" />
         <div class="main-content">
             <router-view />
         </div>
 
         <!-- 登录弹窗 -->
-        <el-dialog v-model="dialogLoginVisible" width="35vw" :close-on-click-modal="false" :align-center="true"
-            class="login-dialog" destroy-on-close>
-            <loginPCView @LoginSuccess="handleLoginSuccess" />
-        </el-dialog>
+        <a-modal 
+            :open="showLogin" 
+            :footer="null" 
+            :maskClosable="false"
+        >
+            <login-pc @login-success="handleLoginSuccess" />
+        </a-modal>
     </div>
     <a-flex justify="center" gap="small">
         <div>
@@ -20,43 +23,55 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import HeadComponent from './HeadComponent.vue';
-import loginPCView from '@/views/auth/loginPC.vue';
-import { UserApi } from '../../services/user.ts';
-import { ElMessage } from 'element-plus';
+import LoginPc from '@/views/auth/loginPC.vue';
+import { useRouter } from 'vue-router';
 
-const dialogLoginVisible = ref<boolean>(false);
+const router = useRouter();
+const showLogin = ref(false);
+const redirectPath = ref('');
+const loginMessage = ref('');
 
 // 显示登录弹窗
 const showLoginDialog = () => {
-    dialogLoginVisible.value = true;
+    showLogin.value = true;
 };
 
-// 刷新用户信息
-const refreshUserInfo = async () => {
-    try {
-        const res = await UserApi.GET_USER_INFO_API();
-        if (res.code === 200) {
-            // 更新本地存储的用户信息
-            localStorage.setItem('userInfo', JSON.stringify(res.data));
-            // 如果需要，可以触发其他组件的更新
-            // 例如通过 emit 事件或 pinia store
-        } else {
-            ElMessage.error(res.message || '获取用户信息失败');
+// 监听登录窗口事件
+const handleShowLoginModal = (event: CustomEvent) => {
+    showLogin.value = true;
+    
+    if (event.detail) {
+        if (event.detail.redirect) {
+            redirectPath.value = event.detail.redirect;
         }
-    } catch (error) {
-        console.error('获取用户信息出错:', error);
-        ElMessage.error('获取用户信息失败');
+        
+        if (event.detail.message) {
+            loginMessage.value = event.detail.message;
+        }
     }
 };
 
-// 处理登录成功
-const handleLoginSuccess = async () => {
-    dialogLoginVisible.value = false;
-    // 登录成功后刷新用户信息
-    await refreshUserInfo();
+// 登录成功处理
+const handleLoginSuccess = () => {
+    showLogin.value = false;
+    loginMessage.value = '';
+    
+    // 如果有重定向路径，可以在这里处理
+    if (redirectPath.value) {
+        router.push(redirectPath.value);
+        redirectPath.value = '';
+    }
 };
+
+onMounted(() => {
+    window.addEventListener('showLoginModal', handleShowLoginModal as EventListener);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('showLoginModal', handleShowLoginModal as EventListener);
+});
 </script>
 
 <style lang="less" scoped>
@@ -73,18 +88,9 @@ const handleLoginSuccess = async () => {
     margin: 0 auto;
 }
 
-:deep(.login-dialog) {
-    .el-dialog {
-        border-radius: 0.5vw;
-        overflow: hidden;
-    }
-
-    .el-dialog__body {
-        padding: 2vw;
-    }
-
-    .el-dialog__header {
-        padding: 1vw 2vw;
-    }
+.login-message {
+    color: #ff4d4f;
+    margin-bottom: 16px;
+    text-align: center;
 }
 </style>
