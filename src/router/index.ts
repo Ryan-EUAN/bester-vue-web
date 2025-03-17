@@ -10,12 +10,6 @@ import HomePC from '@/views/home/PC.vue'
 import Login from '@/views/auth/login.vue';
 import Register from '@/views/auth/register.vue'
 
-const Verify = () => import('@/views/personal/Verify.vue');
-const Points = () => import('@/views/personal/Points.vue');
-const Privacy = () => import('@/views/personal/Privacy.vue');
-const Security = () => import('@/views/personal/Security.vue');
-const Orders = () => import('@/views/personal/Orders.vue');
-
 const isMobile = window.innerWidth <= 768
 
 const routes: RouteRecordRaw[] = [
