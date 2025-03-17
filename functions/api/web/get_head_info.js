@@ -1,27 +1,40 @@
-export async function onRequest({ request, params, env }) {
-    return new Response(
-        null,
-        {
-            headers: {
-                'content-type': 'application/json; charset=UTF-8',
-                'Access-Control-Allow-Origin': '*',
-            },
-        }
-    );
+// export async function onRequest({ request, params, env }) {
 
-    // const { request } = context;
-    // const response = await context.next();
+//     return new Response(
+//         null,
+//         {
+//             headers: {
+//                 'content-type': 'application/json; charset=UTF-8',
+//                 'Access-Control-Allow-Origin': '*',
+//             },
+//         }
+//     );
 
-    // // 设置 CORS 头
-    // response.headers.set("Access-Control-Allow-Origin", "http://123.60.24.41:8888");
-    // response.headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
-    // response.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
-    // response.headers.set("Access-Control-Allow-Credentials", "true");
+// const { request } = context;
+// const response = await context.next();
 
-    // // 处理 OPTIONS 预检请求
-    // if (request.method === "OPTIONS") {
-    //     return new Response(null, { headers: response.headers });
-    // }
+// // 设置 CORS 头
+// response.headers.set("Access-Control-Allow-Origin", "http://123.60.24.41:8888");
+// response.headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+// response.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+// response.headers.set("Access-Control-Allow-Credentials", "true");
 
-    // return response;
+// // 处理 OPTIONS 预检请求
+// if (request.method === "OPTIONS") {
+//     return new Response(null, { headers: response.headers });
+// }
+
+// return response;
+// }
+export async function onRequest({ request }) {
+
+    const res = await fetch('http://123.60.24.41/api/web/get_head_info');
+    const data = await res.json();
+
+    return new Response(JSON.stringify(data), {
+        headers: {
+            'content-type': 'application/json; charset=UTF-8',
+            'Access-Control-Allow-Origin': '*',
+        },
+    });
 }
