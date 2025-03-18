@@ -7,21 +7,11 @@ export async function onRequest({ request }) {
         },
         body: request.body,
     });
-    if (request.method == 'GET') {
-        return new Response(res.body, {
-            headers: {
-                'content-type': 'application/json; charset=UTF-8',
-                'Access-Control-Allow-Origin': '*',
-            },
-        });
-    }
-    if (request.method == 'PUT') {
-        const data = await res.json();
-        return new Response(JSON.stringify(data), {
-            headers: {
-                'content-type': 'application/json; charset=UTF-8',
-                'Access-Control-Allow-Origin': '*',
-            },
-        });
-    }
+
+    return new Response(res.body, {
+        headers: {
+            'content-type': 'application/json; charset=UTF-8',
+            'Access-Control-Allow-Origin': '*',
+        },
+    });
 }
