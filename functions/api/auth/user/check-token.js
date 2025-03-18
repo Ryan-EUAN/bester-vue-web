@@ -13,7 +13,9 @@ export async function onRequest({ request }) {
     // })
     const res = await fetch('http://123.60.24.41/api/auth/user/check-token', {
         method: request.method,
-        headers: request.headers,
+        headers: {
+            Authorization: token,
+        },
         body: request.body,
     });
 

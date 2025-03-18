@@ -13,7 +13,9 @@ export async function onRequest({ request }) {
     // })
     const res = await fetch('http://123.60.24.41/api/user/current', {
         method: request.method,
-        headers: request.headers,
+        headers: {
+            Authorization: token,
+        },
         body: request.body,
     });
     const data = await res.json();
