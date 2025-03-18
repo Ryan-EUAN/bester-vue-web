@@ -119,6 +119,9 @@ const handleCarouselClick = (link: string) => {
 onMounted(async () => {
     await getCarouselData();
     await getModuleData();
+    window.addEventListener('resize', () => {
+        console.log('resize');
+    })
 })
 </script>
 <style lang="less" scoped>
