@@ -5,8 +5,8 @@ export async function onRequest({ request }) {
     const res = await fetch('http://123.60.24.41/api/user/profile', {
         method: method,
         headers: {
-            'Content-Type': 'application/json; charset=UTF-8',
-            'Access-Control-Allow-Origin': '*',
+            // 'Content-Type': 'application/json; charset=UTF-8',
+            // 'Access-Control-Allow-Origin': '*',
             'Authorization': token
         },
         body: JSON.stringify(body)
