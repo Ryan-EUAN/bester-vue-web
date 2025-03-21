@@ -10,16 +10,17 @@
             :open="showLogin" 
             :footer="null" 
             :maskClosable="false"
+            @cancel="handleLoginCancel"
         >
             <login-pc @login-success="handleLoginSuccess" />
         </a-modal>
-    </div>
-    <a-flex justify="center" gap="small">
+        <a-flex justify="center" gap="small">
         <div>
             Bester乐于分享 - HappyToShare © {{ '2024 - ' + new Date().getFullYear() }}
         </div>
         <a href='https://beian.miit.gov.cn' target="_blank">蜀ICP备2025119347号</a>
     </a-flex>
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -53,6 +54,11 @@ const handleShowLoginModal = (event: CustomEvent) => {
     }
 };
 
+// 添加关闭登录框的处理方法
+const handleLoginCancel = () => {
+    showLogin.value = false;
+};
+
 // 登录成功处理
 const handleLoginSuccess = () => {
     showLogin.value = false;
@@ -76,7 +82,6 @@ onUnmounted(() => {
 
 <style lang="less" scoped>
 .layout-container {
-    min-height: 100vh;
     display: flex;
     flex-direction: column;
 }

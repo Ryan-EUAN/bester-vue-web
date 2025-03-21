@@ -74,8 +74,8 @@
                                 <a-menu-item key="profile" @click="goToPersonal">
                                     <user-outlined />个人中心
                                 </a-menu-item>
-                                <a-menu-item key="posts">
-                                    <file-outlined />投稿管理
+                                <a-menu-item key="posts" @click="$router.push('/release')">
+                                    <file-outlined />发布帖子
                                 </a-menu-item>
                                 <a-menu-item key="recommend">
                                     <star-outlined />推荐服务

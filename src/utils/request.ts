@@ -1,4 +1,4 @@
-import type {  AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+import type { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import axios from 'axios';
 import { message } from 'ant-design-vue';
 import router from '@/router';
@@ -28,28 +28,28 @@ request.interceptors.request.use(
 request.interceptors.response.use(
     (response: AxiosResponse) => {
         const { data } = response;
-        
+
         // 处理 token 过期情况
         if (data.code === 401) {
             // 清除本地存储
             localStorage.removeItem('token');
             localStorage.removeItem('userInfo');
             localStorage.removeItem('tokenExpire');
-            
+
             // 触发登录窗口
-            window.dispatchEvent(new CustomEvent('showLoginModal', { 
-                detail: { 
-                    message: '登录已过期，请重新登录'
+            window.dispatchEvent(new CustomEvent('showLoginModal', {
+                detail: {
+                    // message: '登录已过期，请重新登录'
                 }
             }));
-            
+
             return Promise.reject(new Error(data.message || '登录已过期'));
         }
-        
+
         if (data.code === 200) {
             return data;
         }
-        
+
         message.error(data.message || '请求失败');
         return Promise.reject(new Error(data.message || '请求失败'));
     },
@@ -60,15 +60,15 @@ request.interceptors.response.use(
             localStorage.removeItem('token');
             localStorage.removeItem('userInfo');
             localStorage.removeItem('tokenExpire');
-            
+
             // 触发登录窗口
-            window.dispatchEvent(new CustomEvent('showLoginModal', { 
-                detail: { 
+            window.dispatchEvent(new CustomEvent('showLoginModal', {
+                detail: {
                     message: '登录已过期，请重新登录'
                 }
             }));
         }
-        
+
         handleRequestError(error);
         return Promise.reject(error);
     }
@@ -85,7 +85,7 @@ const handleRequestError = (error: any) => {
             500: '服务器错误'
         };
         message.error(errorMessages[status] || '网络错误');
-        if(status===401){
+        if (status === 401) {
             localStorage.removeItem('token');
             localStorage.removeItem('userInfo');
             router.push('/');

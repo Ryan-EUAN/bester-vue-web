@@ -84,6 +84,20 @@ const routes: RouteRecordRaw[] = [
             }
           }
         ]
+      },
+      {
+        path: 'release',
+        name: 'Release',
+        component: () => import('@/views/release/ReleasePC.vue'),
+        meta: {
+          title: '发布',
+          requiresAuth: true
+        }
+      },
+      {
+        path: '/post',
+        name: 'Post',
+        component: () => import('@/views/post/PostPC.vue')
       }
     ]
   },
@@ -122,23 +136,23 @@ router.beforeEach(async (to, from, next) => {
     next();
     return;
   }
-  
+
   // 检查登录状态
   const token = localStorage.getItem('token');
   const userInfo = localStorage.getItem('userInfo');
-  
+
   if (!token || !userInfo) {
     // 未登录情况
     message.warning('请先登录');
-    
+
     // 触发显示登录窗口事件
-    window.dispatchEvent(new CustomEvent('showLoginModal', { 
-      detail: { 
+    window.dispatchEvent(new CustomEvent('showLoginModal', {
+      detail: {
         redirect: to.fullPath,
         message: '请先登录'
       }
     }));
-    
+
     // 如果是首次访问，允许进入页面但会显示登录窗口
     if (from.name === undefined) {
       next();
@@ -148,11 +162,11 @@ router.beforeEach(async (to, from, next) => {
     }
     return;
   }
-  
+
   // 检查本地存储的过期时间
   const tokenExpire = localStorage.getItem('tokenExpire');
   const now = new Date().getTime();
-  
+
   // 如果有过期时间且未过期，且距离上次检查未超过间隔，直接通过
   if (tokenExpire && parseInt(tokenExpire) > now) {
     // 如果过期时间还有超过1小时，直接放行
@@ -160,18 +174,18 @@ router.beforeEach(async (to, from, next) => {
       next();
       return;
     }
-    
+
     // 如果过期时间不足1小时但距离上次检查未超过间隔，也直接放行
     if (now - lastCheckTime < TOKEN_CHECK_INTERVAL) {
       next();
       return;
     }
   }
-  
+
   // 需要向后端验证 token
   try {
     lastCheckTime = now; // 更新最后检查时间
-    
+
     const res = await AuthApi.CHECK_TOKEN_API();
     if (res.code === 200 && res.data.valid) {
       // 更新过期时间
@@ -183,7 +197,7 @@ router.beforeEach(async (to, from, next) => {
     }
   } catch (error) {
     console.error('Token 验证失败:', error);
-    
+
     // 如果有本地过期时间且未过期，网络错误时也放行
     if (tokenExpire && parseInt(tokenExpire) > now) {
       next();
@@ -200,17 +214,17 @@ function handleTokenExpired(next: any, to: any, from: any) {
   localStorage.removeItem('token');
   localStorage.removeItem('userInfo');
   localStorage.removeItem('tokenExpire');
-  
+
   // 触发全局事件，通知 LayoutComponentPC 显示登录窗口
-  window.dispatchEvent(new CustomEvent('showLoginModal', { 
-    detail: { 
+  window.dispatchEvent(new CustomEvent('showLoginModal', {
+    detail: {
       redirect: to.fullPath,
       message: '登录已过期，请重新登录'
     }
   }));
-  
+
   message.error('登录已过期，请重新登录');
-  
+
   // 如果是首次访问，允许进入页面但会显示登录窗口
   if (from.name === undefined) {
     next();

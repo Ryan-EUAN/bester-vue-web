@@ -15,16 +15,18 @@
             </a-space>
         </a-flex>
         <div style="font-size: 0.7rem;color:#a5a5a5;line-height: 3vh;">
-            {{ type == 'blog' ? list.end : PriceInit(list.end) }}
+            {{ type == 'blog' ? TimeInit(list.end) : PriceInit(list.end) }}
         </div>
     </a-flex>
     <a-empty description="暂无数据" v-else />
 </template>
 <script setup lang="ts">
 import { ElText } from "element-plus";
-import { onMounted, ref, watch } from "vue";
-import ranking from '../../services/ranking'
+import { onMounted, ref } from "vue";
+import ranking from '@/services/ranking'
+import postApi from '@/services/post';
 import type { ListInfoType } from "../../model/listInfo";
+import router from "@/router";
 
 const props = defineProps(["tabsId", "listInfo", "type"])
 
@@ -43,31 +45,51 @@ function GetBackgroundColor(index: number) {
 }
 // 点击列表
 function SelectList(list: any) {
-    console.log('类型', type);
-    console.log('导航', props.tabsId);
-    console.log(list)
+    if (type == "blog") {
+        router.push({ path: '/post', query: { id: list.id } })
+    }
 }
 // 价格格式化
 function PriceInit(price: string) {
     return price.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+function TimeInit(time: string) {
+    const now = new Date();
+    const postTime = new Date(time);
+    const diff = now.getTime() - postTime.getTime();
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    if (seconds < 60) {
+        return `${seconds}秒前`;
+    } else if (minutes < 60) {
+        return `${minutes}分钟前`;
+    } else if (hours < 24) {
+        return `${hours}小时前`;
+    } else if (days === 1) {
+        return `昨天 ${postTime.getHours()}:${String(postTime.getMinutes()).padStart(2, '0')}`;
+    } else if (days === 2) {
+        return `前天 ${postTime.getHours()}:${String(postTime.getMinutes()).padStart(2, '0')}`;
+    } else {
+        return `${postTime.getFullYear()}-${String(postTime.getMonth() + 1).padStart(2, '0')}-${String(postTime.getDate()).padStart(2, '0')}`;
+    }
 }
 // 加载用户列表
 async function LoadUserList() {
     if (props.tabsId == 'gold_coin') {
         let goldCoinList = await ranking.GET_USER_GOLD_COIN_RANKING_LIST_API();
         if (goldCoinList.code != 200) return alert(goldCoinList.message);
-        // console.log('结果', goldCoinList.data);
         listInfo.value = goldCoinList.data;
     }
 }
 // 加载博客列表
-function LoadBlogList() {
-    console.log('博客列表')
+async function LoadBlogList() {
+    let postList = await postApi.GET_POST_LIST_API(props.tabsId);
+    if (postList.code != 200) return alert(postList.message);
+    listInfo.value = postList.data;
 }
 
-watch(() => props.tabsId, (newVal, oldVal) => {
-    console.log(newVal, oldVal)
-})
 onMounted(() => {
     switch (props.type) {
         case 'user':
