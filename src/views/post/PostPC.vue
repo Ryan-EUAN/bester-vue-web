@@ -351,29 +351,18 @@ const handleReply = async () => {
 
 // 处理点赞
 const handleLike = async (reply: Reply) => {
-  // try {
-  //   if (reply.isLiked) {
-  //     await postApi.UNLIKE_REPLY_API(reply.id);
-  //   } else {
-  //     await postApi.LIKE_REPLY_API(reply.id);
-  //   }
-  //   reply.isLiked = !reply.isLiked;
-  //   reply.likes += reply.isLiked ? 1 : -1;
-  // } catch (error) {
-  //   message.error('操作失败');
-  // }
+  try {
+    if (reply.isLiked) {
+      await postApi.UNLIKE_REPLY_API(reply.id);
+    } else {
+      await postApi.LIKE_REPLY_API(reply.id);
+    }
+    reply.isLiked = !reply.isLiked;
+    reply.likes += reply.isLiked ? 1 : -1;
+  } catch (error) {
+    message.error('操作失败');
+  }
 };
-
-// 处理回复评论
-// const handleReplyToComment = (reply: Reply) => {
-//   currentReplyTo.value = {
-//     id: reply.id,
-//     username: reply.username
-//   };
-//   replyContent.value = `@${reply.username} `;
-//   // 滚动到回复框
-//   document.querySelector('.post-reply')?.scrollIntoView({ behavior: 'smooth' });
-// };
 
 // 显示二级评论
 const showSubComments = (reply: Reply) => {
@@ -447,7 +436,7 @@ const handleSubLike = (comment: SubComment) => {
 };
 
 // 加载二级评论列表
-const loadSubComments = async (replyId: number) => {
+// const loadSubComments = async (replyId: number) => {
   // try {
   //   const res = await postApi.GET_SUB_COMMENTS_API(replyId, {
   //     page: 1,
@@ -459,7 +448,7 @@ const loadSubComments = async (replyId: number) => {
   // } catch (error) {
   //   message.error('加载评论失败');
   // }
-};
+// };
 
 // 监听排序方式变化
 watch(sortType, () => {

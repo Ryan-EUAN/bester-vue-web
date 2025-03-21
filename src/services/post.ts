@@ -2,9 +2,11 @@ import request from '@/utils/request';
 import type { PostData, Reply, PaginationParams, PaginationResponse, ReplyRequest } from '@/types/post';
 import { Result } from '@/model/result';
 import type { ListInfoType } from "@/model/listInfo";
+// import type { PostData as PostDetailData } from '@/types/post';
+import type { PostData as PostCreateData } from '@/types/release';
 
 // 发布帖子
-const publishPost = (data: PostData) => {
+const publishPost = (data: PostCreateData) => {
   return request({
     url: '/posts/publish',
     method: 'post',
