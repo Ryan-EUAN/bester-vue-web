@@ -590,14 +590,53 @@ const clearRecentEmojis = () => {
 
   .emoji-nav {
     padding: 8px 12px;
+    display: flex;  // 添加横向布局
+    gap: 4px;  // 添加间距
+    justify-content: space-between; // 均匀分布
+    width: 100%; // 占满整行
 
     .nav-item {
       padding: 6px 12px;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.3s;
+      flex: 1; // 平均分配空间
+
+      &:hover {
+        background-color: #f5f5f5;
+      }
+
+      &.active {
+        background-color: #e6f7ff;
+        color: #1890ff;
+      }
     }
   }
 
-  .emoji-grid {
-    grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));  // 使用固定像素
+  .emoji-content {
+    height: calc(100% - 48px);  // 减去导航的高度
+    overflow-y: auto;
+
+    .emoji-grid {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);  // 固定8列布局
+      gap: 8px;
+      padding: 12px;
+
+      .emoji-item {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 4px;
+        transition: all 0.3s;
+
+        &:hover {
+          background-color: #f5f5f5;
+        }
+      }
+    }
   }
 }
 
