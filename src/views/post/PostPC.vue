@@ -24,6 +24,9 @@
         </div>
       </div>
 
+      <!-- 使用浮动按钮组件 -->
+      <FloatingActionButtons pageType="article" @refresh="refresh" />
+
       <!-- 帖子内容 -->
       <div class="post-content">
         <p>{{ postData.content }}</p>
@@ -36,7 +39,7 @@
       <div class="post-stats">
         <div class="stat-item">
           <eye-outlined />
-          <span>{{ postData.reposts }} 次转发</span>
+          <span>{{ postData.browse }} 次浏览</span>
         </div>
         <div class="stat-item">
           <message-outlined />
@@ -44,7 +47,7 @@
         </div>
         <div class="stat-item clickable" @click="handlePostLike">
           <like-outlined :class="{ active: postData.likes.includes(currentUserId) }" />
-          <span>{{ postData.likes.length }} 次点赞</span>
+          <span :class="{ active: postData.likes.includes(currentUserId) }">{{ postData.likes.length }} 次点赞</span>
         </div>
       </div>
 
@@ -102,7 +105,7 @@
                 <div class="reply-actions">
                   <span class="action-item" @click="handleLike(reply)">
                     <like-outlined :class="{ active: reply.isLiked }" />
-                    <span>{{ reply.likes }}</span>
+                    <span :class="{ active: reply.isLiked }">{{ reply.likes }}</span>
                   </span>
                   <span class="action-item" @click="showSubComments(reply)">
                     <comment-outlined />
@@ -126,6 +129,9 @@
             <div class="author-name">{{ postData.author.name }}</div>
             <div class="author-title">作者</div>
           </div>
+          <a-button type="primary" :ghost="!postData.author.isFollowed" @click="handleFollow" :loading="followLoading">
+            {{ postData.author.isFollowed ? '已关注' : '关注' }}
+          </a-button>
         </div>
         <div class="author-stats">
           <div class="stat-item">
@@ -138,7 +144,7 @@
           </div>
           <div class="stat-item">
             <span class="label">帖子</span>
-            <span class="value">{{ postData.author.posts }}</span>
+            <span class="value">{{ postData.author.articles }}</span>
           </div>
         </div>
       </div>
@@ -183,7 +189,7 @@
               <div class="hover-actions" v-show="hoveredComment === comment.id">
                 <span class="action" @click="handleSubLike(comment)">
                   <like-outlined :class="{ active: comment.isLiked }" />
-                  <span>{{ comment.likes || 0 }}</span>
+                  <span :class="{ active: comment.isLiked }">{{ comment.likes || 0 }}</span>
                 </span>
                 <span class="action" @click="handleModalReplyToComment(comment)">
                   <comment-outlined />
@@ -218,12 +224,13 @@ import {
 } from '@ant-design/icons-vue';
 import { useRoute } from 'vue-router';
 import { message } from 'ant-design-vue';
-import postApi from '@/services/post';
-import type { PostData, Reply, SubComment } from '@/types/post';
+import articleApi from '@/services/article';
+import type { ArticleData, Reply, SubComment } from '@/types/article';
 import router from '@/router';
+import FloatingActionButtons from '@/components/common/FloatingActionButtons.vue';
 
 const currentUserId = JSON.parse(localStorage.getItem('userInfo') || '{}').id || 0;
-const postData = ref<PostData>({
+const postData = ref<ArticleData>({
   id: '',
   title: '',
   content: '',
@@ -234,11 +241,12 @@ const postData = ref<PostData>({
     avatar: '',
     followers: 0,
     following: 0,
-    posts: 0
+    articles: 0,
+    isFollowed: false
   },
   likes: [],
   comments: [],
-  reposts: 0,
+  browse: 0,
   images: []
 });
 
@@ -307,11 +315,14 @@ const modalReplyContent = ref('');
 const modalReplyTo = ref<{ id: number; username: string } | null>(null);
 const modalLoading = ref(false);
 
+// 添加关注状态loading
+const followLoading = ref(false);
+
 // 加载回复列表
 const loadReplies = async () => {
   // try {
   //   loading.value = true;
-  //   const res = await postApi.GET_POST_REPLIES_API(postData.value.id, {
+  //   const res = await articleApi.GET_POST_REPLIES_API(postData.value.id, {
   //     page: pagination.value.current,
   //     size: pagination.value.pageSize,
   //     sort: sortType.value
@@ -334,7 +345,7 @@ const handleReply = async () => {
 
   // try {
   //   loading.value = true;
-  //   await postApi.CREATE_REPLY_API(postData.value.id, {
+  //   await articleApi.CREATE_REPLY_API(postData.value.id, {
   //     content: replyContent.value,
   //     replyTo: currentReplyTo.value?.id
   //   });
@@ -353,9 +364,9 @@ const handleReply = async () => {
 const handleLike = async (reply: Reply) => {
   try {
     if (reply.isLiked) {
-      await postApi.UNLIKE_REPLY_API(reply.id);
+      await articleApi.UNLIKE_REPLY_API(reply.id);
     } else {
-      await postApi.LIKE_REPLY_API(reply.id);
+      await articleApi.LIKE_REPLY_API(reply.id);
     }
     reply.isLiked = !reply.isLiked;
     reply.likes += reply.isLiked ? 1 : -1;
@@ -396,7 +407,7 @@ const handleModalReply = async () => {
 
   // try {
   //   modalLoading.value = true;
-  //   await postApi.CREATE_SUB_REPLY_API(currentReply.value!.id, {
+  //   await articleApi.CREATE_SUB_REPLY_API(currentReply.value!.id, {
   //     content: modalReplyContent.value,
   //     replyTo: modalReplyTo.value?.id
   //   });
@@ -437,17 +448,17 @@ const handleSubLike = (comment: SubComment) => {
 
 // 加载二级评论列表
 // const loadSubComments = async (replyId: number) => {
-  // try {
-  //   const res = await postApi.GET_SUB_COMMENTS_API(replyId, {
-  //     page: 1,
-  //     size: 100 // 二级评论一般较少，可以一次性加载
-  //   });
-  //   if (currentReply.value) {
-  //     currentReply.value.subComments = res.data.list;
-  //   }
-  // } catch (error) {
-  //   message.error('加载评论失败');
-  // }
+// try {
+//   const res = await articleApi.GET_SUB_COMMENTS_API(replyId, {
+//     page: 1,
+//     size: 100 // 二级评论一般较少，可以一次性加载
+//   });
+//   if (currentReply.value) {
+//     currentReply.value.subComments = res.data.list;
+//   }
+// } catch (error) {
+//   message.error('加载评论失败');
+// }
 // };
 
 // 监听排序方式变化
@@ -463,14 +474,40 @@ onMounted(() => {
 
 onMounted(async () => {
   const route = useRoute();
-  const postId = String(route.query.id);
+  const postId = String(route.params.id);
   if (!postId) {
     message.error('帖子不存在');
     router.push("/")
     return;
   }
+
+  // 存储当前文章ID到本地存储
+  saveCurrentPageToLocalStorage(postId);
+
   try {
-    const response = await postApi.GET_POST_DETAIL_API(postId);
+    await loadPostData(postId);
+  } catch (error) {
+    message.error('获取帖子详情失败');
+    router.push("/")
+  }
+});
+
+// 保存当前页面信息到本地存储
+const saveCurrentPageToLocalStorage = (postId: string) => {
+  const currentPath = {
+    path: window.location.pathname,
+    type: 'post',
+    postId: postId
+  };
+
+  // 保存当前文章详情页信息
+  localStorage.setItem('articleDetailPage', JSON.stringify(currentPath));
+};
+
+// 加载文章数据
+const loadPostData = async (postId: string) => {
+  try {
+    const response = await articleApi.GET_ARTICLE_DETAIL_API(postId);
     if (response.code !== 200) {
       message.error(response.message || '帖子不存在');
       router.push("/")
@@ -479,11 +516,25 @@ onMounted(async () => {
     console.log('结果', response.data);
     postData.value = response.data;
   } catch (error) {
-    console.error('获取帖子详情失败:', error);
-    message.error('获取帖子详情失败');
-    router.push("/")
+    throw error;
   }
-});
+};
+
+// 刷新功能
+const refresh = async () => {
+  const route = useRoute();
+  const postId = String(route.params.id);
+  if (postId) {
+    try {
+      message.loading('正在刷新数据...');
+      await loadPostData(postId);
+      await loadReplies();
+      message.success('刷新成功');
+    } catch (error) {
+      message.error('刷新失败');
+    }
+  }
+};
 
 // 复制链接功能
 const copyPostLink = async () => {
@@ -503,22 +554,116 @@ const handlePostLike = async () => {
     message.error('请先登录');
     return;
   }
+  if (postData.value.likes.includes(currentUserId)) {
+    await articleApi.UNLIKE_ARTICLE_API(postData.value.id);
+    postData.value.likes = postData.value.likes.filter(id => id !== currentUserId);
+  } else {
+    await articleApi.LIKE_ARTICLE_API(postData.value.id);
+    postData.value.likes.push(currentUserId);
+  }
+  message.success(postData.value.likes.includes(currentUserId) ? '点赞成功' : '已取消点赞');
+};
+
+// 处理关注/取消关注
+const handleFollow = async () => {
+  if (currentUserId === 0) {
+    message.error('请先登录');
+    return;
+  }
+
   try {
-    if (postData.value.likes.includes(currentUserId)) {
-      await postApi.UNLIKE_POST_API(postData.value.id);
-      postData.value.likes = postData.value.likes.filter(id => id !== currentUserId);
+    followLoading.value = true;
+    if (postData.value.author.isFollowed) {
+      // 取消关注
+      await articleApi.UNFOLLOW_AUTHOR_API(postData.value.author.id);
+      postData.value.author.isFollowed = false;
+      postData.value.author.followers--;
+      message.success('已取消关注');
     } else {
-      await postApi.LIKE_POST_API(postData.value.id);
-      postData.value.likes.push(currentUserId);
+      // 关注
+      await articleApi.FOLLOW_AUTHOR_API(postData.value.author.id);
+      postData.value.author.isFollowed = true;
+      postData.value.author.followers++;
+      message.success('关注成功');
     }
-    message.success(postData.value.likes.includes(currentUserId) ? '点赞成功' : '已取消点赞');
-  } catch (err) {
-    console.error('点赞操作失败:', err);
-    message.error('操作失败，请稍后重试');
+  } catch (error: any) {
+    message.error(error.message);
+  } finally {
+    followLoading.value = false;
   }
 };
 </script>
 
 <style lang="less" scoped>
 @import url('./post.less');
+
+/* 点赞按钮激活效果 */
+.active {
+  color: #1890ff !important;
+  /* 使用网站主题蓝色 */
+  font-weight: 500;
+}
+
+.stat-item.clickable,
+.action-item,
+.action {
+  transition: all 0.3s;
+
+  &:hover {
+    color: #1890ff;
+  }
+}
+
+/* 回复操作样式 */
+.reply-actions,
+.hover-actions {
+
+  .action-item,
+  .action {
+    cursor: pointer;
+    margin-right: 16px;
+
+    &:last-child {
+      margin-right: 0;
+    }
+  }
+}
+
+/* 二级评论样式 */
+.sub-comments-container {
+  .sub-comment-item {
+    position: relative;
+
+    .hover-actions {
+      position: absolute;
+      right: 0;
+      top: 0;
+      display: flex;
+      align-items: center;
+    }
+  }
+}
+
+/* 浮动按钮样式 */
+.floating-buttons {
+  position: fixed;
+  bottom: 50px;
+  right: 50px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 100;
+
+  .float-btn {
+    width: 45px;
+    height: 45px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s;
+
+    &:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    }
+  }
+}
 </style>

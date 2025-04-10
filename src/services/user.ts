@@ -1,5 +1,5 @@
-import type { Result } from '../model/result'
-import http from './request'
+import type { Result } from '@/model/result'
+import http from '@/utils/request'
 
 /**
  * 获取用户信息API

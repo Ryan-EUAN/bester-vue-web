@@ -100,7 +100,6 @@ import { onBeforeMount, onMounted, ref, h, onBeforeUnmount } from 'vue';
 // import type { CSSProperties } from 'vue';
 import * as icons from '@ant-design/icons-vue';
 import type { MenuProps } from 'ant-design-vue';
-import WebHeadApi from '../../services/web-head'
 import { ElButton, ElNotification } from 'element-plus';
 import type { HeadUserInfoModal } from '../../model/headInfo';
 import AuthApi from '../../services/auth';
@@ -111,14 +110,63 @@ import {
     LogoutOutlined,
     CrownOutlined,
     GiftOutlined,
-    TrophyOutlined
+    TrophyOutlined,
+    HomeOutlined,
+    ToolOutlined,
+    AppstoreOutlined,
+    CompassOutlined
 } from '@ant-design/icons-vue';
 import { useRouter } from 'vue-router';
 
 const emits = defineEmits(['openLogin']);
 
-const current = ref<string[]>([]);
-const items = ref<MenuProps['items']>([]);
+// 静态导航菜单数据
+const items = ref<MenuProps['items']>([
+    {
+        label: '首页',
+        key: 'menu-1',
+        icon: () => h(HomeOutlined),
+        // @ts-ignore
+        path: ''
+    },
+    {
+        label: '老板找技术',
+        key: 'menu-2',
+        icon: () => h(ToolOutlined),
+        // @ts-ignore
+        path: 'zjs'
+    },
+    {
+        label: '站点功能',
+        key: 'menu-3',
+        icon: () => h(AppstoreOutlined),
+        // @ts-ignore
+        path: 'zd'
+    },
+    {
+        label: '快捷导航',
+        key: 'menu-4',
+        icon: () => h(CompassOutlined),
+        // @ts-ignore
+        path: 'kj',
+        children: [
+            {
+                label: '每日签到',
+                key: 'submenu-41',
+                // @ts-ignore
+                path: 'qd'
+            },
+            {
+                label: '排行榜',
+                key: 'submenu-42',
+                // @ts-ignore
+                path: 'ph'
+            }
+        ]
+    }
+]);
+
+const current = ref<string[]>(['menu-1']);
 const searchValue = ref('');
 const isMobile = ref<boolean>(window.innerWidth <= 768);
 const userInfo = ref<HeadUserInfoModal>({
@@ -214,33 +262,6 @@ const logOut = async () => {
     })
     LoadUserInfo()
 }
-const navigationInit = async () => {
-    let res = await WebHeadApi.GET_HEAD_INFO_API();
-    if (res.code == 400) alert(res.message);
-    // console.log('res', res);
-    items.value = []
-    res.data.forEach(item => {
-        const menuItem: any = {
-            label: item.label,
-            key: `menu-${item.key}`,
-            icon: () => renderIcon(item.icon),
-            path: item.path,
-        };
-        if (item.children && item.children.length > 0) {
-            menuItem.children = item.children.map(child => ({
-                label: child.label,
-                key: `submenu-${child.key}`,
-                path: child.path,
-            }));
-        }
-        items.value?.push(menuItem);
-    })
-    current.value = []
-    if (items.value.length > 0) {
-        // @ts-ignore
-        current.value.push(items.value[0].key)
-    }
-}
 //监听窗口大小变化判断是否是手机端
 function updateMobile() {
     isMobile.value = window.innerWidth <= 768
@@ -277,8 +298,7 @@ const handleLoginSuccess = () => {
 window.addEventListener('loginSuccess', handleLoginSuccess);
 
 onBeforeMount(() => {
-    // console.log('before时间', new Date().toLocaleTimeString());
-    navigationInit()
+    // 不再调用 navigationInit
 })
 onMounted(() => {
     // console.log('mounted时间', new Date().toLocaleTimeString());

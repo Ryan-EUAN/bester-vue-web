@@ -24,7 +24,7 @@
 import { ElText } from "element-plus";
 import { onMounted, ref } from "vue";
 import ranking from '@/services/ranking'
-import postApi from '@/services/post';
+import articleApi from '@/services/article';
 import type { ListInfoType } from "../../model/listInfo";
 import router from "@/router";
 
@@ -46,7 +46,7 @@ function GetBackgroundColor(index: number) {
 // 点击列表
 function SelectList(list: any) {
     if (type == "blog") {
-        router.push({ path: '/post', query: { id: list.id } })
+        router.push(`/article/${list.id}`);
     }
 }
 // 价格格式化
@@ -85,7 +85,7 @@ async function LoadUserList() {
 }
 // 加载博客列表
 async function LoadBlogList() {
-    let postList = await postApi.GET_POST_LIST_API(props.tabsId);
+    let postList = await articleApi.GET_ARTICLE_LIST_API(props.tabsId);
     if (postList.code != 200) return alert(postList.message);
     listInfo.value = postList.data;
 }

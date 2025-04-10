@@ -1,22 +1,23 @@
 import type { LoginModel, AuthResponse, LoginEmailModel } from '../model/login'
-import type { Result } from '../model/result'
-import http from './request'
+import type { Result } from '@/model/result'
+import http from '@/utils/request'
+
 
 /**
  * 异步登录API函数，用于用户登录验证。
  * 
- * @param {LoginModel} data - 登录请求的数据模型，包含用户名和密码等信息。
- * @returns {Promise<Result<AuthResponse>>} - 返回一个Promise对象，解析为包含认证响应的结果对象。
+ * @param {LoginModel} data - 登录所需的用户数据模型。
+ * @returns {Promise<Result<string>>} - 返回一个Promise对象，解析为包含字符串结果的Result对象。
  * 
- * 该函数通过HTTP POST请求将登录数据发送到指定的URL（'/auth/user/login'），并等待服务器响应。
- * 服务器响应后，函数将响应数据解析为Result<AuthResponse>类型并返回。
+ * 该函数通过HTTP POST请求向'/auth/user/login'端点发送登录数据，
+ * 并将响应结果作为Result<string>类型返回。
  */
-async function LOGIN_API(data: LoginModel): Promise<Result<AuthResponse>> {
+async function LOGIN_API(data: LoginModel): Promise<Result<string>> {
   return await http({
     url: '/auth/user/login',
     method: 'post',
     data
-  }) as Result<AuthResponse>
+  }) as Result<string>
 }
 
 /**
@@ -78,12 +79,28 @@ async function LOGIN_EMAIL_API(data: LoginEmailModel): Promise<Result<any>> {
 
 // 添加验证 token 的接口
 async function CHECK_TOKEN_API(): Promise<Result<{ valid: boolean; expireTime: number }>> {
-    return await http({
-        url: '/auth/user/check-token',
-        method: 'GET'
-    }) as Result<{ valid: boolean; expireTime: number }>
+  return await http({
+    url: '/auth/user/check-token',
+    method: 'GET'
+  }) as Result<{ valid: boolean; expireTime: number }>
 }
-
+/**
+ * 获取登录结果的API调用
+ * 
+ * @param {string} trackingId - 用于跟踪登录状态的唯一标识符
+ * @returns {Promise<Result<AuthResponse>>} - 返回一个Promise，解析为包含AuthResponse结果的Result对象
+ * 
+ * 该函数通过HTTP GET请求获取指定trackingId的登录结果。
+ * 请求的URL为 '/auth/user/check-login/' + trackingId。
+ * 请求方法为GET。
+ * 返回的结果是一个Promise，该Promise解析为一个Result对象，其中包含AuthResponse数据。
+ */
+async function GET_LOGIN_RESULT_API(trackingId: string): Promise<Result<AuthResponse>> {
+  return await http({
+    url: '/auth/user/check-login/' + trackingId,
+    method: 'GET'
+  }) as Result<AuthResponse>
+}
 export default {
-  LOGIN_API, REGISTER_API, LOG_OUT_API, GET_CODE_API, LOGIN_EMAIL_API, CHECK_TOKEN_API
+  LOGIN_API, REGISTER_API, LOG_OUT_API, GET_CODE_API, LOGIN_EMAIL_API, CHECK_TOKEN_API, GET_LOGIN_RESULT_API
 }

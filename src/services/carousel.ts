@@ -1,13 +1,6 @@
-import type { Result } from '../model/result'
-import http from './request'
-
-// 定义轮播图数据接口
-export interface CarouselItem {
-    imageUrl: string
-    title: string
-    description: string
-    link?: string
-}
+import type { Result } from '@/model/result'
+import type { CarouselItem } from '@/types/carousel'
+import http from '@/utils/request'
 
 /**
  * 获取顶部轮播图数据API
@@ -20,7 +13,7 @@ export interface CarouselItem {
  */
 async function GET_TOP_CAROUSEL_API(): Promise<Result<CarouselItem[]>> {
     return await http({
-        url: '/carousel/top',
+        url: '/web/carousel/top',
         method: 'get'
     }) as Result<CarouselItem[]>
 }

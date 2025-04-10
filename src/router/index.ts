@@ -95,9 +95,17 @@ const routes: RouteRecordRaw[] = [
         }
       },
       {
-        path: '/post',
-        name: 'Post',
+        path: '/article/:id',
+        name: 'Article',
         component: () => import('@/views/post/PostPC.vue')
+      },
+      {
+        path: '/module/:moduleId',
+        name: 'ModuleArticleList',
+        component: () => import('@/views/module/ArticleList.vue'),
+        meta: {
+          title: '模块文章列表'
+        }
       }
     ]
   },
@@ -118,6 +126,11 @@ const routes: RouteRecordRaw[] = [
       }
     ]
   },
+  {
+    path: '/websocket',
+    name: 'WebSocket',
+    component: () => import('@/components/WebSocketDemo.vue'),
+  }
 ];
 
 const router = createRouter({
@@ -215,10 +228,20 @@ function handleTokenExpired(next: any, to: any, from: any) {
   localStorage.removeItem('userInfo');
   localStorage.removeItem('tokenExpire');
 
+  // 保存当前路径到 sessionStorage，确保登录后可以返回
+  if (from.path && from.path !== '/auth/login' && from.path !== '/') {
+    // 优先使用来源页面路径（用户当前所在页面）
+    const fromFullPath = from.fullPath || from.path;
+    sessionStorage.setItem('redirectPath', fromFullPath);
+  } else if (to.path && to.path !== '/auth/login' && to.path !== '/') {
+    // 其次使用目标页面路径
+    const toFullPath = to.fullPath || to.path;
+    sessionStorage.setItem('redirectPath', toFullPath);
+  }
+
   // 触发全局事件，通知 LayoutComponentPC 显示登录窗口
   window.dispatchEvent(new CustomEvent('showLoginModal', {
     detail: {
-      redirect: to.fullPath,
       message: '登录已过期，请重新登录'
     }
   }));

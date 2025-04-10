@@ -21,7 +21,7 @@
             <div class="module-content" v-if="!isCollapsed">
                 <a-flex wrap="wrap" :gap="16">
                     <div v-for="(item, index) in props.moduleList" :key="index" class="module-item"
-                        @click="handleNavigate(item.path)">
+                        @click="handleNavigate(item)">
                         <a-flex gap="middle" class="item-container">
                             <!-- 左侧图标 -->
                             <div class="icon-wrapper">
@@ -65,9 +65,25 @@ const toggleCollapse = () => {
     isCollapsed.value = !isCollapsed.value;
 };
 
-const handleNavigate = (path: string) => {
-    console.log('路径=', path);
-    router.push(path);
+const handleNavigate = (item: any) => {
+    console.log('模块项=', item);
+    
+    // 如果有指定路径，则使用该路径
+    if (item.path) {
+        router.push(item.path);
+        return;
+    }
+    
+    // 获取模块ID，如果有plateId则使用plateId，否则尝试获取其他ID形式
+    let moduleId = item.plateId || item.id;
+    
+    // 如果没有任何ID，则生成一个随机ID
+    if (!moduleId) {
+        moduleId = Math.floor(Math.random() * 10) + 1; // 模拟一个1-10的模块ID
+        console.log('使用随机生成的模块ID:', moduleId);
+    }
+    
+    router.push(`/module/${moduleId}`);
 };
 
 // 添加动画处理函数

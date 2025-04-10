@@ -172,7 +172,7 @@ import {
 } from '@ant-design/icons-vue';
 import { emojiCategories, emojiData } from '@/utils/emojiData';
 import moduleAPI from '@/services/module';
-import postApi from '@/services/post';
+import articleApi from '@/services/article';
 import { debounce } from 'lodash-es';
 import dayjs, { Dayjs } from 'dayjs';
 import type { ModuleInfo, CategoryData, PostData } from '@/types/release';
@@ -449,7 +449,7 @@ const publishPost = async () => {
     }
 
     console.log('postData', postData); // 添加日志
-    const res = await postApi.publishPost(postData);
+    const res = await articleApi.publishArticle(postData);
     console.log('res', res);
     message.success('发布成功');
     router.push('/')

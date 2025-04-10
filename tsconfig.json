@@ -33,7 +33,7 @@
     "src/**/*.d.ts",
     "src/**/*.tsx",
     "src/**/*.vue"
-  ],
+, "src/utils/websocket.ts"  ],
   "exclude": ["vite.config.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

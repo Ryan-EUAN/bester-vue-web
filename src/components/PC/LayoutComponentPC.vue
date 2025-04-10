@@ -11,14 +11,16 @@
             :footer="null" 
             :maskClosable="false"
             @cancel="handleLoginCancel"
+            :destroyOnClose="true"
         >
+            <div v-if="loginMessage" class="login-message">{{ loginMessage }}</div>
             <login-pc @login-success="handleLoginSuccess" />
         </a-modal>
         <a-flex justify="center" gap="small">
         <div>
             Bester乐于分享 - HappyToShare © {{ '2024 - ' + new Date().getFullYear() }}
         </div>
-        <a href='https://beian.miit.gov.cn' target="_blank">蜀ICP备2025119347号</a>
+        <a href='https://beian.miit.gov.cn' target="_blank">蜀ICP备2025132580号</a>
     </a-flex>
     </div>
 </template>
@@ -45,7 +47,8 @@ const handleShowLoginModal = (event: CustomEvent) => {
     
     if (event.detail) {
         if (event.detail.redirect) {
-            redirectPath.value = event.detail.redirect;
+            // 使用 sessionStorage 而不是组件变量，避免组件重新渲染时丢失
+            sessionStorage.setItem('redirectPath', event.detail.redirect);
         }
         
         if (event.detail.message) {
@@ -64,10 +67,14 @@ const handleLoginSuccess = () => {
     showLogin.value = false;
     loginMessage.value = '';
     
-    // 如果有重定向路径，可以在这里处理
-    if (redirectPath.value) {
-        router.push(redirectPath.value);
-        redirectPath.value = '';
+    // 获取重定向路径
+    const savedPath = sessionStorage.getItem('redirectPath');
+    if (savedPath) {
+        // 延迟一下再跳转，确保登录弹窗完全关闭
+        setTimeout(() => {
+            sessionStorage.removeItem('redirectPath'); // 使用后删除
+            router.push(savedPath);
+        }, 100);
     }
 };
 

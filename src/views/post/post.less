@@ -280,56 +280,66 @@
 }
 
 .post-sidebar {
-  width: 280px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  width: 300px;
+  margin-left: 20px;
 
   .author-card {
     background: #fff;
-    padding: 20px;
     border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 
     .author-header {
       display: flex;
-      gap: 12px;
-      margin-bottom: 16px;
+      align-items: center;
+      margin-bottom: 20px;
+      position: relative;
 
       .author-info {
+        margin-left: 12px;
+        flex: 1;
+
         .author-name {
           font-size: 16px;
           font-weight: 500;
+          color: #333;
           margin-bottom: 4px;
         }
 
         .author-title {
           font-size: 12px;
-          color: #666;
+          color: #999;
         }
+      }
+
+      .ant-btn {
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        min-width: 68px;
       }
     }
 
     .author-stats {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-around;
+      border-top: 1px solid #f0f0f0;
+      padding-top: 16px;
 
       .stat-item {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
+        text-align: center;
 
         .label {
-          color: #666;
           font-size: 12px;
+          color: #999;
+          margin-bottom: 4px;
         }
 
         .value {
-          color: #333;
-          font-size: 14px;
+          font-size: 16px;
           font-weight: 500;
+          color: #333;
         }
       }
     }

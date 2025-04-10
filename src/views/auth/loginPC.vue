@@ -38,8 +38,10 @@
             </el-input>
         </el-form-item>
         <el-form-item>
-            <el-button type="primary" @click="loginMethod" class="login_css"
-                :disabled="form.username == ''">登录</el-button>
+            <el-button type="primary" @click="loginMethod" class="login_css" :disabled="form.username == '' || loading"
+                :loading="loading">
+                {{ loading ? loginStatusMessage : '登录' }}
+            </el-button>
         </el-form-item>
     </el-form>
     <el-form :model="formEmail" v-else>
@@ -62,7 +64,10 @@
             </el-input>
         </el-form-item>
         <el-form-item>
-            <el-button type="primary" @click="loginEmailMethod" class="login_css">登录/注册</el-button>
+            <el-button type="primary" @click="loginEmailMethod" class="login_css" :loading="loading"
+                :disabled="loading">
+                {{ loading ? loginStatusMessage : '登录/注册' }}
+            </el-button>
         </el-form-item>
     </el-form>
     <a-flex justify="center" style="user-select: none;font-size: 0.8rem;">未注册过Bester的邮箱，我们将帮您自动注册账号</a-flex>
@@ -91,6 +96,10 @@ const sendCodeInfo = ref({
     state: false,
     time: 0
 })
+// 添加loading状态变量
+const loading = ref<boolean>(false)
+// 添加登录状态消息
+const loginStatusMessage = ref<string>('')
 
 const formEmail = ref<LoginEmailModel>({
     email: '',
@@ -103,84 +112,162 @@ const router = useRouter()
 
 //登录方法
 const loginMethod = async () => {
-    let login_api = await AuthApi.LOGIN_API(form.value)
-    
-    // 存储token
-    localStorage.setItem('token', login_api.data.token)
-    
-    // 存储用户信息
-    localStorage.setItem('userInfo', JSON.stringify(login_api.data.info))
-    
-    // 保存 token 过期时间
-    if (login_api.data.expireTime) {
-        localStorage.setItem('tokenExpire', login_api.data.expireTime.toString())
-    } else {
-        const defaultExpireTime = new Date().getTime() + 24 * 60 * 60 * 1000
-        localStorage.setItem('tokenExpire', defaultExpireTime.toString())
-    }
-    
-    ElNotification({
-        title: '鉴权系统',
-        message: '登录成功',
-        type: 'success',
-        duration: 2000,
-    })
-    
-    // 触发全局登录成功事件
-    window.dispatchEvent(new Event('userInfoUpdated'))
-    
-    // 检查是否有重定向地址
-    const redirect = route.query.redirect as string
-    if (redirect) {
-        router.push(redirect)
-    } else {
-        emits('LoginSuccess')
+    try {
+        // 开始加载
+        loading.value = true
+        loginStatusMessage.value = '正在登录...'
+
+        const res = await AuthApi.LOGIN_API(form.value);
+        if (res.code !== 200) {
+            loading.value = false
+            loginStatusMessage.value = ''
+            return ElNotification({
+                title: '鉴权系统',
+                message: res.message,
+                type: 'warning',
+                duration: 2000,
+            });
+        }
+        const trackingId = res.data;
+        startResultPolling(trackingId);
+    } catch (error) {
+        console.error('请求失败：', error);
+        loading.value = false
+        loginStatusMessage.value = ''
+        ElNotification({
+            title: '鉴权系统',
+            message: '登录请求失败',
+            type: 'error',
+            duration: 2000,
+        })
     }
 }
+//持续轮询登录结果
+function startResultPolling(trackingId: string) {
+    loginStatusMessage.value = '登录中...'
+    const poll = setInterval(async () => {
+        try {
+            const res = await AuthApi.GET_LOGIN_RESULT_API(trackingId);
+            if (res.code !== 200) {
+                if (res.message === "PENDING") {
+                    loginStatusMessage.value = '正在处理登录请求...'
+                    return;
+                }
+                clearInterval(poll);
+                loading.value = false
+                loginStatusMessage.value = ''
+                ElNotification({
+                    title: '鉴权系统',
+                    message: res.message,
+                    type: 'error',
+                    duration: 2000,
+                })
+                return;
+            }
+            clearInterval(poll);
+            loading.value = false
+            loginStatusMessage.value = ''
+            localStorage.setItem('token', res.data.token)
+            localStorage.setItem('userInfo', JSON.stringify(res.data.info))
+            if (res.data.expireTime) {
+                localStorage.setItem('tokenExpire', res.data.expireTime.toString())
+            } else {
+                const defaultExpireTime = new Date().getTime() + 24 * 60 * 60 * 1000
+                localStorage.setItem('tokenExpire', defaultExpireTime.toString())
+            }
 
+            ElNotification({
+                title: '鉴权系统',
+                message: '登录成功',
+                type: 'success',
+                duration: 2000,
+            })
+
+            // 触发全局登录成功事件
+            window.dispatchEvent(new Event('userInfoUpdated'))
+
+            // 检查是否有重定向地址
+            const redirect = route.query.redirect as string
+            if (redirect) {
+                router.push(redirect)
+            } else {
+                // 检查会话存储中是否有重定向路径
+                const savedRedirectPath = sessionStorage.getItem('redirectPath');
+                if (savedRedirectPath) {
+                    sessionStorage.removeItem('redirectPath'); // 使用后删除
+                    router.push(savedRedirectPath);
+                } else {
+                    emits('LoginSuccess')
+                }
+            }
+        } catch (error: any) {
+            clearInterval(poll);
+            loading.value = false
+            loginStatusMessage.value = ''
+            ElNotification({
+                title: '鉴权系统',
+                message: error.message,
+                type: 'error',
+                duration: 2000,
+            })
+        }
+    }, 2000);
+}
 //邮箱登录方法
 async function loginEmailMethod() {
-    let login_email_api = await AuthApi.LOGIN_EMAIL_API(formEmail.value)
-    
-    // 存储token
-    localStorage.setItem('token', login_email_api.data.token)
-    
-    // 存储用户信息
-    localStorage.setItem('userInfo', JSON.stringify(login_email_api.data.info))
-    
-    // 保存 token 过期时间
-    if (login_email_api.data.expireTime) {
-        // 确保存储为字符串格式
-        localStorage.setItem('tokenExpire', login_email_api.data.expireTime.toString())
-        console.log('存储令牌过期时间:', login_email_api.data.expireTime)
-    } else {
-        // 如果后端没有返回过期时间，设置默认过期时间（例如24小时后）
-        const defaultExpireTime = new Date().getTime() + 24 * 60 * 60 * 1000
-        localStorage.setItem('tokenExpire', defaultExpireTime.toString())
-        console.log('设置默认令牌过期时间:', defaultExpireTime)
-    }
-    
-    ElNotification({
-        title: '鉴权系统',
-        message: '登录成功',
-        type: 'success',
-        duration: 2000,
-    })
-    
-    // 触发全局登录成功事件
-    window.dispatchEvent(new Event('userInfoUpdated'))
-    
-    formEmail.value = {
-        email: '',
-        code: ''
-    }
-    
-    // 检查是否有重定向地址
-    const redirect = route.query.redirect as string
-    if (redirect) {
-        router.push(redirect)
-    } else {
-        emits('LoginSuccess')
+    try {
+        loading.value = true
+        loginStatusMessage.value = '正在登录...'
+        let login_email_api = await AuthApi.LOGIN_EMAIL_API(formEmail.value)
+        loading.value = false
+        loginStatusMessage.value = ''
+        localStorage.setItem('token', login_email_api.data.token)
+        localStorage.setItem('userInfo', JSON.stringify(login_email_api.data.info))
+        if (login_email_api.data.expireTime) {
+            localStorage.setItem('tokenExpire', login_email_api.data.expireTime.toString())
+        } else {
+            const defaultExpireTime = new Date().getTime() + 24 * 60 * 60 * 1000
+            localStorage.setItem('tokenExpire', defaultExpireTime.toString())
+        }
+
+        ElNotification({
+            title: '鉴权系统',
+            message: '登录成功',
+            type: 'success',
+            duration: 2000,
+        })
+
+        // 触发全局登录成功事件
+        window.dispatchEvent(new Event('userInfoUpdated'))
+
+        formEmail.value = {
+            email: '',
+            code: ''
+        }
+
+        // 检查是否有重定向地址
+        const redirect = route.query.redirect as string
+        if (redirect) {
+            router.push(redirect)
+        } else {
+            // 检查会话存储中是否有重定向路径
+            const savedRedirectPath = sessionStorage.getItem('redirectPath');
+            if (savedRedirectPath) {
+                sessionStorage.removeItem('redirectPath'); // 使用后删除
+                router.push(savedRedirectPath);
+            } else {
+                emits('LoginSuccess')
+            }
+        }
+    } catch (error) {
+        loading.value = false
+        loginStatusMessage.value = ''
+        ElNotification({
+            title: '鉴权系统',
+            message: '登录请求失败',
+            type: 'error',
+            duration: 2000,
+        })
     }
 }
 
@@ -260,7 +347,37 @@ onBeforeUnmount(() => {
     height: 4vh;
 }
 
+.test_btn {
+    margin-top: 10px;
+    width: 80vw;
+    margin: 0 auto;
+    height: 4vh;
+}
+
+.debug-info {
+    margin-top: 20px;
+    font-size: 0.8rem;
+    color: #888;
+    padding: 10px;
+    background: #f5f5f5;
+    border-radius: 5px;
+    text-align: left;
+    word-break: break-all;
+}
+
 .el-button {
     border-radius: 0.5rem;
+}
+
+.el-progress {
+    width: 80vw;
+    margin: 0 auto;
+}
+
+.loading-message {
+    text-align: center;
+    font-size: 0.9rem;
+    color: #909399;
+    margin: 8px 0;
 }
 </style>

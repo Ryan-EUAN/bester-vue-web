@@ -3,54 +3,12 @@ import type { Result } from '@/model/result';
 import type {
     WithdrawForm,
     RechargeForm,
+    ProfileData,
+    VerifyForm,
+    PointsInfo,
+    PointsRecord,
+    PointsRule
 } from '@/types/personal';
-
-
-// 个人资料数据类型
-interface ProfileData {
-    username: string;    // 用户名
-    realName: string;    // 真实姓名
-    nickName: string;    // 昵称
-    gender: 1 | 0;       // 性别(1:男, 0:女)
-    birthday: string | null;  // 生日日期，格式为YYYY-MM-DD
-    birthplace: string[];     // 出生地，包含省市区的数组
-    residence: string[];      // 居住地，包含省市区的数组
-    phone: string;       // 手机号码
-    qq: string;         // QQ号码
-    email: string;      // 电子邮箱
-    signature: string;  // 个性签名
-}
-
-// 添加认证表单接口定义
-interface VerifyForm {
-    phone: string;           // 手机号
-    phoneVerified: boolean;  // 手机是否已认证
-    realName: string;        // 真实姓名
-    idCard: string;         // 身份证号
-    identityVerified: boolean; // 是否已实名认证
-}
-
-// 积分相关接口定义
-interface PointsInfo {
-    current: number;    // 当前积分
-    total: number;     // 累计获得
-    used: number;      // 已使用
-}
-
-interface PointsRecord {
-    id: string;        // 记录ID
-    time: string;      // 时间
-    type: string;      // 类型
-    points: number;    // 积分变动
-    remark: string;    // 备注
-}
-
-interface PointsRule {
-    id: string;        // 规则ID
-    title: string;     // 规则标题
-    content: string;   // 规则内容
-    points: number;    // 可获得积分
-}
 
 /**
  * 获取用户个人资料

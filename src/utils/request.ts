@@ -31,18 +31,16 @@ request.interceptors.response.use(
 
         // 处理 token 过期情况
         if (data.code === 401) {
-            // 清除本地存储
             localStorage.removeItem('token');
             localStorage.removeItem('userInfo');
             localStorage.removeItem('tokenExpire');
-
-            // 触发登录窗口
+            const currentPath = window.location.pathname + window.location.search;
+            sessionStorage.setItem('redirectPath', currentPath);
             window.dispatchEvent(new CustomEvent('showLoginModal', {
                 detail: {
-                    // message: '登录已过期，请重新登录'
+                    redirectPath: currentPath
                 }
             }));
-
             return Promise.reject(new Error(data.message || '登录已过期'));
         }
 
@@ -50,21 +48,20 @@ request.interceptors.response.use(
             return data;
         }
 
-        message.error(data.message || '请求失败');
+        // message.error(data.message || '请求失败');
         return Promise.reject(new Error(data.message || '请求失败'));
     },
     (error: any) => {
-        // 处理 401 错误
         if (error.response && error.response.status === 401) {
-            // 清除本地存储
             localStorage.removeItem('token');
             localStorage.removeItem('userInfo');
             localStorage.removeItem('tokenExpire');
-
-            // 触发登录窗口
+            const currentPath = window.location.pathname + window.location.search;
+            sessionStorage.setItem('redirectPath', currentPath);
             window.dispatchEvent(new CustomEvent('showLoginModal', {
                 detail: {
-                    message: '登录已过期，请重新登录'
+                    message: '登录已过期，请重新登录',
+                    redirectPath: currentPath
                 }
             }));
         }
@@ -74,7 +71,6 @@ request.interceptors.response.use(
     }
 );
 
-// 统一的错误处理函数
 const handleRequestError = (error: any) => {
     if (error.response) {
         const { status } = error.response;

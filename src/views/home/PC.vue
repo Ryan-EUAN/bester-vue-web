@@ -59,9 +59,9 @@ import WebsiteInformation from '@/components/PC/WebsiteInformation.vue';
 import { Picture } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router';
 import CarouselApi from '../../services/carousel';
-import type { CarouselItem } from '../../services/carousel';
+import type { CarouselItem } from '../../types/carousel';
 import ModuleApi from '../../services/module';
-import type { ModuleData } from '../../services/module';
+import type { ModuleData } from '../../types/module';
 import { ElMessage } from 'element-plus';
 
 const carouselList = ref<CarouselItem[]>([]);
