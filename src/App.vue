@@ -54,8 +54,8 @@ onMounted(() => {
     setTimeout(() => {
         loading.value = false;
     }, 1000);
-    
-    webSocketService.connect('ws://localhost:80/ws');
+
+    webSocketService.connect('ws://139.159.243.123/ws');
     webSocketService.addMessageListener(handleMessage);
 });
 
