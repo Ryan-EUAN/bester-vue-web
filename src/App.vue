@@ -5,35 +5,14 @@
             <div class="loading-text">加载中，请稍候...</div>
         </div>
         <router-view v-else />
-
-        <!-- 添加消息显示区域 -->
-        <div v-if="!loading && messages.length > 0" class="messages-container">
-            <h3>实时消息:</h3>
-            <ul>
-                <li v-for="(msg, index) in messages" :key="index">{{ msg }}</li>
-            </ul>
-        </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { webSocketService } from './utils/websocket';
-import { ElNotification } from 'element-plus';
 
 const loading = ref(true);
-const messages = ref<string[]>([]);
-let connectionStatusInterval: number | null = null;
-
-const handleMessage = (data: string) => {
-    const res = JSON.parse(data);
-    ElNotification({
-        title: '提示',
-        message: res.content,
-        type: 'success'
-    });
-    // console.log('结果=',res.content);
-};
 
 onMounted(() => {
     // 预加载关键样式资源
@@ -55,17 +34,18 @@ onMounted(() => {
         loading.value = false;
     }, 1000);
 
-    // webSocketService.connect('wss://139.159.243.123/ws');
-    webSocketService.connect('ws://wss.euan.site/ws');
-    webSocketService.addMessageListener(handleMessage);
-});
-
-// 组件销毁时清理资源
-onUnmounted(() => {
-    if (connectionStatusInterval !== null) {
-        clearInterval(connectionStatusInterval);
-        connectionStatusInterval = null;
-    }
+    // 初始化WebSocket连接
+    webSocketService.connect('http://139.159.243.123/ws')
+        .then(() => {
+            // 发送连接成功消息
+            webSocketService.sendMessage({
+                type: 'connect',
+                content: '客户端已连接'
+            });
+        })
+        .catch(error => {
+            console.error('WebSocket连接失败:', error);
+        });
 });
 </script>
 
@@ -107,44 +87,6 @@ body {
     font-size: 16px;
     color: #00aee0;
     font-weight: 500;
-}
-
-/* 消息容器样式 */
-.messages-container {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: white;
-    padding: 15px;
-    border-radius: 5px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    max-width: 300px;
-    max-height: 300px;
-    overflow-y: auto;
-    z-index: 1000;
-}
-
-.messages-container h3 {
-    margin-top: 0;
-    margin-bottom: 10px;
-    font-size: 16px;
-    color: #333;
-}
-
-.messages-container ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.messages-container li {
-    padding: 8px 0;
-    border-bottom: 1px solid #eee;
-    word-break: break-word;
-}
-
-.messages-container li:last-child {
-    border-bottom: none;
 }
 
 @keyframes spin {
