@@ -55,7 +55,8 @@ onMounted(() => {
         loading.value = false;
     }, 1000);
 
-    webSocketService.connect('wss://139.159.243.123/ws');
+    // webSocketService.connect('wss://139.159.243.123/ws');
+    webSocketService.connect('ws://wss.euan.site/ws');
     webSocketService.addMessageListener(handleMessage);
 });
 
