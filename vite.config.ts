@@ -89,7 +89,8 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api/, '')
       },
       '/ws': {
-        target: 'http://localhost:80',
+        // target: 'http://localhost:80',
+        target: 'http://139.159.243.123',
         ws: true // 必须启用WebSocket代理
       }
     }
