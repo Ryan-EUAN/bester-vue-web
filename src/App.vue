@@ -55,7 +55,7 @@ onMounted(() => {
         loading.value = false;
     }, 1000);
 
-    webSocketService.connect('ws://139.159.243.123/ws');
+    webSocketService.connect('wss://127.0.0.1/ws');
     webSocketService.addMessageListener(handleMessage);
 });
 
