@@ -178,7 +178,7 @@ const handlePageChange = (page: number) => {
 };
 
 // 处理每页显示数量变化
-const handlePageSizeChange = (current: number, size: number) => {
+const handlePageSizeChange = (size: number) => {
   pagination.value.current = 1;
   pagination.value.pageSize = size;
   loadArticles();

@@ -33,7 +33,6 @@ import { useRouter } from 'vue-router';
 
 const router = useRouter();
 const showLogin = ref(false);
-const redirectPath = ref('');
 const loginMessage = ref('');
 
 // 显示登录弹窗

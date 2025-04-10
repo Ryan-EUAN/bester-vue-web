@@ -1,3 +1,5 @@
+import { Client, IMessage, StompSubscription } from '@stomp/stompjs';
+
 type MessageListener = (data: any) => void;
 type WebSocketMessage = {
     type: string;
@@ -6,36 +8,61 @@ type WebSocketMessage = {
 };
 
 class WebSocketService {
-    private socket: WebSocket | null;
-    private messageListeners: MessageListener[];
+    private client: Client | null = null;
+    private messageListeners: MessageListener[] = [];
+    private subscription: StompSubscription | null = null;
 
     constructor() {
-        this.socket = null;
+        this.client = null;
         this.messageListeners = [];
+        this.subscription = null;
     }
 
     connect(url: string): void {
-        if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
-            this.socket = new WebSocket(url);
+        if (!this.client || !this.client.connected) {
+            this.client = new Client({
+                brokerURL: url,
+                reconnectDelay: 5000,
+                heartbeatIncoming: 4000,
+                heartbeatOutgoing: 4000,
+                onConnect: () => {
+                    console.log('STOMP连接成功');
+                    this.subscribe('/topic/messages');
+                },
+                onDisconnect: () => {
+                    console.log('STOMP断开连接');
+                },
+                onStompError: (frame) => {
+                    console.error('STOMP错误:', frame);
+                }
+            });
 
-            // 监听事件
-            this.socket.onopen = (): void => {
-                console.log('WebSocket connected');
-            };
+            this.client.activate();
+        }
+    }
 
-            this.socket.onmessage = (event: MessageEvent): void => {
-                this.messageListeners.forEach(callback => callback(event.data));
-            };
-
-            this.socket.onclose = (): void => {
-                console.log('WebSocket disconnected');
-            };
+    private subscribe(destination: string): void {
+        if (this.client && this.client.connected) {
+            this.subscription = this.client.subscribe(destination, (message: IMessage) => {
+                try {
+                    const data = JSON.parse(message.body);
+                    this.messageListeners.forEach(callback => callback(data));
+                } catch (e) {
+                    console.error('消息解析错误:', e);
+                    this.messageListeners.forEach(callback => callback(message.body));
+                }
+            });
         }
     }
 
     sendMessage(message: WebSocketMessage): void {
-        if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-            this.socket.send(JSON.stringify(message));
+        if (this.client && this.client.connected) {
+            this.client.publish({
+                destination: '/app/chat',
+                body: JSON.stringify(message)
+            });
+        } else {
+            console.warn('STOMP客户端未连接，无法发送消息');
         }
     }
 
@@ -44,9 +71,14 @@ class WebSocketService {
     }
 
     disconnect(): void {
-        if (this.socket) {
-            this.socket.close();
-            this.socket = null;
+        if (this.subscription) {
+            this.subscription.unsubscribe();
+            this.subscription = null;
+        }
+        
+        if (this.client) {
+            this.client.deactivate();
+            this.client = null;
         }
     }
 }
