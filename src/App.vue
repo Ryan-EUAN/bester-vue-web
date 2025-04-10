@@ -18,22 +18,22 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
-// import { webSocketService } from './utils/websocket';
-// import { ElNotification } from 'element-plus';
+import { webSocketService } from './utils/websocket';
+import { ElNotification } from 'element-plus';
 
 const loading = ref(true);
 const messages = ref<string[]>([]);
 let connectionStatusInterval: number | null = null;
 
-// const handleMessage = (data: string) => {
-//     const res = JSON.parse(data);
-//     ElNotification({
-//         title: '提示',
-//         message: res.content,
-//         type: 'success'
-//     });
-//     // console.log('结果=',res.content);
-// };
+const handleMessage = (data: string) => {
+    const res = JSON.parse(data);
+    ElNotification({
+        title: '提示',
+        message: res.content,
+        type: 'success'
+    });
+    // console.log('结果=',res.content);
+};
 
 onMounted(() => {
     // 预加载关键样式资源
@@ -55,8 +55,8 @@ onMounted(() => {
         loading.value = false;
     }, 1000);
 
-    // webSocketService.connect('ws://139.159.243.123/ws');
-    // webSocketService.addMessageListener(handleMessage);
+    webSocketService.connect('ws://139.159.243.123/ws');
+    webSocketService.addMessageListener(handleMessage);
 });
 
 // 组件销毁时清理资源
