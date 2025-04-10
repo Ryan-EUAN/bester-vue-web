@@ -55,8 +55,8 @@ onMounted(() => {
         loading.value = false;
     }, 1000);
 
-    webSocketService.connect('ws://139.159.243.123/ws');
-    webSocketService.addMessageListener(handleMessage);
+    // webSocketService.connect('ws://139.159.243.123/ws');
+    // webSocketService.addMessageListener(handleMessage);
 });
 
 // 组件销毁时清理资源
