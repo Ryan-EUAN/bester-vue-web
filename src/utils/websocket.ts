@@ -52,9 +52,12 @@ class WebSocketService {
                 this.stompClient.connect(
                     headers,
                     (frame: any) => {
+                        console.log("未知数据：",frame);
+                        if(frame.command == "CONNECTED"){
+                            console.log('WebSocket连接成功');
+                        }
                         this.connected = true;
                         this.reconnectAttempts = 0;
-                        console.log('WebSocket连接成功');
                         this.subscribeToTopics();
                         resolve(true);
                     },
