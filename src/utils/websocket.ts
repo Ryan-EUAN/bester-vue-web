@@ -17,6 +17,7 @@ class WebSocketService {
     private maxReconnectAttempts: number = 5;
     private reconnectTimeout: number | null = null;
     private debugMode: boolean = false;
+    private url: string = '';
 
     /**
      * 初始化WebSocket服务
@@ -33,6 +34,7 @@ class WebSocketService {
      * @returns Promise<boolean> 连接是否成功
      */
     connect(url: string, headers: any = {}): Promise<boolean> {
+        this.url = url;
         return new Promise((resolve, reject) => {
             try {
                 // 如果已经连接，先断开
@@ -146,7 +148,7 @@ class WebSocketService {
         if (this.stompClient) {
             this.disconnect();
             // 重新连接到默认地址
-            this.connect('http://localhost:80/ws')
+            this.connect(this.url == '' ? 'http://139.159.243.123/ws' : this.url)
                 .catch(() => {
                     // 连接失败会自动触发handleReconnect
                 });

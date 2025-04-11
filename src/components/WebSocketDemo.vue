@@ -18,7 +18,7 @@ const inputMessage = ref('');
 
 // 初始化WebSocket
 onMounted(() => {
-    webSocketService.connect('ws://localhost:80/ws');
+    webSocketService.connect('http://139.159.243.123/ws');
     webSocketService.addMessageListener(handleMessage);
 });
 
@@ -29,8 +29,7 @@ onBeforeUnmount(() => {
 
 // 处理接收消息
 const handleMessage = (data) => {
-    const res = JSON.parse(data);
-    messages.value.push(res.content);
+    messages.value.push(data.content);
 };
 
 // 发送消息
