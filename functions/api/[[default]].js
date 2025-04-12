@@ -7,7 +7,7 @@ export async function onRequest({ request }) {
         pathname = pathname.replace('/api', '');
     }
     
-    const res = await fetch(`http://139.159.243.123${pathname}${url.search}`, {
+    const res = await fetch(`http://139.159.243.123:10010${pathname}${url.search}`, {
         method: request.method,
         headers: reqHeaders,
         body: request.body,
