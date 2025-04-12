@@ -67,7 +67,7 @@ const followingList = ref<any[]>([]);
 const defaultAvatar = 'https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg';
 
 // 加载关注用户数据
-const loadFollowingUsers = (isRefresh = false) => {
+const loadFollowingUsers = () => {
   loading.value = true;
   
   try {
@@ -109,7 +109,7 @@ const onSearch = () => {
 
 // 下拉刷新
 const onRefresh = () => {
-  loadFollowingUsers(true);
+  loadFollowingUsers();
 };
 
 // 处理关注/取消关注

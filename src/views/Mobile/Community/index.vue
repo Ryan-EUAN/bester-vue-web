@@ -76,7 +76,6 @@ const loading = ref(false);
 const finished = ref(false);
 const refreshing = ref(false);
 const pageNum = ref(1);
-const pageSize = ref(10);
 
 // 帖子列表
 const postList = ref<any[]>([]);
@@ -147,7 +146,7 @@ const onRefresh = () => {
 };
 
 // 切换分类
-const onCategoryChange = (index: number) => {
+const onCategoryChange = () => {
   // 重置数据状态
   postList.value = [];
   pageNum.value = 1;

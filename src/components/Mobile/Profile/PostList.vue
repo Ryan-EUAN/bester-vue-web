@@ -38,7 +38,7 @@
 import { ref, defineProps, defineEmits } from 'vue';
 import { useRouter } from 'vue-router';
 
-const props = defineProps<{
+defineProps<{
   posts: any[];
   loading: boolean;
 }>();

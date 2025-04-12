@@ -67,7 +67,7 @@ const followersList = ref<any[]>([]);
 const defaultAvatar = 'https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg';
 
 // 加载粉丝数据
-const loadFollowersData = (isRefresh = false) => {
+const loadFollowersData = () => {
   loading.value = true;
   
   try {
@@ -108,7 +108,7 @@ const onSearch = () => {
 
 // 下拉刷新
 const onRefresh = () => {
-  loadFollowersData(true);
+  loadFollowersData();
 };
 
 // 处理关注/取消关注

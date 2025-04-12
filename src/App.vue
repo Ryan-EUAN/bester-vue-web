@@ -10,7 +10,6 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { webSocketService } from './utils/websocket';
 
 const loading = ref(true);
 

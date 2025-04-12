@@ -87,7 +87,7 @@ interface Post {
   images?: string[];
 }
 
-const props = defineProps<{
+defineProps<{
   post: Post;
 }>();
 

@@ -92,7 +92,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { showToast, showDialog } from 'vant';
+import { showToast } from 'vant';
 
 const router = useRouter();
 

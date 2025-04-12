@@ -166,7 +166,7 @@ const maskedPhone = computed(() => {
 const maskedEmail = computed(() => {
   const email = securityInfo.email;
   if (!email) return '';
-  const [username, domain] = email.split('@');
+  const username = email.split('@')[0];
   if (username.length <= 2) {
     return email.replace(/(.{1})(.*)(@.*)/, '$1***$3');
   }

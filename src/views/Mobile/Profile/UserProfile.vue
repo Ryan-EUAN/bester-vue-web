@@ -37,11 +37,11 @@
       
       <!-- 数据统计 -->
       <div class="user-stats">
-        <div class="stat-item" @click="goToFollows('following')">
+        <div class="stat-item" @click="goToFollows">
           <div class="stat-value">{{ userInfo.following }}</div>
           <div class="stat-label">关注</div>
         </div>
-        <div class="stat-item" @click="goToFollows('followers')">
+        <div class="stat-item" @click="goToFollows">
           <div class="stat-value">{{ userInfo.followers }}</div>
           <div class="stat-label">粉丝</div>
         </div>
@@ -185,7 +185,7 @@ const handleFollow = () => {
 };
 
 // 查看用户关注/粉丝列表
-const goToFollows = (type: 'following' | 'followers') => {
+const goToFollows = () => {
   // 这里可以添加跳转逻辑
   showToast('功能开发中');
 };

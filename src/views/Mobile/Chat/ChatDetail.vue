@@ -1,135 +1,87 @@
 <template>
   <div class="chat-detail" @click="onPageClick">
-    <van-nav-bar
-      :title="chatUser.name"
-      left-arrow
-      @click-left="goBack"
-    >
+    <van-nav-bar :title="chatUser.name" left-arrow @click-left="goBack">
       <template #right>
         <van-icon name="more-o" size="18" @click="showUserOptions" />
       </template>
     </van-nav-bar>
-    
+
     <!-- 聊天内容区域 -->
     <div class="chat-content" ref="chatContentRef">
       <van-pull-refresh v-model="refreshing" @refresh="loadMoreHistory">
         <van-empty v-if="messages.length === 0" description="暂无聊天记录" />
-        
+
         <div v-else class="message-list">
           <div class="time-divider" v-if="messages.length > 0">{{ formatDate(messages[0].time) }}</div>
-          
+
           <div v-for="(message, index) in messages" :key="message.id" class="message-wrapper">
             <!-- 显示日期分割线 -->
-            <div 
-              v-if="index > 0 && shouldShowDateDivider(messages[index-1].time, message.time)" 
-              class="time-divider"
-            >
+            <div v-if="index > 0 && shouldShowDateDivider(messages[index - 1].time, message.time)" class="time-divider">
               {{ formatDate(message.time) }}
             </div>
-            
+
             <!-- 消息气泡 -->
-            <div 
-              class="message-bubble" 
-              :class="message.from === 'self' ? 'self' : 'other'"
-            >
+            <div class="message-bubble" :class="message.from === 'self' ? 'self' : 'other'">
               <!-- 头像 (只在对方消息时显示) -->
-              <van-image
-                v-if="message.from !== 'self'"
-                round
-                width="40"
-                height="40"
-                :src="chatUser.avatar"
-                class="avatar"
-              />
-              
+              <van-image v-if="message.from !== 'self'" round width="40" height="40" :src="chatUser.avatar"
+                class="avatar" />
+
               <!-- 消息内容 -->
               <div class="message-container">
                 <div class="message-content" :class="message.from === 'self' ? 'self' : 'other'">
                   <div v-if="message.type === 'text'" class="text-message">{{ message.content }}</div>
                   <div v-else-if="message.type === 'image'" class="image-message">
-                    <van-image 
-                      :src="message.content" 
-                      fit="cover" 
-                      @click="previewImage(message.content)"
-                    />
+                    <van-image :src="message.content" fit="cover" @click="previewImage(message.content)" />
                   </div>
                 </div>
-                
+
                 <!-- 发送状态 (仅自己发送的消息显示) -->
                 <div v-if="message.from === 'self'" class="message-status">
                   <van-loading v-if="message.status === 'sending'" size="12px" />
-                  <van-icon v-else-if="message.status === 'failed'" name="warning-o" color="#ee0a24" size="14px" @click="resendMessage(message)" />
+                  <van-icon v-else-if="message.status === 'failed'" name="warning-o" color="#ee0a24" size="14px"
+                    @click="resendMessage(message)" />
                   <span v-else-if="message.status === 'sent'" class="sent-time">{{ formatTime(message.time) }}</span>
                 </div>
               </div>
-              
+
               <!-- 自己的头像 -->
-              <van-image
-                v-if="message.from === 'self'"
-                round
-                width="40"
-                height="40"
-                :src="userAvatar"
-                class="avatar"
-              />
+              <van-image v-if="message.from === 'self'" round width="40" height="40" :src="userAvatar" class="avatar" />
             </div>
           </div>
         </div>
       </van-pull-refresh>
     </div>
-    
+
     <!-- 底部输入区域 -->
     <div class="chat-footer">
       <div class="input-area">
         <van-icon name="smile-o" size="24" class="emoji-btn" @click="toggleEmojiPanel" />
-        <van-field
-          v-model="inputMessage"
-          type="text"
-          placeholder="请输入消息"
-          class="message-input"
-          @keypress.enter="sendMessage"
-          maxlength="500"
-          @focus="showEmojiPanel = false"
-        />
+        <van-field v-model="inputMessage" type="text" placeholder="请输入消息" class="message-input"
+          @keypress.enter="sendMessage" maxlength="500" @focus="showEmojiPanel = false" />
         <van-icon name="photograph" size="24" class="image-btn" @click="chooseImage" />
-        <van-button 
-          type="primary" 
-          size="small" 
-          class="send-btn" 
-          :disabled="!inputMessage.trim()" 
-          @click="sendMessage"
-        >发送</van-button>
+        <van-button type="primary" size="small" class="send-btn" :disabled="!inputMessage.trim()"
+          @click="sendMessage">发送</van-button>
       </div>
-      
+
       <!-- 表情面板 -->
       <transition name="slide-up">
         <div v-if="showEmojiPanel" class="emoji-panel">
           <div class="emoji-container">
-            <span 
-              v-for="emoji in emojiList" 
-              :key="emoji" 
-              class="emoji-item" 
-              @click="addEmoji(emoji)"
-            >
+            <span v-for="emoji in emojiList" :key="emoji" class="emoji-item" @click="addEmoji(emoji)">
               {{ emoji }}
             </span>
           </div>
         </div>
       </transition>
     </div>
-    
+
     <!-- 用户选项弹出菜单 -->
-    <van-action-sheet
-      v-model:show="showOptions"
-      :actions="userActions"
-      cancel-text="取消"
-      @select="onSelectUserAction"
-    />
+    <van-action-sheet v-model:show="showOptions" :actions="userActions" cancel-text="取消" @select="onSelectUserAction" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick, watch } from 'vue';
+import { ref, onMounted, nextTick, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { showToast, showDialog } from 'vant';
 
@@ -199,10 +151,10 @@ const loadChatHistory = () => {
   // 模拟聊天记录
   setTimeout(() => {
     const mockMessages: ChatMessage[] = [];
-    
+
     // 添加一些模拟消息
     const now = new Date();
-    
+
     mockMessages.push({
       id: '1',
       from: 'other',
@@ -211,7 +163,7 @@ const loadChatHistory = () => {
       time: new Date(now.getTime() - 24 * 60 * 60 * 1000), // 一天前
       status: 'sent'
     });
-    
+
     mockMessages.push({
       id: '2',
       from: 'self',
@@ -220,7 +172,7 @@ const loadChatHistory = () => {
       time: new Date(now.getTime() - 23 * 60 * 60 * 1000),
       status: 'sent'
     });
-    
+
     mockMessages.push({
       id: '3',
       from: 'other',
@@ -229,7 +181,7 @@ const loadChatHistory = () => {
       time: new Date(now.getTime() - 22 * 60 * 60 * 1000),
       status: 'sent'
     });
-    
+
     mockMessages.push({
       id: '4',
       from: 'self',
@@ -238,7 +190,7 @@ const loadChatHistory = () => {
       time: new Date(now.getTime() - 10 * 60 * 1000), // 10分钟前
       status: 'sent'
     });
-    
+
     mockMessages.push({
       id: '5',
       from: 'other',
@@ -247,7 +199,7 @@ const loadChatHistory = () => {
       time: new Date(now.getTime() - 5 * 60 * 1000), // 5分钟前
       status: 'sent'
     });
-    
+
     mockMessages.push({
       id: '6',
       from: 'self',
@@ -256,9 +208,9 @@ const loadChatHistory = () => {
       time: new Date(now.getTime() - 2 * 60 * 1000), // 2分钟前
       status: 'sent'
     });
-    
+
     messages.value = mockMessages;
-    
+
     // 滚动到底部
     scrollToBottom();
   }, 1000);
@@ -271,7 +223,7 @@ const loadMoreHistory = () => {
   setTimeout(() => {
     const firstMessageTime = messages.value.length > 0 ? messages.value[0].time : new Date();
     const mockOlderMessages: ChatMessage[] = [];
-    
+
     for (let i = 1; i <= 5; i++) {
       mockOlderMessages.push({
         id: `older-${i}`,
@@ -282,10 +234,10 @@ const loadMoreHistory = () => {
         status: 'sent'
       });
     }
-    
+
     messages.value = [...mockOlderMessages, ...messages.value];
     refreshing.value = false;
-    
+
     // 保持当前滚动位置
     nextTick(() => {
       if (chatContentRef.value) {
@@ -298,7 +250,7 @@ const loadMoreHistory = () => {
 // 发送消息
 const sendMessage = () => {
   if (!inputMessage.value.trim()) return;
-  
+
   const newMessage: ChatMessage = {
     id: `msg-${Date.now()}`,
     from: 'self',
@@ -307,20 +259,20 @@ const sendMessage = () => {
     time: new Date(),
     status: 'sending'
   };
-  
+
   messages.value.push(newMessage);
-  
+
   // 清空输入框并滚动到底部
   inputMessage.value = '';
   scrollToBottom();
-  
+
   // 模拟发送过程
   setTimeout(() => {
     const msgIndex = messages.value.findIndex(msg => msg.id === newMessage.id);
     if (msgIndex !== -1) {
       messages.value[msgIndex].status = 'sent';
     }
-    
+
     // 模拟对方回复
     setTimeout(() => {
       messages.value.push({
@@ -331,7 +283,7 @@ const sendMessage = () => {
         time: new Date(),
         status: 'sent'
       });
-      
+
       scrollToBottom();
     }, 2000);
   }, 1000);
@@ -342,7 +294,7 @@ const resendMessage = (message: ChatMessage) => {
   const msgIndex = messages.value.findIndex(msg => msg.id === message.id);
   if (msgIndex !== -1) {
     messages.value[msgIndex].status = 'sending';
-    
+
     // 模拟重发
     setTimeout(() => {
       messages.value[msgIndex].status = 'sent';
@@ -354,7 +306,7 @@ const resendMessage = (message: ChatMessage) => {
 const chooseImage = () => {
   // 这里应该调用实际的图片选择API
   showToast('选择图片功能需要原生支持');
-  
+
   // 模拟选择图片
   setTimeout(() => {
     const newImageMessage: ChatMessage = {
@@ -365,10 +317,10 @@ const chooseImage = () => {
       time: new Date(),
       status: 'sending'
     };
-    
+
     messages.value.push(newImageMessage);
     scrollToBottom();
-    
+
     // 模拟发送过程
     setTimeout(() => {
       const msgIndex = messages.value.findIndex(msg => msg.id === newImageMessage.id);
@@ -382,12 +334,13 @@ const chooseImage = () => {
 // 预览图片
 const previewImage = (url: string) => {
   // 使用vant的图片预览
-  const imageUrls = messages.value
-    .filter(msg => msg.type === 'image')
-    .map(msg => msg.content);
-  
-  const startPosition = imageUrls.indexOf(url);
-  
+  // 不需要这些未使用的变量
+  // const imageUrls = messages.value
+  //   .filter(msg => msg.type === 'image')
+  //   .map(msg => msg.content);
+  // const startPosition = imageUrls.indexOf(url);
+  console.log('图片路径', url);
+
   // 这里应该调用图片预览组件
   showToast('图片预览功能');
 };
@@ -401,9 +354,9 @@ const toggleEmojiPanel = () => {
 const onPageClick = (e: MouseEvent) => {
   // 如果点击的不是表情按钮或表情面板内部元素，则隐藏表情面板
   const target = e.target as HTMLElement;
-  if (showEmojiPanel.value && 
-      !target.classList.contains('emoji-btn') && 
-      !target.closest('.emoji-panel')) {
+  if (showEmojiPanel.value &&
+    !target.classList.contains('emoji-btn') &&
+    !target.closest('.emoji-panel')) {
     showEmojiPanel.value = false;
   }
 };
@@ -457,7 +410,7 @@ const formatDate = (date: Date) => {
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
   const yesterdayStart = todayStart - 24 * 60 * 60 * 1000;
   const dateTime = date.getTime();
-  
+
   if (dateTime >= todayStart) {
     return '今天';
   } else if (dateTime >= yesterdayStart) {
@@ -513,30 +466,33 @@ onMounted(() => {
   top: 0;
   left: 0;
   right: 0;
-  bottom: 50px; /* 预留底部菜单栏高度 */
-//   z-index: 10; /* 确保聊天页面在菜单栏上方 */
-  
+  bottom: 50px;
+  /* 预留底部菜单栏高度 */
+  //   z-index: 10; /* 确保聊天页面在菜单栏上方 */
+
   .chat-content {
     flex: 1;
     overflow-y: auto;
     padding: 16px 12px;
     padding-bottom: 16px;
-    margin-bottom: 56px; /* 预留底部输入框的高度 */
-    
+    margin-bottom: 56px;
+    /* 预留底部输入框的高度 */
+
     /* 添加一个很大的底部内边距，确保内容可以滚到底部且不被输入框遮挡 */
     &::after {
       content: '';
       display: block;
-      height: 20px; /* 底部额外空间 */
+      height: 20px;
+      /* 底部额外空间 */
     }
-    
+
     .message-list {
       .time-divider {
         text-align: center;
         margin: 16px 0;
         font-size: 12px;
         color: #969799;
-        
+
         &::before,
         &::after {
           content: '';
@@ -548,46 +504,46 @@ onMounted(() => {
           vertical-align: middle;
         }
       }
-      
+
       .message-wrapper {
         margin-bottom: 16px;
-        
+
         .message-bubble {
           display: flex;
           align-items: flex-start;
-          
+
           &.self {
             flex-direction: row-reverse;
           }
-          
+
           .avatar {
             margin: 0 8px;
             flex-shrink: 0;
           }
-          
+
           .message-container {
             max-width: 70%;
-            
+
             .message-content {
               padding: 10px 12px;
               border-radius: 8px;
               word-break: break-word;
-              
+
               &.other {
                 background-color: #fff;
                 color: #323233;
               }
-              
+
               &.self {
                 background-color: #07c160;
                 color: #fff;
               }
-              
+
               .text-message {
                 font-size: 15px;
                 line-height: 1.4;
               }
-              
+
               .image-message {
                 .van-image {
                   width: 100%;
@@ -597,13 +553,13 @@ onMounted(() => {
                 }
               }
             }
-            
+
             .message-status {
               text-align: right;
               font-size: 11px;
               color: #969799;
               margin-top: 4px;
-              
+
               .sent-time {
                 margin-right: 4px;
               }
@@ -613,46 +569,49 @@ onMounted(() => {
       }
     }
   }
-  
+
   .chat-footer {
     position: fixed;
-    bottom: 50px; /* 距离底部50px，刚好在底部菜单栏上方 */
+    bottom: 50px;
+    /* 距离底部50px，刚好在底部菜单栏上方 */
     left: 0;
     right: 0;
     background-color: #fff;
     border-top: 1px solid #ebedf0;
     padding: 8px 12px;
-    z-index: 11; /* 确保在聊天页面上方 */
-    
+    z-index: 11;
+    /* 确保在聊天页面上方 */
+
     .input-area {
       display: flex;
       align-items: center;
-      
+
       .emoji-btn,
       .image-btn {
         flex-shrink: 0;
         padding: 8px;
         color: #646566;
       }
-      
+
       .message-input {
         flex: 1;
         margin: 0 8px;
-        
+
         &:deep(.van-field__control) {
           min-height: 36px;
           line-height: 20px;
         }
       }
-      
+
       .send-btn {
         flex-shrink: 0;
       }
     }
-    
+
     .emoji-panel {
       position: absolute;
-      bottom: 56px; /* 输入区域的高度 */
+      bottom: 56px;
+      /* 输入区域的高度 */
       left: 0;
       right: 0;
       height: 180px;
@@ -660,13 +619,14 @@ onMounted(() => {
       background-color: #fff;
       border-top: 1px solid #ebedf0;
       overflow-y: auto;
-      z-index: 12; /* 确保在输入框上方 */
+      z-index: 12;
+      /* 确保在输入框上方 */
       box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
-      
+
       .emoji-container {
         display: flex;
         flex-wrap: wrap;
-        
+
         .emoji-item {
           font-size: 22px;
           width: 36px;
@@ -675,7 +635,7 @@ onMounted(() => {
           justify-content: center;
           align-items: center;
           cursor: pointer;
-          
+
           &:hover {
             background-color: #f2f3f5;
             border-radius: 4px;
@@ -697,4 +657,4 @@ onMounted(() => {
   transform: translateY(100%);
   opacity: 0;
 }
-</style> 
+</style>

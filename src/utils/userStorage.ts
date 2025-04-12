@@ -1,5 +1,4 @@
 import { UserInfoModel } from "@/model/login";
-import { ElNotification } from "element-plus";
 
 function logOut(){
     localStorage.removeItem('token')
