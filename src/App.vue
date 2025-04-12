@@ -35,17 +35,17 @@ onMounted(() => {
     }, 1000);
 
     // 初始化WebSocket连接
-    webSocketService.connect('http://139.159.243.123/ws')
-        .then(() => {
-            // 发送连接成功消息
-            webSocketService.sendMessage({
-                type: 'connect',
-                content: '客户端已连接'
-            });
-        })
-        .catch(error => {
-            console.error('WebSocket连接失败:', error);
-        });
+    // webSocketService.connect('http://139.159.243.123/ws')
+    //     .then(() => {
+    //         // 发送连接成功消息
+    //         webSocketService.sendMessage({
+    //             type: 'connect',
+    //             content: '客户端已连接'
+    //         });
+    //     })
+    //     .catch(error => {
+    //         console.error('WebSocket连接失败:', error);
+    //     });
 });
 </script>
 

@@ -5,7 +5,7 @@
       <!-- 帖子头部信息 -->
       <div class="post-header">
         <div class="post-title">
-          <span class="title-tag">[插件]</span>
+          <span class="title-tag">[{{ postData.module || '未分类' }}]</span>
           <span class="title-text">{{ postData.title }}</span>
           <span class="title-badge" @click="copyPostLink">复制链接</span>
         </div>
@@ -235,6 +235,7 @@ const postData = ref<ArticleData>({
   title: '',
   content: '',
   time: '',
+  module: '',
   author: {
     id: 0,
     name: '',
@@ -513,7 +514,6 @@ const loadPostData = async (postId: string) => {
       router.push("/")
       return;
     }
-    console.log('结果', response.data);
     postData.value = response.data;
   } catch (error) {
     throw error;

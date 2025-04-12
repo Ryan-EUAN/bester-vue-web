@@ -175,6 +175,19 @@ const UNFOLLOW_AUTHOR_API = (authorId: number): Promise<Result<void>> => {
   }) as Promise<Result<void>>;
 };
 
+/**
+ * 更新文章查看次数
+ * 
+ * @param {string} articleId - 文章ID
+ * @returns {Promise<Result<any>>} - 返回更新结果
+ */
+async function UPDATE_ARTICLE_VIEW_COUNT_API(articleId: string): Promise<Result<any>> {
+  return await request({
+    url: `/web/article/view/${articleId}`,
+    method: 'POST'
+  }) as Result<any>
+}
+
 export default {
   publishArticle,
   saveDraft,
@@ -193,5 +206,6 @@ export default {
   UNLIKE_ARTICLE_API,
   GET_MODULE_ARTICLES_API,
   FOLLOW_AUTHOR_API,
-  UNFOLLOW_AUTHOR_API
+  UNFOLLOW_AUTHOR_API,
+  UPDATE_ARTICLE_VIEW_COUNT_API
 } 

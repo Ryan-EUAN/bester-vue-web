@@ -19,7 +19,7 @@
         <!-- 轮播图 -->
         <van-swipe class="banner-swipe" :autoplay="3000" indicator-color="#1989fa">
             <van-swipe-item v-for="(image, index) in bannerImages" :key="index">
-                <img :src="image.url" class="banner-image" />
+                <img :src="image.imageUrl" class="banner-image" />
             </van-swipe-item>
         </van-swipe>
 
@@ -115,6 +115,9 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import PopupComponent from '@/components/Mobile/PopupComponent.vue';
 import { useRouter } from 'vue-router';
+import type { CarouselItem } from '@/types/carousel';
+import carouselApi from '@/services/carousel';
+import { message } from 'ant-design-vue';
 
 interface PopupInstance {
      open: () => void;
@@ -126,24 +129,13 @@ const activeTab = ref(0);
 const showSearch = ref<boolean>(false);
 const router = useRouter();
 const showFloatButtons = ref(false);
-
+const bannerImages = ref<CarouselItem[]>([]);
 // 主导航标签
 const mainTabs = ref([
     { name: 'home', title: '首页' },
     { name: 'server', title: '开服宣传' },
     { name: 'community', title: '社区' },
     { name: 'help', title: '问题求助' }
-]);
-
-// 轮播图数据
-const bannerImages = ref([
-    { url: 'https://picsum.photos/800/400?random=1' },
-    { url: 'https://picsum.photos/800/400?random=2' },
-    { url: 'https://picsum.photos/800/400?random=3' },
-    { url: 'https://picsum.photos/800/400?random=4' },
-    { url: 'https://picsum.photos/800/400?random=5' },
-    { url: 'https://picsum.photos/800/400?random=6' },
-    { url: 'https://picsum.photos/800/400?random=7' }
 ]);
 
 const featureItems = ref([
@@ -295,9 +287,25 @@ const scrollToTop = () => {
     });
 };
 
+// 获取轮播图数据
+const fetchCarouselData = async () => {
+    try {
+        const res = await carouselApi.GET_APP_CAROUSEL_API();
+        if (res.code === 200) {
+            bannerImages.value = res.data;
+        } else {
+            message.error(res.message || '获取轮播图数据失败');
+        }
+    } catch (error) {
+        console.error('获取轮播图数据失败:', error);
+        message.error('获取轮播图数据失败');
+    }
+};
+
 // 生命周期钩子
 onMounted(() => {
     window.addEventListener('scroll', handleScroll);
+    fetchCarouselData(); // 获取轮播图数据
 });
 
 onUnmounted(() => {

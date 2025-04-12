@@ -1,14 +1,14 @@
 <template>
     <van-popup v-model:show="showPopup" position="left" :style="{ width: '80%', height: '100%' }">
         <div class="popup-container">
-            <!-- 用户信息 - 增加高度 -->
-            <div class="user-info">
+            <!-- 用户信息 - 增加高度和点击事件 -->
+            <div class="user-info" @click="handleUserInfoClick">
                 <van-image round width="50" height="50" :src="userInfo.avatar" />
                 <div class="user-detail">
                     <div class="username">{{ userInfo.username }}</div>
                     <div class="user-desc">{{ userInfo.description }} <van-icon name="arrow" /></div>
                 </div>
-                <van-icon name="share-o" size="24" @click="closePopup" />
+                <van-icon v-if="userInfo.isLogin" name="cross" size="24" @click.stop="handleLogout" />
             </div>
 
             <!-- 主导航 - 调整位置和间距 -->
@@ -84,16 +84,87 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import authApi from '@/services/auth';
+import { message } from 'ant-design-vue';
+import { useRouter } from 'vue-router';
 
 const showPopup = ref(false);
+const router = useRouter();
+
+// 默认头像
+const DEFAULT_AVATAR = 'https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg';
 
 // 用户信息
 const userInfo = ref({
-    username: 'EUAN0721',
-    description: '资料与账号',
-    avatar: 'https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg'
+    username: '未登录',
+    description: '点击登录',
+    avatar: DEFAULT_AVATAR,
+    isLogin: false
 });
+
+// 检查用户登录状态
+const checkLoginStatus = () => {
+    // 从本地存储获取用户信息和token过期时间
+    const storedUserInfo = localStorage.getItem('userInfo');
+    const tokenExpire = localStorage.getItem('tokenExpire');
+    const token = localStorage.getItem('token');
+
+    // 检查token是否存在且未过期
+    const isTokenValid = token && tokenExpire && new Date().getTime() < parseInt(tokenExpire);
+
+    // 重置为默认未登录状态
+    let tempUserInfo = {
+        username: '未登录',
+        description: '点击登录',
+        avatar: DEFAULT_AVATAR,
+        isLogin: false
+    };
+
+    if (isTokenValid && storedUserInfo) {
+        try {
+            // 确保storedUserInfo是有效的JSON字符串
+            if (typeof storedUserInfo === 'string' && storedUserInfo.trim() !== '') {
+                const userInfoObj = JSON.parse(storedUserInfo);
+                
+                // 确保对象是有效的，并至少有name或id属性
+                if (userInfoObj && (userInfoObj.name || userInfoObj.id)) {
+                    tempUserInfo = {
+                        username: userInfoObj.name || '用户暂未设置昵称',
+                        description: '资料与账号',
+                        avatar: userInfoObj.avatar || DEFAULT_AVATAR,
+                        isLogin: true
+                    };
+                } else {
+                    console.warn('用户信息对象无效', userInfoObj);
+                    clearUserData();
+                }
+            } else {
+                console.warn('用户信息字符串无效', storedUserInfo);
+                clearUserData();
+            }
+        } catch (error) {
+            console.error('解析用户信息失败:', error, 'Raw data:', storedUserInfo);
+            clearUserData();
+        }
+    } else {
+        // 如果token过期或不存在，清除用户数据
+        clearUserData();
+    }
+
+    // 最后设置用户信息
+    userInfo.value = tempUserInfo;
+};
+
+// 清除用户数据
+const clearUserData = () => {
+    // 只清除localStorage中的数据
+    localStorage.removeItem('token');
+    localStorage.removeItem('userInfo');
+    localStorage.removeItem('tokenExpire');
+    
+    // 不再直接修改userInfo，而是由checkLoginStatus统一处理
+};
 
 // 主导航项
 const mainNavItems = ref([
@@ -129,15 +200,53 @@ const quickItems = ref([
     { name: 'pc', text: '电脑版', icon: 'desktop-o', bgColor: '#1abc9c' }
 ]);
 
-// 关闭弹窗
-const closePopup = () => {
-    showPopup.value = false;
+// 退出登录
+const handleLogout = async () => {
+    try {
+        const res = await authApi.LOG_OUT_API();
+        if (res.code === 200) {
+            message.success('退出登录成功');
+            clearUserData();
+        } else {
+            message.error(res.message || '退出登录失败');
+        }
+    } catch (error) {
+        console.error('退出登录失败:', error);
+        message.error('退出登录失败，请重试');
+    } finally {
+        showPopup.value = false;
+    }
+};
+
+// 处理用户信息区域点击事件
+const handleUserInfoClick = () => {
+    if (!userInfo.value.isLogin) {
+        // 未登录时，关闭侧边栏并跳转到登录页面
+        showPopup.value = false;
+        router.push('/auth/loginMobile');
+    }
 };
 
 // 提供打开弹窗的方法
 const open = () => {
+    // 每次打开弹窗时检查用户登录状态
+    checkLoginStatus();
     showPopup.value = true;
 };
+
+// 监听登录成功事件
+const listenLoginEvent = () => {
+    window.addEventListener('loginSuccess', () => {
+        // 登录成功后刷新用户信息
+        checkLoginStatus();
+    });
+};
+
+// 初始化时检查登录状态并添加事件监听
+onMounted(() => {
+    checkLoginStatus();
+    listenLoginEvent();
+});
 
 // 暴露方法给父组件
 defineExpose({
@@ -244,7 +353,7 @@ defineExpose({
         justify-content: center;
         margin-right: 2vmin;
     }
-    
+
     :deep(.van-cell__title) {
         font-size: 3.5vmin; // 响应式字体大小
     }
@@ -277,7 +386,7 @@ defineExpose({
     align-items: center;
     justify-content: center;
     margin-bottom: 1vmin;
-    
+
     .van-icon {
         font-size: 4.5vmin; // 响应式图标大小
     }
@@ -290,7 +399,7 @@ defineExpose({
     display: flex;
     align-items: center;
     justify-content: center;
-    
+
     .van-icon {
         font-size: 4.5vmin; // 响应式图标大小
     }

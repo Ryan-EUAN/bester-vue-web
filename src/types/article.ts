@@ -4,6 +4,7 @@ export interface ArticleData {
   title: string;
   content: string;
   time: string;
+  module?: string;
   author: {
     id: number;
     name: string;

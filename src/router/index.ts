@@ -8,6 +8,7 @@ import LayoutComponentPC from '../components/PC/LayoutComponentPC.vue';
 import HomeMobile from '@/views/home/Mobile.vue'
 import HomePC from '@/views/home/PC.vue'
 import Login from '@/views/auth/login.vue';
+import LoginMobile from '@/views/auth/loginMobile.vue';
 import Register from '@/views/auth/register.vue'
 
 const isMobile = window.innerWidth <= 768
@@ -22,6 +23,161 @@ const routes: RouteRecordRaw[] = [
         path: '/home',
         name: 'Home',
         component: isMobile ? HomeMobile : HomePC,
+      },
+      {
+        path: '/community',
+        name: 'Community',
+        component: () => import('@/views/Mobile/Community/index.vue'),
+        meta: {
+          title: '社区',
+          platform: 'mobile'
+        }
+      },
+      {
+        path: '/profile',
+        name: 'Profile',
+        component: () => import('@/views/Mobile/Profile/index.vue'),
+        meta: {
+          title: '我的',
+          platform: 'mobile'
+        }
+      },
+      {
+        path: '/user/posts',
+        name: 'UserPosts',
+        component: () => import('@/views/Mobile/Profile/Posts.vue'),
+        meta: {
+          title: '我的帖子',
+          requiresAuth: true,
+          platform: 'mobile'
+        }
+      },
+      {
+        path: '/user/favorites',
+        name: 'UserFavorites',
+        component: () => import('@/views/Mobile/Profile/Favorites.vue'),
+        meta: {
+          title: '我的收藏',
+          requiresAuth: true,
+          platform: 'mobile'
+        }
+      },
+      {
+        path: '/user/following',
+        name: 'UserFollowing',
+        component: () => import('@/views/Mobile/Profile/Following.vue'),
+        meta: {
+          title: '我的关注',
+          requiresAuth: true,
+          platform: 'mobile'
+        }
+      },
+      {
+        path: '/user/followers',
+        name: 'UserFollowers',
+        component: () => import('@/views/Mobile/Profile/Followers.vue'),
+        meta: {
+          title: '我的粉丝',
+          requiresAuth: true,
+          platform: 'mobile'
+        }
+      },
+      {
+        path: '/user/history',
+        name: 'UserHistory',
+        component: () => import('@/views/Mobile/Profile/History.vue'),
+        meta: {
+          title: '浏览历史',
+          requiresAuth: true,
+          platform: 'mobile'
+        }
+      },
+      {
+        path: '/user/messages',
+        name: 'UserMessages',
+        component: () => import('@/views/Mobile/Profile/Messages.vue'),
+        meta: {
+          title: '我的消息',
+          requiresAuth: true,
+          platform: 'mobile'
+        }
+      },
+      {
+        path: '/user/verify',
+        name: 'UserVerify',
+        component: () => import('@/views/Mobile/Profile/Verify.vue'),
+        meta: {
+          title: '实名认证',
+          requiresAuth: true,
+          platform: 'mobile'
+        }
+      },
+      {
+        path: '/user/security',
+        name: 'UserSecurity',
+        component: () => import('@/views/Mobile/Profile/Security.vue'),
+        meta: {
+          title: '账号安全',
+          requiresAuth: true,
+          platform: 'mobile'
+        }
+      },
+      {
+        path: '/user/privacy',
+        name: 'UserPrivacy',
+        component: () => import('@/views/Mobile/Profile/Privacy.vue'),
+        meta: {
+          title: '隐私设置',
+          requiresAuth: true,
+          platform: 'mobile'
+        }
+      },
+      {
+        path: '/user/help',
+        name: 'UserHelp',
+        component: () => import('@/views/Mobile/Profile/Help.vue'),
+        meta: {
+          title: '帮助与反馈',
+          platform: 'mobile'
+        }
+      },
+      {
+        path: '/user/settings',
+        name: 'UserSettings',
+        component: () => import('@/views/Mobile/Profile/Settings.vue'),
+        meta: {
+          title: '设置',
+          platform: 'mobile'
+        }
+      },
+      {
+        path: '/user/edit-profile',
+        name: 'UserEditProfile',
+        component: () => import('@/views/Mobile/Profile/EditProfile.vue'),
+        meta: {
+          title: '编辑资料',
+          requiresAuth: true,
+          platform: 'mobile'
+        }
+      },
+      {
+        path: '/user/blacklist',
+        name: 'UserBlacklist',
+        component: () => import('@/views/Mobile/Profile/Blacklist.vue'),
+        meta: {
+          title: '黑名单管理',
+          requiresAuth: true,
+          platform: 'mobile'
+        }
+      },
+      {
+        path: '/user/profile/:id',
+        name: 'UserProfile',
+        component: () => import('@/views/Mobile/Profile/UserProfile.vue'),
+        meta: {
+          title: '用户主页',
+          platform: 'mobile'
+        }
       },
       {
         path: '/personal',
@@ -106,6 +262,26 @@ const routes: RouteRecordRaw[] = [
         meta: {
           title: '模块文章列表'
         }
+      },
+      {
+        path: '/chat',
+        name: 'ChatList',
+        component: () => import('@/views/Mobile/Chat/ChatList.vue'),
+        meta: {
+          title: '我的私信',
+          requiresAuth: true,
+          platform: 'mobile'
+        }
+      },
+      {
+        path: '/chat/:userId',
+        name: 'Chat',
+        component: () => import('@/views/Mobile/Chat/ChatDetail.vue'),
+        meta: {
+          title: '私信聊天',
+          requiresAuth: true,
+          platform: 'mobile'
+        }
       }
     ]
   },
@@ -118,6 +294,11 @@ const routes: RouteRecordRaw[] = [
         path: 'login',
         name: 'Login',
         component: Login,
+      },
+      {
+        path: 'loginMobile',
+        name: 'LoginMobile',
+        component: LoginMobile,
       },
       {
         path: 'register',

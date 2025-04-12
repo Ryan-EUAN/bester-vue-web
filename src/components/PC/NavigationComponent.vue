@@ -56,17 +56,17 @@
                             </div>
                             <div class="stats-container">
                                 <div class="stat-item">
-                                    <div class="number">{{ userInfo.following || 0 }}</div>
+                                    <div class="number">{{ userInfo.following }}</div>
                                     <div class="label">关注</div>
                                 </div>
                                 <a-divider type="vertical" />
                                 <div class="stat-item">
-                                    <div class="number">{{ userInfo.followers || 0 }}</div>
+                                    <div class="number">{{ userInfo.followers}}</div>
                                     <div class="label">粉丝</div>
                                 </div>
                                 <a-divider type="vertical" />
                                 <div class="stat-item">
-                                    <div class="number">{{ userInfo.posts || 0 }}</div>
+                                    <div class="number">{{ userInfo.posts }}</div>
                                     <div class="label">动态</div>
                                 </div>
                             </div>
@@ -117,6 +117,7 @@ import {
     CompassOutlined
 } from '@ant-design/icons-vue';
 import { useRouter } from 'vue-router';
+import userStorage from '@/utils/userStorage';
 
 const emits = defineEmits(['openLogin']);
 
@@ -240,8 +241,7 @@ const onSearch = (value: string) => {
 const logOut = async () => {
     let res = await AuthApi.LOG_OUT_API();
     if (res.code != 200) return alert(res.message);
-    localStorage.removeItem('token')
-    localStorage.removeItem('userInfo')
+    userStorage.logOut();
     userInfo.value = {
         id: 0,
         avatar: "",
@@ -268,9 +268,34 @@ function updateMobile() {
 }
 //加载用户信息
 function LoadUserInfo() {
-    let userInfoStr = localStorage.getItem('userInfo')
-    if (userInfoStr) {
-        userInfo.value = JSON.parse(userInfoStr)
+    let infoStr = localStorage.getItem('userInfo');
+    if (infoStr) {
+        let info = JSON.parse(infoStr);
+        userInfo.value = {
+            posts: info.posts,
+            followers: info.followers,
+            following: info.following,
+            name: info.name,
+            avatar: info.avatar,
+            id: info.id,
+            hardCurrency: 0,
+            bCurrency: 0,
+            nextLevel: 0,
+            needGrowth: 0
+        }
+    } else {
+        userInfo.value = {
+            posts: 0,
+            followers: 0,
+            following: 0,
+            name: "登录",
+            avatar: "",
+            id: 0,
+            hardCurrency: 0,
+            bCurrency: 0,
+            nextLevel: 0,
+            needGrowth: 0
+        }
     }
 }
 
@@ -283,10 +308,7 @@ const goToPersonal = () => {
 
 // 从localStorage获取用户信息
 const getUserInfoFromStorage = () => {
-    const storedInfo = localStorage.getItem('userInfo');
-    if (storedInfo) {
-        userInfo.value = JSON.parse(storedInfo);
-    }
+    LoadUserInfo();
 };
 
 // 监听登录事件
@@ -306,6 +328,7 @@ onMounted(() => {
     getUserInfoFromStorage()
     // 监听用户信息更新事件
     window.addEventListener('userInfoUpdated', getUserInfoFromStorage)
+    LoadUserInfo();
 })
 onBeforeUnmount(() => {
     window.removeEventListener('resize', updateMobile)

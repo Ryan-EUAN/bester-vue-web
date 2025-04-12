@@ -83,6 +83,15 @@ const handleNavigate = (item: any) => {
         console.log('使用随机生成的模块ID:', moduleId);
     }
     
+    // 保存模块信息到本地存储以便ArticleList页面使用
+    const moduleInfo = {
+        id: moduleId,
+        title: item.name || '模块详情',
+        description: item.description || '查看该模块下的所有文章'
+    };
+    
+    localStorage.setItem('currentModuleInfo', JSON.stringify(moduleInfo));
+    
     router.push(`/module/${moduleId}`);
 };
 

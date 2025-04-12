@@ -14,6 +14,7 @@
               <a-select-option value="newest">最新发布</a-select-option>
               <a-select-option value="hottest">最多浏览</a-select-option>
               <a-select-option value="mostCommented">最多评论</a-select-option>
+              <a-select-option value="hotArticle">火热帖子</a-select-option>
             </a-select>
             <a-input-search v-model:value="searchKeyword" placeholder="搜索文章" style="width: 200px"
               @search="handleSearch" />
@@ -121,16 +122,29 @@ const pagination = ref({
 // 加载模块信息
 const loadModuleInfo = async () => {
   try {
+    // 首先尝试从本地存储获取模块信息
+    const moduleInfoStr = localStorage.getItem('currentModuleInfo');
+    if (moduleInfoStr) {
+      const moduleInfo = JSON.parse(moduleInfoStr);
+      moduleTitle.value = moduleInfo.title;
+      moduleDescription.value = moduleInfo.description;
+      return;
+    }
+
+    // 如果本地存储没有，则通过API获取模块信息
     // 实际项目中这里应该通过API获取模块信息
     // const res = await moduleApi.GET_MODULE_INFO_API(moduleId.value);
     // moduleTitle.value = res.data.title;
     // moduleDescription.value = res.data.description;
 
-    // 静态数据
+    // 如果API调用失败或未实现，使用静态数据
     moduleTitle.value = '技术开发专区';
     moduleDescription.value = '分享前沿技术、编程经验与技术见解，让开发更轻松';
   } catch (error) {
     message.error('获取模块信息失败');
+    // 出错时也使用默认值
+    moduleTitle.value = '技术开发专区';
+    moduleDescription.value = '分享前沿技术、编程经验与技术见解，让开发更轻松';
   }
 };
 
@@ -185,7 +199,15 @@ const handlePageSizeChange = (size: number) => {
 };
 
 // 导航到文章详情页
-const navigateToArticle = (articleId: string) => {
+const navigateToArticle = async (articleId: string) => {
+  // 更新文章查看次数
+  try {
+    await articleApi.UPDATE_ARTICLE_VIEW_COUNT_API(articleId);
+  } catch (error) {
+    console.error('更新文章查看次数失败:', error);
+    // 继续导航，不影响用户体验
+  }
+  
   // 保存当前页面路径信息到本地存储
   const currentPath = {
     path: route.fullPath,
@@ -243,6 +265,9 @@ onMounted(() => {
 
   loadModuleInfo();
   loadArticles();
+  
+  // 加载完成后清除本地存储的模块信息，避免影响后续访问
+  localStorage.removeItem('currentModuleInfo');
 });
 
 // 刷新功能

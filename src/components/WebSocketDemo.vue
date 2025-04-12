@@ -18,7 +18,7 @@ const inputMessage = ref('');
 
 // 初始化WebSocket
 onMounted(() => {
-    webSocketService.connect('http://139.159.243.123/ws');
+    webSocketService.connect('http://127.0.0.1:10010/ws');
     webSocketService.addMessageListener(handleMessage);
 });
 

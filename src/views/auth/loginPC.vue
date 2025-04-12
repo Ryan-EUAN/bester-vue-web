@@ -46,15 +46,18 @@
     </el-form>
     <el-form :model="formEmail" v-else>
         <el-form-item>
-            <el-input v-model="formEmail.email" placeholder="请输入邮箱">
+            <el-input v-model="formEmail.email" placeholder="请输入邮箱账号">
                 <template #prepend>邮箱</template>
                 <template #append>
-                    @qq.com
+                    <el-select v-model="emailType" class="email-domain-select">
+                        <el-option v-for="item in emailDomains" :key="item.value" :label="item.value"
+                            :value="item.value"></el-option>
+                    </el-select>
                 </template>
             </el-input>
         </el-form-item>
         <el-form-item>
-            <el-input v-model="formEmail.code" type="password" :show-password="true">
+            <el-input v-model="formEmail.code">
                 <template #prepend>验证码</template>
                 <template #append>
                     <el-button @click="getCode" :disabled="sendCodeInfo.state">
@@ -81,10 +84,12 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import type { LoginEmailModel, LoginModel } from '../../model/login'
-import AuthApi from '../../services/auth'
-import { ElButton, ElNotification, ElPopover } from 'element-plus'
+import AuthApi from '@/services/auth'
+import { ElButton, ElPopover } from 'element-plus'
 import { useRoute, useRouter } from 'vue-router'
-
+import Notification from '@/utils/notification'
+import storage from '@/utils/storage'
+import userStorage from '@/utils/userStorage'
 const emits = defineEmits(["LoginSuccess"])
 
 const isEmail = ref<boolean>(false)
@@ -101,8 +106,19 @@ const loading = ref<boolean>(false)
 // 添加登录状态消息
 const loginStatusMessage = ref<string>('')
 
+// 添加邮箱域名选择
+const emailType = ref('@qq.com')
+const emailDomains = [
+    { label: '@qq.com', value: '@qq.com' },
+    { label: '@163.com', value: '@163.com' },
+    { label: '@gmail.com', value: '@gmail.com' },
+    { label: '@126.com', value: '@126.com' },
+    { label: '@outlook.com', value: '@outlook.com' }
+]
+
 const formEmail = ref<LoginEmailModel>({
     email: '',
+    requestId: '',
     code: ''
 })
 //每秒定时器
@@ -121,12 +137,7 @@ const loginMethod = async () => {
         if (res.code !== 200) {
             loading.value = false
             loginStatusMessage.value = ''
-            return ElNotification({
-                title: '鉴权系统',
-                message: res.message,
-                type: 'warning',
-                duration: 2000,
-            });
+            return Notification.warning(res.message, '鉴权系统', 2000, false)
         }
         const trackingId = res.data;
         startResultPolling(trackingId);
@@ -134,12 +145,7 @@ const loginMethod = async () => {
         console.error('请求失败：', error);
         loading.value = false
         loginStatusMessage.value = ''
-        ElNotification({
-            title: '鉴权系统',
-            message: '登录请求失败',
-            type: 'error',
-            duration: 2000,
-        })
+        Notification.error('登录请求失败', '鉴权系统', 2000, false)
     }
 }
 //持续轮询登录结果
@@ -156,19 +162,16 @@ function startResultPolling(trackingId: string) {
                 clearInterval(poll);
                 loading.value = false
                 loginStatusMessage.value = ''
-                ElNotification({
-                    title: '鉴权系统',
-                    message: res.message,
-                    type: 'error',
-                    duration: 2000,
-                })
+                Notification.error(res.message, '鉴权系统', 2000, false)
                 return;
             }
             clearInterval(poll);
             loading.value = false
             loginStatusMessage.value = ''
             localStorage.setItem('token', res.data.token)
-            localStorage.setItem('userInfo', JSON.stringify(res.data.info))
+            console.log('信息',res.data.info);
+            
+            userStorage.setUserInfo(res.data.info)
             if (res.data.expireTime) {
                 localStorage.setItem('tokenExpire', res.data.expireTime.toString())
             } else {
@@ -176,12 +179,7 @@ function startResultPolling(trackingId: string) {
                 localStorage.setItem('tokenExpire', defaultExpireTime.toString())
             }
 
-            ElNotification({
-                title: '鉴权系统',
-                message: '登录成功',
-                type: 'success',
-                duration: 2000,
-            })
+            Notification.success('登录成功', '鉴权系统', 2000, false)
 
             // 触发全局登录成功事件
             window.dispatchEvent(new Event('userInfoUpdated'))
@@ -204,25 +202,39 @@ function startResultPolling(trackingId: string) {
             clearInterval(poll);
             loading.value = false
             loginStatusMessage.value = ''
-            ElNotification({
-                title: '鉴权系统',
-                message: error.message,
-                type: 'error',
-                duration: 2000,
-            })
+            Notification.error(error.message, '鉴权系统', 2000, false)
         }
     }, 2000);
 }
 //邮箱登录方法
 async function loginEmailMethod() {
     try {
-        loading.value = true
-        loginStatusMessage.value = '正在登录...'
-        let login_email_api = await AuthApi.LOGIN_EMAIL_API(formEmail.value)
+        if (formEmail.value.email == '') return Notification.warning('请输入邮箱账号', '鉴权系统', 2000, false);
+        if (formEmail.value.code == '') return Notification.warning('请输入验证码', '鉴权系统', 2000, false);
+
+        // 拼接完整邮箱
+        const fullEmail = `${formEmail.value.email}${emailType.value}`;
+
+        loading.value = true;
+        loginStatusMessage.value = '正在登录...';
+
+        // 创建新的登录参数对象
+        const loginParams = {
+            email: fullEmail,
+            requestId: storage.getStorage('requestId'),
+            code: formEmail.value.code
+        };
+
+        let login_email_api = await AuthApi.LOGIN_EMAIL_API(loginParams);
+        
+        if(login_email_api.code != 200) {
+            return Notification.error(login_email_api.message, '鉴权系统', 2000, false)
+        }
         loading.value = false
         loginStatusMessage.value = ''
         localStorage.setItem('token', login_email_api.data.token)
         localStorage.setItem('userInfo', JSON.stringify(login_email_api.data.info))
+        localStorage.removeItem('requestId')
         if (login_email_api.data.expireTime) {
             localStorage.setItem('tokenExpire', login_email_api.data.expireTime.toString())
         } else {
@@ -230,18 +242,14 @@ async function loginEmailMethod() {
             localStorage.setItem('tokenExpire', defaultExpireTime.toString())
         }
 
-        ElNotification({
-            title: '鉴权系统',
-            message: '登录成功',
-            type: 'success',
-            duration: 2000,
-        })
+        Notification.success('登录成功', '鉴权系统', 2000, false)
 
         // 触发全局登录成功事件
         window.dispatchEvent(new Event('userInfoUpdated'))
 
         formEmail.value = {
             email: '',
+            requestId: '',
             code: ''
         }
 
@@ -259,46 +267,65 @@ async function loginEmailMethod() {
                 emits('LoginSuccess')
             }
         }
-    } catch (error) {
+    } catch (error:any) {
         loading.value = false
         loginStatusMessage.value = ''
-        ElNotification({
-            title: '鉴权系统',
-            message: '登录请求失败',
-            type: 'error',
-            duration: 2000,
-        })
+        Notification.error(error.message, '鉴权系统', 2000, false)
     }
 }
 
-function getCode() {
-    if (formEmail.value.email == '') {
-        ElNotification({
-            title: '鉴权系统',
-            message: '请输入邮箱',
-            type: 'warning',
-            duration: 2000,
-        })
-        return;
-    }
-    //发送验证码
-    AuthApi.GET_CODE_API(formEmail.value.email).then(res => {
-        if (res.code != 200) return ElNotification({
-            title: '鉴权系统',
-            message: res.message,
-            type: 'error',
-        })
-        sendCodeInfo.value = {
-            state: true,
-            time: 60
+async function getCode() {
+    if (formEmail.value.email == '') return Notification.warning('请输入邮箱账号', '鉴权系统', 2000, false);
+
+    // 拼接完整邮箱
+    const fullEmail = `${formEmail.value.email}${emailType.value}`;
+
+    try {
+        // 发送验证码请求
+        const res = await AuthApi.GET_CODE_API(fullEmail);
+        
+        if (res.code !== 200) {
+            return Notification.error(res.message || '验证码发送失败', '鉴权系统', 2000, false);
         }
-        ElNotification({
-            title: '鉴权系统',
-            message: '验证码已发送，请注意查收',
-            type: 'success',
-            duration: 2000,
-        })
-    })
+
+        // 存储requestId
+        const requestId = res.data;
+        storage.setStorage('requestId', requestId);
+        
+        // 开始轮询验证码发送状态
+        let pollCount = 0;
+        const maxPolls = 10; // 最多轮询10次
+        const pollInterval = 1000; // 每秒轮询一次
+        
+        const pollTimer = setInterval(async () => {
+            try {
+                const stateRes = await AuthApi.GET_CODE_RESULT_API(requestId);
+                
+                if (stateRes.code === 200 && stateRes.data) {
+                    // 验证码发送成功
+                    clearInterval(pollTimer);
+                    sendCodeInfo.value = {
+                        state: true,
+                        time: 60
+                    };
+                    Notification.success('验证码已发送，请注意查收', '鉴权系统', 2000, false);
+                } else if (pollCount >= maxPolls) {
+                    // 超过最大轮询次数
+                    clearInterval(pollTimer);
+                    storage.removeStorage('requestId');
+                    Notification.error('验证码发送超时，请重试', '鉴权系统', 2000, false);
+                }
+                
+                pollCount++;
+            } catch (error) {
+                clearInterval(pollTimer);
+                Notification.error('验证码发送失败', '鉴权系统', 2000, false);
+            }
+        }, pollInterval);
+        
+    } catch (error) {
+        Notification.error('验证码发送失败', '鉴权系统', 2000, false);
+    }
 }
 //开启计时器
 function startTimer() {
@@ -313,6 +340,7 @@ function startTimer() {
 function stopTimer() {
     clearInterval(timer.value)
 }
+
 onMounted(() => {
     startTimer()
 })
@@ -379,5 +407,9 @@ onBeforeUnmount(() => {
     font-size: 0.9rem;
     color: #909399;
     margin: 8px 0;
+}
+
+.email-domain-select {
+    width: 10vw;
 }
 </style>

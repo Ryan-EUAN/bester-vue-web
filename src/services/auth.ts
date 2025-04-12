@@ -21,6 +21,56 @@ async function LOGIN_API(data: LoginModel): Promise<Result<string>> {
 }
 
 /**
+ * APP端登录API函数
+ * 
+ * @param {LoginModel} data - 登录所需的用户数据模型
+ * @returns {Promise<Result<AuthResponse>>} - 返回一个Promise对象，包含登录结果
+ * 
+ * 该函数通过HTTP POST请求向'/app/auth/login'端点发送登录数据，
+ * 并将响应结果作为Result<AuthResponse>类型返回。
+ */
+async function APP_LOGIN_API(data: LoginModel): Promise<Result<AuthResponse>> {
+  return await http({
+    url: '/auth/user/login',
+    method: 'post',
+    data
+  }) as Result<AuthResponse>
+}
+
+/**
+ * APP端短信验证码登录API函数
+ * 
+ * @param {object} data - 包含手机号和验证码的对象
+ * @returns {Promise<Result<AuthResponse>>} - 返回一个Promise对象，包含登录结果
+ * 
+ * 该函数通过HTTP POST请求向'/app/auth/sms-login'端点发送短信验证码登录数据，
+ * 并将响应结果作为Result<AuthResponse>类型返回。
+ */
+async function APP_SMS_LOGIN_API(data: { phone: string, code: string }): Promise<Result<AuthResponse>> {
+  return await http({
+    url: '/app/auth/sms-login',
+    method: 'post',
+    data
+  }) as Result<AuthResponse>
+}
+
+/**
+ * APP端发送短信验证码API函数
+ * 
+ * @param {string} phone - 手机号码
+ * @returns {Promise<Result<{ requestId: string }>>} - 返回一个Promise对象，包含请求ID
+ * 
+ * 该函数通过HTTP GET请求向'/app/auth/send-sms'端点发送获取验证码请求，
+ * 并将响应结果作为Result<{ requestId: string }>类型返回。
+ */
+async function APP_SEND_SMS_API(phone: string): Promise<Result<{ requestId: string }>> {
+  return await http({
+    url: `/app/auth/send-sms?phone=${phone}`,
+    method: 'get'
+  }) as Result<{ requestId: string }>
+}
+
+/**
  * 注册API接口
  * 
  * @param {any} data - 注册所需的数据，具体格式根据后端要求而定
@@ -62,11 +112,11 @@ async function LOG_OUT_API(): Promise<Result<any>> {
  * 请求方法为GET。
  * 返回的结果被断言为Result类型。
  */
-async function GET_CODE_API(email: string): Promise<Result<any>> {
+async function GET_CODE_API(email: string): Promise<Result<string>> {
   return await http({
     url: '/auth/user/sendCode?email=' + email,
     method: 'get',
-  }) as Result<any>
+  }) as Result<string>
 }
 
 async function LOGIN_EMAIL_API(data: LoginEmailModel): Promise<Result<any>> {
@@ -101,6 +151,24 @@ async function GET_LOGIN_RESULT_API(trackingId: string): Promise<Result<AuthResp
     method: 'GET'
   }) as Result<AuthResponse>
 }
+
+async function GET_CODE_RESULT_API(requestId: string): Promise<Result<Boolean>> {
+  return await http({
+    url: '/auth/user/check-sendCode/' + requestId,
+    method: 'GET'
+  }) as Result<Boolean>
+}
+
 export default {
-  LOGIN_API, REGISTER_API, LOG_OUT_API, GET_CODE_API, LOGIN_EMAIL_API, CHECK_TOKEN_API, GET_LOGIN_RESULT_API
+  LOGIN_API, 
+  REGISTER_API, 
+  LOG_OUT_API, 
+  GET_CODE_API, 
+  LOGIN_EMAIL_API, 
+  CHECK_TOKEN_API, 
+  GET_LOGIN_RESULT_API, 
+  GET_CODE_RESULT_API,
+  APP_LOGIN_API,
+  APP_SMS_LOGIN_API,
+  APP_SEND_SMS_API
 }

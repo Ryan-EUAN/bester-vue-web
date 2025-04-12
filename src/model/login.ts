@@ -4,6 +4,7 @@ export interface LoginModel {
 }
 export interface LoginEmailModel {
     email: string,
+    requestId:string,
     code: string
 }
 export interface AuthResponse {

@@ -177,6 +177,7 @@ import { debounce } from 'lodash-es';
 import dayjs, { Dayjs } from 'dayjs';
 import type { ModuleInfo, CategoryData, PostData } from '@/types/release';
 import router from '@/router';
+import userStorage from '@/utils/userStorage';
 
 const title = ref('');
 const content = ref('');
@@ -246,6 +247,22 @@ const currentEmojis = computed(() => {
 
 // 组件挂载时加载最近使用的表情
 onMounted(() => {
+  // 检查是否已登录
+  const token = localStorage.getItem('token');
+  const userInfo = localStorage.getItem('userInfo');
+
+  if (!token || !userInfo) {
+    // 未登录，触发显示登录窗口事件
+    window.dispatchEvent(new CustomEvent('showLoginModal', {
+      detail: {
+        redirect: '/release'
+      }
+    }));
+    // 不再强制跳转，与路由守卫行为保持一致
+    return;
+  }
+  
+  // 已登录，继续正常加载
   loadRecentEmojis();
 });
 
@@ -452,6 +469,7 @@ const publishPost = async () => {
     const res = await articleApi.publishArticle(postData);
     console.log('res', res);
     message.success('发布成功');
+    userStorage.addPosts();
     router.push('/')
   } catch (error) {
     message.error('发布失败');
@@ -502,8 +520,8 @@ const clearRecentEmojis = () => {
 }
 
 .main-content {
-  width: 800px;  // 使用固定宽度替代 60vw
-  max-width: 90%;  // 在小屏幕上自适应
+  width: 800px; // 使用固定宽度替代 60vw
+  max-width: 90%; // 在小屏幕上自适应
 
   .title-area {
     padding: 20px 24px 0;
@@ -534,7 +552,7 @@ const clearRecentEmojis = () => {
 
     .image-preview {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));  // 使用固定像素
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); // 使用固定像素
       gap: 12px;
       margin-top: 16px;
 
@@ -584,14 +602,14 @@ const clearRecentEmojis = () => {
 }
 
 .emoji-container {
-  width: 420px;  // 使用固定宽度
+  width: 420px; // 使用固定宽度
   height: 360px;
-  max-width: 90vw;  // 在小屏幕上自适应
+  max-width: 90vw; // 在小屏幕上自适应
 
   .emoji-nav {
     padding: 8px 12px;
-    display: flex;  // 添加横向布局
-    gap: 4px;  // 添加间距
+    display: flex; // 添加横向布局
+    gap: 4px; // 添加间距
     justify-content: space-between; // 均匀分布
     width: 100%; // 占满整行
 
@@ -614,12 +632,12 @@ const clearRecentEmojis = () => {
   }
 
   .emoji-content {
-    height: calc(100% - 48px);  // 减去导航的高度
+    height: calc(100% - 48px); // 减去导航的高度
     overflow-y: auto;
 
     .emoji-grid {
       display: grid;
-      grid-template-columns: repeat(8, 1fr);  // 固定8列布局
+      grid-template-columns: repeat(8, 1fr); // 固定8列布局
       gap: 8px;
       padding: 12px;
 
@@ -644,17 +662,17 @@ const clearRecentEmojis = () => {
 @media screen and (max-width: 768px) {
   .main-content {
     width: 100%;
-    
+
     .toolbar {
       .left-tools {
-        justify-content: flex-start;  // 改为左对齐
-        gap: 8px;  // 减小间距
+        justify-content: flex-start; // 改为左对齐
+        gap: 8px; // 减小间距
       }
     }
   }
 
   .emoji-container {
-    width: 320px;  // 小屏幕下的固定宽度
+    width: 320px; // 小屏幕下的固定宽度
   }
 }
 
@@ -662,10 +680,10 @@ const clearRecentEmojis = () => {
   .main-content {
     .toolbar {
       .tool-item {
-        padding: 4px 6px;  // 减小内边距
-        
+        padding: 4px 6px; // 减小内边距
+
         span {
-          display: none;  // 隐藏文字
+          display: none; // 隐藏文字
         }
       }
     }

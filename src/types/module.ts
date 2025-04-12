@@ -18,6 +18,7 @@ export interface PlateInfo {
  */
 export interface ModuleData {
     title: string
+    description: string
     plateInfos: PlateInfo[]
 }
 

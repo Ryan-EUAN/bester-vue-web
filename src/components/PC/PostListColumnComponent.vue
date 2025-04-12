@@ -44,8 +44,15 @@ function GetBackgroundColor(index: number) {
     return index == 1 ? '#ed741c' : index == 2 ? '#f3ac27' : index == 3 ? '#f9d375' : '#E0E0E0'
 }
 // 点击列表
-function SelectList(list: any) {
+async function SelectList(list: any) {
     if (type == "blog") {
+        try {
+            // 更新文章查看次数
+            await articleApi.UPDATE_ARTICLE_VIEW_COUNT_API(list.id);
+        } catch (error) {
+            console.error('更新文章查看次数失败:', error);
+            // 继续导航，不影响用户体验
+        }
         router.push(`/article/${list.id}`);
     }
 }

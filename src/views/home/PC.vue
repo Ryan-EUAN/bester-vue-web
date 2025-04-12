@@ -63,6 +63,7 @@ import type { CarouselItem } from '../../types/carousel';
 import ModuleApi from '../../services/module';
 import type { ModuleData } from '../../types/module';
 import { ElMessage } from 'element-plus';
+import articleApi from '@/services/article';
 
 const carouselList = ref<CarouselItem[]>([]);
 const moduleList = ref<ModuleData[]>([]);
@@ -110,8 +111,20 @@ const userKey = ref(userTabsInfos.value[0].id || '');
 const router = useRouter();
 
 // 处理轮播图点击
-const handleCarouselClick = (link: string) => {
+const handleCarouselClick = async (link: string) => {
     if (link) {
+        // 检查是否是文章链接
+        const articleMatch = link.match(/\/article\/(\w+)/);
+        if (articleMatch && articleMatch[1]) {
+            const articleId = articleMatch[1];
+            try {
+                // 更新文章查看次数
+                await articleApi.UPDATE_ARTICLE_VIEW_COUNT_API(articleId);
+            } catch (error) {
+                console.error('更新文章查看次数失败:', error);
+                // 继续导航，不影响用户体验
+            }
+        }
         router.push(link);
     }
 };

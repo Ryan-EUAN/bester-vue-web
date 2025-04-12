@@ -13,7 +13,7 @@
             @cancel="handleLoginCancel"
             :destroyOnClose="true"
         >
-            <div v-if="loginMessage" class="login-message">{{ loginMessage }}</div>
+            <!-- <div v-if="loginMessage" class="login-message">{{ loginMessage }}</div> -->
             <login-pc @login-success="handleLoginSuccess" />
         </a-modal>
         <a-flex justify="center" gap="small">
@@ -33,7 +33,6 @@ import { useRouter } from 'vue-router';
 
 const router = useRouter();
 const showLogin = ref(false);
-const loginMessage = ref('');
 
 // 显示登录弹窗
 const showLoginDialog = () => {
@@ -49,10 +48,6 @@ const handleShowLoginModal = (event: CustomEvent) => {
             // 使用 sessionStorage 而不是组件变量，避免组件重新渲染时丢失
             sessionStorage.setItem('redirectPath', event.detail.redirect);
         }
-        
-        if (event.detail.message) {
-            loginMessage.value = event.detail.message;
-        }
     }
 };
 
@@ -64,7 +59,6 @@ const handleLoginCancel = () => {
 // 登录成功处理
 const handleLoginSuccess = () => {
     showLogin.value = false;
-    loginMessage.value = '';
     
     // 获取重定向路径
     const savedPath = sessionStorage.getItem('redirectPath');
