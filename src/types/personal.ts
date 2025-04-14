@@ -23,8 +23,8 @@ export interface ProfileForm {
 export interface ProfileData {
     username: string;    // 用户名
     realName: string;    // 真实姓名
-    nickName: string;    // 昵称
-    gender: 1 | 0;       // 性别(1:男, 0:女)
+    name: string;    // 昵称
+    gender: number;       // 性别(1:男, 0:女)
     birthday: string | null;  // 生日日期，格式为YYYY-MM-DD
     birthplace: string[];     // 出生地，包含省市区的数组
     residence: string[];      // 居住地，包含省市区的数组
@@ -32,6 +32,7 @@ export interface ProfileData {
     qq: string;         // QQ号码
     email: string;      // 电子邮箱
     signature: string;  // 个性签名
+    avatar: string;     // 头像
 }
 
 // 认证信息接口

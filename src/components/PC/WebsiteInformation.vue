@@ -135,17 +135,50 @@ const handleViewReplies = () => {
     router.push('/latest-replies');
 };
 
+// 检查用户登录状态
+const checkLoginStatus = () => {
+    const userInfoStr = localStorage.getItem('userInfo');
+    const tokenStr = localStorage.getItem('token');
+    
+    // 如果token不存在，表示用户已退出登录
+    if (!tokenStr) {
+        userInfo.value.nickname = '';
+        return;
+    }
+    
+    // 如果用户信息存在，更新昵称
+    if (userInfoStr) {
+        try {
+            const parsedUserInfo = JSON.parse(userInfoStr);
+            userInfo.value.nickname = parsedUserInfo.name || '';
+        } catch (error) {
+            console.error('解析用户信息失败:', error);
+            userInfo.value.nickname = '';
+        }
+    } else {
+        userInfo.value.nickname = '';
+    }
+};
+
+// 定时检查用户登录状态的定时器
+let userStatusCheckTimer: number | null = null;
+
 onMounted(() => {
     updateDateTime();
     fetchStatisticsData();
     setupRefreshTimer();
-    let userInfoStr = localStorage.getItem('userInfo');
-    if (userInfoStr) {
-        userInfo.value.nickname = JSON.parse(userInfoStr).name;
-    }
+    checkLoginStatus(); // 初始化时检查登录状态
     
-    // 添加用户登录事件监听，以便在用户登录后刷新统计数据
-    window.addEventListener('userInfoUpdated', fetchStatisticsData);
+    // 添加用户登录事件监听，以便在用户登录后刷新统计数据和用户信息
+    window.addEventListener('userInfoUpdated', () => {
+        fetchStatisticsData();
+        checkLoginStatus(); // 登录后更新用户信息
+    });
+    
+    // 每10秒检查一次登录状态，以处理退出登录的情况
+    userStatusCheckTimer = window.setInterval(() => {
+        checkLoginStatus();
+    }, 10000);
 });
 
 onBeforeUnmount(() => {
@@ -154,8 +187,16 @@ onBeforeUnmount(() => {
         clearInterval(statsRefreshTimer.value);
     }
     
+    // 清除用户状态检查定时器
+    if (userStatusCheckTimer) {
+        clearInterval(userStatusCheckTimer);
+    }
+    
     // 移除事件监听器
-    window.removeEventListener('userInfoUpdated', fetchStatisticsData);
+    window.removeEventListener('userInfoUpdated', () => {
+        fetchStatisticsData();
+        checkLoginStatus();
+    });
 });
 </script>
 

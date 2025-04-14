@@ -9,7 +9,7 @@
                 <a-input v-model:value="profileForm.realName" disabled v-else />
             </a-form-item>
             <a-form-item label="昵称">
-                <a-input v-model:value="profileForm.nickName" />
+                <a-input v-model:value="profileForm.name" />
             </a-form-item>
             <a-form-item label="性别" name="gender">
                 <a-radio-group v-model:value="profileForm.gender">
@@ -17,8 +17,8 @@
                     <a-radio :value="0">女</a-radio>
                 </a-radio-group>
             </a-form-item>
-            <a-form-item label="生日" name="birthday">
-                <a-date-picker v-model:value="profileForm.birthday" :disabledDate="disabledDate" format="YYYY年MM月DD日"
+            <a-form-item label="生日" name="birthdayDate">
+                <a-date-picker v-model:value="profileForm.birthdayDate" :disabledDate="disabledDate" format="YYYY年MM月DD日"
                     :locale="locale" @change="handleDateChange" />
             </a-form-item>
             <a-form-item label="出生地" name="birthplace">
@@ -55,46 +55,38 @@
 import { ref, onMounted } from 'vue';
 import { message, FormInstance } from 'ant-design-vue';
 import PersonalApi from '@/services/personal';
-import type { ProfileForm } from '@/types/personal';
+import type { ProfileData } from '@/types/personal';
 import { regionOptions } from '@/utils/constants';
 import dayjs from 'dayjs';
 import type { Dayjs } from 'dayjs';
 import 'dayjs/locale/zh-cn';
 import locale from 'ant-design-vue/es/date-picker/locale/zh_CN';
 
-// 修改 profileForm 的类型定义
-interface ProfileFormState extends Omit<ProfileForm, 'birthday' | 'gender'> {
-    username: string;
-    realName: string;
-    nickName: string;
-    gender: 0 | 1;
-    birthday: dayjs.Dayjs | null;
-    birthplace: string[];
-    residence: string[];
-    phone: string;
-    qq: string;
-    email: string;
-    signature: string;
+// 扩展ProfileData类型，添加birthdayDate字段用于日期选择器
+interface ProfileFormState extends ProfileData {
+    birthdayDate: Dayjs | null;
 }
 
 const profileForm = ref<ProfileFormState>({
     username: '',
     realName: '',
-    nickName: '',
+    name: '',
     gender: 1,
-    birthday: null,
+    birthday: '',
+    birthdayDate: null, // 新增字段用于日期选择器
     birthplace: [],
     residence: [],
     phone: '',
     qq: '',
     email: '',
-    signature: ''
+    signature: '',
+    avatar: ''
 });
 
 // 表单验证规则
 const rules = {
     gender: [{ required: true, message: '请选择性别' }],
-    birthday: [{ required: true, message: '请选择生日' }],
+    birthdayDate: [{ required: true, message: '请选择生日' }],
     birthplace: [{ required: true, message: '请选择出生地' }],
     residence: [{ required: true, message: '请选择居住地' }]
 };
@@ -109,7 +101,8 @@ const formRef = ref<FormInstance>();
 
 // 处理日期选择
 const handleDateChange = (date: Dayjs | null) => {
-    profileForm.value.birthday = date;
+    profileForm.value.birthdayDate = date;
+    profileForm.value.birthday = date ? date.format('YYYY-MM-DD') : null;
 };
 
 // 获取个人资料
@@ -119,7 +112,7 @@ const getProfile = async () => {
         if (res.code === 200) {
             profileForm.value = {
                 ...res.data,
-                birthday: res.data.birthday ? dayjs(res.data.birthday) : null
+                birthdayDate: res.data.birthday ? dayjs(res.data.birthday) : null
             };
         }
     } catch (error) {
@@ -133,7 +126,7 @@ const handleSubmit = async () => {
         await formRef.value?.validate();
         const formData = {
             ...profileForm.value,
-            birthday: profileForm.value.birthday?.format('YYYY-MM-DD') || null
+            birthday: profileForm.value.birthday
         };
         const res = await PersonalApi.UPDATE_PROFILE_API(formData);
         if (res.code === 200) {

@@ -3,32 +3,19 @@
     <!-- 用户信息头部 -->
     <div class="user-header">
       <div class="header-background"></div>
-      
+
       <div class="user-info">
-        <van-image
-          round
-          width="80"
-          height="80"
-          :src="userInfo.avatar"
-          class="avatar"
-        />
-        <div 
-          v-if="userInfo.isLogin" 
-          class="user-detail"
-        >
+        <van-image round width="80" height="80" :src="userInfo.avatar" class="avatar" />
+        <div v-if="userInfo.isLogin" class="user-detail">
           <div class="username">{{ userInfo.name }}</div>
           <div class="user-id">ID: {{ userInfo.id }}</div>
         </div>
-        <div 
-          v-else 
-          class="user-detail not-login" 
-          @click="goToLogin"
-        >
+        <div v-else class="user-detail not-login" @click="goToLogin">
           <div class="login-tip">点击登录</div>
           <div class="login-desc">登录后享受更多精彩服务</div>
         </div>
       </div>
-      
+
       <!-- 数据统计 -->
       <div class="user-stats">
         <div class="stat-item" @click="goToFollows('following')">
@@ -45,31 +32,17 @@
         </div>
       </div>
     </div>
-    
+
     <!-- 功能区域 -->
     <div class="function-section">
       <van-cell-group inset class="function-group">
-        <van-cell 
-          v-for="item in mainFunctions" 
-          :key="item.id"
-          :title="item.title" 
-          is-link
-          :icon="item.icon"
-          :to="item.path"
-          class="function-cell"
-        />
+        <van-cell v-for="item in mainFunctions" :key="item.id" :title="item.title" is-link :icon="item.icon"
+          :to="item.path" class="function-cell" />
       </van-cell-group>
-      
+
       <van-cell-group inset title="更多服务" class="function-group">
-        <van-cell 
-          v-for="item in moreFunctions" 
-          :key="item.id"
-          :title="item.title" 
-          is-link
-          :icon="item.icon"
-          :to="item.path"
-          class="function-cell"
-        />
+        <van-cell v-for="item in moreFunctions" :key="item.id" :title="item.title" is-link :icon="item.icon"
+          :to="item.path" class="function-cell" />
       </van-cell-group>
     </div>
   </div>
@@ -105,19 +78,18 @@ const mainFunctions = [
 
 // 更多功能
 const moreFunctions = [
-  { id: 1, title: '黑名单管理', icon: 'cross', path: '/user/blacklist' },
-  { id: 2, title: '实名认证', icon: 'idcard', path: '/user/verify' },
-  { id: 3, title: '账号安全', icon: 'shield-o', path: '/user/security' },
-  { id: 4, title: '隐私设置', icon: 'eye-o', path: '/user/privacy' },
-  { id: 5, title: '帮助与反馈', icon: 'question-o', path: '/user/help' },
-  { id: 6, title: '设置', icon: 'setting-o', path: '/user/settings' }
+  { id: 1, title: '实名认证', icon: 'idcard', path: '/user/verify' },
+  { id: 2, title: '账号安全', icon: 'shield-o', path: '/user/security' },
+  { id: 3, title: '隐私设置', icon: 'eye-o', path: '/user/privacy' },
+  { id: 4, title: '帮助与反馈', icon: 'question-o', path: '/user/help' },
+  { id: 5, title: '设置', icon: 'setting-o', path: '/user/settings' }
 ];
 
 // 加载用户信息
 const loadUserInfo = () => {
   const token = localStorage.getItem('token');
   const storedUserInfo = localStorage.getItem('userInfo');
-  
+
   if (token && storedUserInfo) {
     try {
       const parsedUserInfo = JSON.parse(storedUserInfo);
@@ -163,7 +135,7 @@ const goToFollows = (type: 'following' | 'followers') => {
     goToLogin();
     return;
   }
-  
+
   try {
     console.log(`正在跳转到${type === 'following' ? '关注' : '粉丝'}列表页面...`);
     router.push(`/user/${type}`);
@@ -199,55 +171,55 @@ onMounted(() => {
 .mobile-profile {
   min-height: 100vh;
   background-color: #f7f8fa;
-  
+
   .user-header {
     position: relative;
     background-color: #fff;
     padding-bottom: 16px;
     margin-bottom: 12px;
-    
+
     .header-background {
       height: 120px;
       background: linear-gradient(135deg, #1989fa, #39a9fc);
     }
-    
+
     .user-info {
       display: flex;
       flex-direction: column;
       align-items: center;
       margin-top: -40px;
       position: relative;
-      
+
       .avatar {
         border: 2px solid #fff;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       }
-      
+
       .user-detail {
         margin-top: 12px;
         text-align: center;
-        
+
         .username {
           font-size: 18px;
           font-weight: 600;
           color: #323233;
         }
-        
+
         .user-id {
           font-size: 12px;
           color: #969799;
           margin-top: 4px;
         }
-        
+
         &.not-login {
           cursor: pointer;
-          
+
           .login-tip {
             font-size: 18px;
             font-weight: 600;
             color: #323233;
           }
-          
+
           .login-desc {
             font-size: 12px;
             color: #969799;
@@ -256,17 +228,17 @@ onMounted(() => {
         }
       }
     }
-    
+
     .user-stats {
       display: flex;
       margin-top: 16px;
-      
+
       .stat-item {
         flex: 1;
         text-align: center;
         padding: 8px 0;
         position: relative;
-        
+
         &:not(:last-child)::after {
           content: '';
           position: absolute;
@@ -276,13 +248,13 @@ onMounted(() => {
           width: 1px;
           background-color: #ebedf0;
         }
-        
+
         .stat-value {
           font-size: 18px;
           font-weight: 500;
           color: #323233;
         }
-        
+
         .stat-label {
           font-size: 12px;
           color: #969799;
@@ -291,25 +263,25 @@ onMounted(() => {
       }
     }
   }
-  
+
   .function-section {
     padding: 0 0 60px;
-    
+
     .function-group {
       margin-bottom: 12px;
-      
+
       :deep(.van-cell-group__title) {
         font-size: 14px;
         color: #969799;
         padding: 16px 16px 8px;
       }
-      
+
       .function-cell {
         :deep(.van-cell__title) {
           font-size: 15px;
           font-weight: 400;
         }
-        
+
         :deep(.van-icon) {
           font-size: 18px;
           color: #1989fa;
@@ -318,4 +290,4 @@ onMounted(() => {
     }
   }
 }
-</style> 
+</style>

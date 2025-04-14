@@ -96,4 +96,39 @@ export interface ModuleArticleListResponse {
   currentPage: number;
   pageSize: number;
   totalPages: number;
+}
+
+// 用户帖子状态枚举
+export enum UserPostStatus {
+  PUBLISHED = 'published',  // 已发布
+  PENDING = 'pending',      // 待审核
+  DRAFT = 'draft',          // 草稿
+  DELETED = 'deleted'       // 已删除
+}
+
+/**
+ * 用户帖子数据类型
+ */
+export interface UserPost {
+  id: string;               // 帖子ID
+  title: string;            // 标题
+  content: string;          // 内容
+  status?: UserPostStatus;  // 状态
+  createTime?: string;      // 创建时间
+  updateTime?: string;      // 更新时间
+  browse?: number;          // 浏览量
+  comments?: any[];         // 评论
+  images?: string[];        // 图片
+  likes?: any[];            // 点赞
+  plateId?: number;         // 板块ID
+  sendId?: number;          // 发送者ID
+  time?: string;            // 时间
+}
+
+/**
+ * 用户帖子列表返回结构
+ */
+export interface UserPostsResponse {
+  posts: UserPost[];        // 帖子列表
+  total: number;            // 总数量
 } 

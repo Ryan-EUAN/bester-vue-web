@@ -1,40 +1,17 @@
 <template>
   <div class="edit-profile">
-    <van-nav-bar
-      title="编辑资料"
-      left-arrow
-      @click-left="goBack"
-    />
+    <van-nav-bar title="编辑资料" left-arrow @click-left="goBack" />
     <div class="edit-form">
       <van-cell-group inset>
         <van-cell title="头像">
           <template #right-icon>
-            <van-image
-              round
-              width="50"
-              height="50"
-              :src="userInfo.avatar"
-              @click="showAvatarActionSheet"
-            />
+            <van-image round width="50" height="50" :src="userInfo.avatar" @click="showAvatarActionSheet" />
           </template>
         </van-cell>
-        <van-field
-          v-model="userInfo.name"
-          label="用户名"
-          placeholder="请输入用户名"
-          maxlength="20"
-          :rules="[{ required: true, message: '请填写用户名' }]"
-        />
-        <van-field
-          v-model="userInfo.bio"
-          rows="3"
-          autosize
-          label="个人简介"
-          type="textarea"
-          maxlength="100"
-          placeholder="请输入个人简介"
-          show-word-limit
-        />
+        <van-field v-model="userInfo.username" label="用户名" placeholder="请输入用户名" maxlength="20"
+          :rules="[{ required: true, message: '请填写用户名' }]" />
+        <van-field v-model="userInfo.signature" rows="3" autosize label="个人简介" type="textarea" maxlength="100"
+          placeholder="请输入个人简介" show-word-limit />
         <van-cell title="性别" is-link @click="showGenderPicker">
           <template #value>
             <span>{{ genderText }}</span>
@@ -45,13 +22,13 @@
             <span>{{ userInfo.birthday || '未设置' }}</span>
           </template>
         </van-cell>
-        <van-field
-          v-model="userInfo.location"
-          label="所在地"
-          placeholder="请输入所在地"
-        />
+        <van-cell title="所在地" is-link @click="showAreaPicker">
+          <template #value>
+            <span>{{ formatResidence || '请选择所在地' }}</span>
+          </template>
+        </van-cell>
       </van-cell-group>
-      
+
       <div class="submit-btn">
         <van-button type="primary" block round @click="saveProfile">保存</van-button>
       </div>
@@ -59,59 +36,59 @@
 
     <!-- 性别选择器 -->
     <van-popup v-model:show="showGender" position="bottom">
-      <van-picker
-        :columns="genderOptions"
-        @confirm="onConfirmGender"
-        @cancel="showGender = false"
-        show-toolbar
-        title="选择性别"
-      />
+      <van-picker :columns="genderOptions" @confirm="onConfirmGender" @cancel="showGender = false" show-toolbar
+        title="选择性别" />
     </van-popup>
-    
+
     <!-- 日期选择器 -->
     <van-popup v-model:show="showDate" position="bottom">
-      <van-date-picker
-        title="选择生日"
-        :min-date="minDate"
-        :max-date="maxDate"
-        @confirm="onConfirmDate"
-        @cancel="showDate = false"
-      />
+      <van-date-picker title="选择生日" :min-date="minDate" :max-date="maxDate" @confirm="onConfirmDate"
+        @cancel="showDate = false" />
     </van-popup>
-    
+
     <!-- 头像操作菜单 -->
-    <van-action-sheet
-      v-model:show="showAvatarSheet"
-      :actions="avatarActions"
-      cancel-text="取消"
-      @select="onSelectAvatarAction"
-    />
+    <van-action-sheet v-model:show="showAvatarSheet" :actions="avatarActions" cancel-text="取消"
+      @select="onSelectAvatarAction" />
+
+    <!-- 地区选择器 -->
+    <van-popup v-model:show="showArea" position="bottom">
+      <van-cascader v-model="areaActiveId" title="请选择所在地" :options="formattedRegionOptions" @close="showArea = false"
+        @finish="onConfirmArea" />
+    </van-popup>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { showToast } from 'vant';
+import { showToast, showLoadingToast, closeToast } from 'vant';
+import PersonalService from '@/services/personal';
+import type { ProfileData } from '@/types/personal';
+import { regionOptions } from '@/utils/constants';
 
 const router = useRouter();
 
 // 用户信息
-const userInfo = ref({
+const userInfo = ref<ProfileData>({
   avatar: 'https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg',
-  name: '',
-  bio: '',
-  gender: 0, // 0: 未设置, 1: 男, 2: 女
+  username: '',
+  realName: '',
+  gender: 0,
   birthday: '',
-  location: ''
+  birthplace: [],
+  residence: [],
+  phone: '',
+  qq: '',
+  email: '',
+  signature: '',
+  name: ''
 });
 
 // 性别选择
 const showGender = ref(false);
 const genderOptions = [
-  { text: '未设置', value: 0 },
-  { text: '男', value: 1 },
-  { text: '女', value: 2 }
+  { text: '女', value: 0 },
+  { text: '男', value: 1 }
 ];
 
 const genderText = computed(() => {
@@ -176,34 +153,128 @@ const onSelectAvatarAction = (action: { name: string }) => {
   showToast(`您选择了${action.name}，此功能实际开发中需要调用原生API`);
 };
 
+// 地区选择相关
+const showArea = ref(false);
+const areaActiveId = ref('');
+
+// 根据 Vant 的 Cascader 组件格式要求，处理地区数据
+const formattedRegionOptions = regionOptions.map(province => {
+  return {
+    text: province.label,
+    value: province.value,
+    children: province.children.map(city => {
+      return {
+        text: city.label,
+        value: city.value,
+        children: city.children.map(district => {
+          return {
+            text: district.label,
+            value: district.value
+          };
+        })
+      };
+    })
+  };
+});
+
+// 查找地区名称的函数
+const findRegionName = (code: string) => {
+  if (!code) return '';
+
+  const codes = code.split(',');
+  // 查找省
+  const province = regionOptions.find(item => item.value === codes[0]);
+  if (!province) return '';
+
+  // 查找市
+  if (codes.length < 2) return province.label;
+  const city = province.children.find(item => item.value === codes[1]);
+  if (!city) return province.label;
+
+  // 查找区/县
+  if (codes.length < 3) return `${province.label} ${city.label}`;
+  const district = city.children.find(item => item.value === codes[2]);
+  if (!district) return `${province.label} ${city.label}`;
+
+  return `${province.label} ${city.label} ${district.label}`;
+};
+
+// 格式化显示所在地
+const formatResidence = computed(() => {
+  // 将地区代码转换为中文名称
+  if (typeof userInfo.value.residence === 'string') {
+    return findRegionName(userInfo.value.residence);
+  }
+
+  return findRegionName(userInfo.value.residence.join(','));
+});
+
+// 打开地区选择器
+const showAreaPicker = () => {
+  areaActiveId.value = userInfo.value.residence[0];
+  showArea.value = true;
+};
+
+// 确认地区选择
+const onConfirmArea = ({ selectedOptions }: { selectedOptions: Array<{ value: string, text: string }> }) => {
+  // 将选择的地区代码转为逗号分隔的字符串
+  const codeArray = selectedOptions.map(option => option.value);
+  // 保存为逗号分隔的字符串，与后端数据格式匹配
+  userInfo.value.residence = codeArray;
+  showArea.value = false;
+};
+
 // 获取用户信息
-const loadUserInfo = () => {
-  // 这里应该调用实际的API获取用户信息
-  // 模拟数据
-  setTimeout(() => {
-    userInfo.value = {
-      avatar: 'https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg',
-      name: '测试用户',
-      bio: '这是一段个人简介，用于展示在个人主页上。',
-      gender: 1,
-      birthday: '1990-01-01',
-      location: '北京市'
-    };
-  }, 500);
+const loadUserInfo = async () => {
+  try {
+    showLoadingToast({
+      message: '加载中...',
+      forbidClick: true,
+    });
+    const res = await PersonalService.GET_PROFILE_API();
+    if (res.code === 200) {
+      userInfo.value = res.data;
+    } else {
+      showToast(res.message || '获取用户信息失败');
+    }
+  } catch (error) {
+    showToast('获取用户信息失败');
+    console.error(error);
+  } finally {
+    closeToast();
+  }
 };
 
 // 保存资料
-const saveProfile = () => {
-  if (!userInfo.value.name) {
+const saveProfile = async () => {
+  if (!userInfo.value.username) {
     showToast('请填写用户名');
     return;
   }
-  
-  // 这里应该调用实际的API保存用户资料
-  showToast('保存成功');
-  setTimeout(() => {
-    router.back();
-  }, 1000);
+
+  try {
+    showLoadingToast({
+      message: '保存中...',
+      forbidClick: true,
+    });
+
+    // 确保数据格式正确，后端期望字符串格式的residence
+    const profileData = { ...userInfo.value };
+    const res = await PersonalService.UPDATE_PROFILE_API(profileData);
+    if (res.code === 200) {
+      showToast('保存成功');
+      setTimeout(() => {
+        router.back();
+      }, 1000);
+    } else {
+      showToast(res.message || '保存失败');
+    }
+  } catch (error) {
+    showToast('保存失败');
+    console.error(error);
+  } finally {
+    closeToast();
+  }
 };
 
 // 返回上一页
@@ -220,13 +291,13 @@ onMounted(() => {
 .edit-profile {
   min-height: 100vh;
   background-color: #f7f8fa;
-  
+
   .edit-form {
     padding: 16px;
-    
+
     .submit-btn {
       margin-top: 24px;
     }
   }
 }
-</style> 
+</style>

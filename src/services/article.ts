@@ -5,7 +5,9 @@ import type {
   PaginationParams,
   PaginationResponse,
   ReplyRequest,
-  ModuleArticleListResponse
+  ModuleArticleListResponse,
+  UserPostStatus,
+  UserPostsResponse
 } from '@/types/article';
 import { Result } from '@/model/result';
 import type { ListInfoType } from "@/model/listInfo";
@@ -188,6 +190,47 @@ async function UPDATE_ARTICLE_VIEW_COUNT_API(articleId: string): Promise<Result<
   }) as Result<any>
 }
 
+/**
+ * 获取用户帖子列表
+ * @param params 查询参数
+ * @returns 帖子列表和总数
+ */
+async function GET_USER_POSTS_API(params?: {
+  status?: UserPostStatus;
+  page?: number;
+  size?: number;
+}): Promise<Result<UserPostsResponse>> {
+  return await request({
+    url: '/article/user/posts',
+    method: 'GET',
+    params
+  }) as Result<UserPostsResponse>;
+}
+
+/**
+ * 删除用户帖子
+ * @param postId 帖子ID
+ * @returns 操作结果
+ */
+async function DELETE_USER_POST_API(postId: string): Promise<Result<null>> {
+  return await request({
+    url: `/article/user/posts/${postId}`,
+    method: 'DELETE'
+  }) as Result<null>;
+}
+
+/**
+ * 取消发布帖子（将待审核的帖子转为草稿）
+ * @param postId 帖子ID
+ * @returns 操作结果
+ */
+async function CANCEL_USER_POST_PUBLISH_API(postId: string): Promise<Result<null>> {
+  return await request({
+    url: `/article/user/posts/${postId}/cancel`,
+    method: 'PUT'
+  }) as Result<null>;
+}
+
 export default {
   publishArticle,
   saveDraft,
@@ -207,5 +250,8 @@ export default {
   GET_MODULE_ARTICLES_API,
   FOLLOW_AUTHOR_API,
   UNFOLLOW_AUTHOR_API,
-  UPDATE_ARTICLE_VIEW_COUNT_API
+  UPDATE_ARTICLE_VIEW_COUNT_API,
+  GET_USER_POSTS_API,
+  DELETE_USER_POST_API,
+  CANCEL_USER_POST_PUBLISH_API
 } 

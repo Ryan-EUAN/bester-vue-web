@@ -18,6 +18,23 @@ async function GET_WEBSITE_STATISTICS_API(): Promise<Result<WebsiteStatistics>> 
   }) as Result<WebsiteStatistics>
 }
 
+/**
+ * 获取系统运行时间API
+ * 
+ * @returns {Promise<Result<number>>} - 返回一个Promise，解析为包含系统运行时间(毫秒)的Result对象
+ * 
+ * 该函数通过HTTP GET请求获取系统运行时间。
+ * 请求的URL为 '/web/system/runningTime'。
+ * 请求方法为GET。
+ */
+async function GET_SYSTEM_RUNNING_TIME_API(): Promise<Result<number>> {
+  return await http({
+    url: '/web/system/runningTime',
+    method: 'GET'
+  }) as Result<number>
+}
+
 export default {
-  GET_WEBSITE_STATISTICS_API
+  GET_WEBSITE_STATISTICS_API,
+  GET_SYSTEM_RUNNING_TIME_API
 } 

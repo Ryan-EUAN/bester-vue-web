@@ -9,9 +9,32 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
+import heartbeatService from './services/heartbeat';
 
 const loading = ref(true);
+let heartbeatTimer: number | null = null;
+
+// 初始化心跳服务，如果失败则重试有限次数
+const initHeartbeatService = (retryCount = 0, maxRetries = 3) => {
+  try {
+    // 初始化心跳服务 - 每30秒发送一次心跳
+    heartbeatTimer = heartbeatService.setupHeartbeat(30000);
+    console.log('心跳服务初始化成功');
+  } catch (error) {
+    console.error('心跳服务初始化失败:', error);
+    
+    // 如果未超过最大重试次数，尝试重新初始化
+    if (retryCount < maxRetries) {
+      console.log(`尝试重新初始化心跳服务 (${retryCount + 1}/${maxRetries})...`);
+      setTimeout(() => {
+        initHeartbeatService(retryCount + 1, maxRetries);
+      }, 5000); // 5秒后重试
+    } else {
+      console.error(`心跳服务初始化失败，已达到最大重试次数 ${maxRetries}`);
+    }
+  }
+};
 
 onMounted(() => {
     // 预加载关键样式资源
@@ -31,8 +54,11 @@ onMounted(() => {
     // 模拟初始加载完成的时间
     setTimeout(() => {
         loading.value = false;
+        
+        // 在加载完成后初始化心跳服务
+        initHeartbeatService();
     }, 1000);
-
+    
     // 初始化WebSocket连接
     // webSocketService.connect('http://139.159.243.123/ws')
     //     .then(() => {
@@ -45,6 +71,13 @@ onMounted(() => {
     //     .catch(error => {
     //         console.error('WebSocket连接失败:', error);
     //     });
+});
+
+onBeforeUnmount(() => {
+    // 清除心跳定时器
+    if (heartbeatTimer !== null) {
+        clearInterval(heartbeatTimer);
+    }
 });
 </script>
 

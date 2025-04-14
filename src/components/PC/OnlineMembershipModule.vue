@@ -24,20 +24,27 @@
                         <span>在线：{{ item.count }}</span>
                     </a-flex>
                 </a-flex>
-                <div class="statistics">
-                    <span v-for="(stat, index) in statistics" :key="index">
-                        {{ stat.label }}：{{ stat.value }}
-                    </span>
-                </div>
             </div>
         </transition>
+
+        <!-- 统计信息部分，不参与折叠 -->
+        <div class="statistics">
+            <span v-for="(stat, index) in statistics" :key="index">
+                {{ stat.label }}：{{ stat.value }}
+            </span>
+            <span>系统运行：{{ runningTime }}</span>
+        </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue';
+import { computed, ref, onMounted, onBeforeUnmount } from 'vue';
 import { UserOutlined, CrownOutlined, StarOutlined, GoldOutlined, PlusOutlined, MinusOutlined } from '@ant-design/icons-vue';
 import ModuleApi from '../../services/module';
+import heartbeatService from '../../services/heartbeat';
+import statisticsApi from '../../services/statistics';
+import { formatRunningTime } from '../../utils/timeUtils';
+import type { HeartbeatVO } from '../../types/online';
 import { message } from 'ant-design-vue';
 
 const isCollapsed = ref(false);
@@ -80,8 +87,19 @@ const memberTypes = ref([
 // 统计数据
 const invisibleCount = ref(0);
 const guestCount = ref(0);
+const membersCount = ref(0);
+const totalOnlineCount = ref(0);
 
-// 获取在线会员数据
+// 系统运行时间相关变量
+const runningTime = ref('获取中...');
+const serverStartTime = ref<number | null>(null);
+const localOffset = ref(0);
+let syncTimerInterval: number | null = null;
+let updateTimerInterval: number | null = null;
+let onlineMembersInterval: number | null = null;
+
+// 获取在线会员数据的两种方式
+// 1. 通过ModuleApi获取
 const getOnlineMembers = async () => {
     try {
         const res = await ModuleApi.GET_ONLINE_MEMBERS_API();
@@ -107,16 +125,90 @@ const getOnlineMembers = async () => {
     }
 };
 
+// 2. 通过心跳服务获取
+const getOnlineMembersViaHeartbeat = async () => {
+    try {
+        const res = await heartbeatService.SEND_HEARTBEAT_API();
+        if (res.code === 200 && res.data) {
+            const heartbeatData = res.data as HeartbeatVO;
+            
+            // 直接更新总数值
+            totalOnlineCount.value = heartbeatData.totalOnline;
+            membersCount.value = heartbeatData.members;
+            guestCount.value = heartbeatData.guests;
+            invisibleCount.value = heartbeatData.invisible;
+            
+            // 更新会员类型数据
+            if (heartbeatData.userGroups) {
+                memberTypes.value.forEach(memberType => {
+                    // 根据会员类型名称匹配userGroups中的数据
+                    const count = heartbeatData.userGroups[memberType.name];
+                    memberType.count = count !== undefined ? count : 0;
+                });
+            }
+        }
+    } catch (error) {
+        console.error('通过心跳获取在线会员数据出错:', error);
+        // 如果心跳服务获取失败，尝试使用传统方式获取
+        await getOnlineMembers();
+    }
+};
+
+// 从服务器同步系统运行时间
+const syncSystemRunningTime = async () => {
+    try {
+        const res = await statisticsApi.GET_SYSTEM_RUNNING_TIME_API();
+        if (res.code === 200 && typeof res.data === 'number') {
+            // 存储服务器返回的运行时间（毫秒）
+            const serverRunningTime = res.data;
+            
+            // 计算服务器启动时间 = 当前时间 - 运行时间
+            serverStartTime.value = Date.now() - serverRunningTime;
+            
+            // 更新本地时间偏移量
+            localOffset.value = Date.now();
+            
+            // 立即更新显示
+            updateRunningTimeDisplay();
+        } else {
+            console.error('获取系统运行时间失败:', res.message);
+            runningTime.value = '获取失败';
+        }
+    } catch (error) {
+        console.error('获取系统运行时间出错:', error);
+        runningTime.value = '获取失败';
+    }
+};
+
+// 更新运行时间显示
+const updateRunningTimeDisplay = () => {
+    if (serverStartTime.value === null) {
+        return;
+    }
+    
+    // 计算当前的运行时间 = 当前时间 - 服务器启动时间
+    const currentRunningTime = Date.now() - serverStartTime.value;
+    
+    // 使用时间工具格式化显示
+    runningTime.value = formatRunningTime(currentRunningTime);
+};
+
 // 计算总在线人数
 const totalOnline = computed(() => {
+    // 如果通过心跳获取了总在线人数，优先使用
+    if (totalOnlineCount.value > 0) {
+        return totalOnlineCount.value;
+    }
+    // 否则使用原来的计算方式
     return memberTypes.value.reduce((sum, item) => sum + item.count, 0) + invisibleCount.value;
 });
 
 // 统计信息数组
 const statistics = computed(() => [
     { label: '总在线人数', value: totalOnline.value },
-    { label: '隐身人数', value: invisibleCount.value },
-    { label: '游客人数', value: guestCount.value }
+    { label: '会员人数', value: membersCount.value > 0 ? membersCount.value : memberTypes.value.reduce((sum, item) => sum + item.count, 0) },
+    { label: '游客人数', value: guestCount.value },
+    { label: '隐身人数', value: invisibleCount.value }
 ]);
 
 // 切换折叠状态
@@ -126,7 +218,48 @@ const toggleCollapse = () => {
 
 // 组件挂载时获取数据
 onMounted(async () => {
-    await getOnlineMembers();
+    // 首先尝试通过心跳服务获取数据
+    await getOnlineMembersViaHeartbeat();
+    
+    // 如果心跳服务不可用或数据不完整，使用传统方式获取
+    if (totalOnlineCount.value === 0) {
+        await getOnlineMembers();
+    }
+    
+    // 获取系统运行时间
+    await syncSystemRunningTime();
+    
+    // 设置定时同步服务器时间（每5分钟同步一次）
+    syncTimerInterval = window.setInterval(async () => {
+        await syncSystemRunningTime();
+    }, 5 * 60 * 1000);
+    
+    // 设置定时更新显示（每秒更新一次）
+    updateTimerInterval = window.setInterval(() => {
+        updateRunningTimeDisplay();
+    }, 1000);
+    
+    // 设置定时获取在线会员数据（每分钟更新一次）
+    onlineMembersInterval = window.setInterval(async () => {
+        // 优先使用心跳服务获取数据
+        await getOnlineMembersViaHeartbeat();
+    }, 60 * 1000);
+});
+
+// 组件卸载前清理资源
+onBeforeUnmount(() => {
+    // 清除定时器
+    if (syncTimerInterval !== null) {
+        clearInterval(syncTimerInterval);
+    }
+    
+    if (updateTimerInterval !== null) {
+        clearInterval(updateTimerInterval);
+    }
+    
+    if (onlineMembersInterval !== null) {
+        clearInterval(onlineMembersInterval);
+    }
 });
 </script>
 
@@ -234,7 +367,7 @@ onMounted(async () => {
 
     .statistics {
         margin-top: 1.5vh;
-        padding-top: 1vh;
+        padding: 1vh 1vw;
         border-top: 0.05vw solid #f0f0f0;
 
         span {
