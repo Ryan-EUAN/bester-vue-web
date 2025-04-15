@@ -231,47 +231,47 @@ button:focus-visible {
   width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
+}
 
-  th {
-    text-align: left;
-    padding: 12px 15px;
-    color: rgba(255, 255, 255, 0.7);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    font-size: 14px;
-    font-weight: normal;
-    position: sticky;
-    top: 0;
-    background-color: rgba(30, 30, 40, 0.95);
-    z-index: 10;
-  }
+.music-table th {
+  text-align: left;
+  padding: 12px 15px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  font-weight: normal;
+  position: sticky;
+  top: 0;
+  background-color: transparent;
+  z-index: 10;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.15);
+}
 
-  td {
-    padding: 12px 15px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    font-size: 14px;
-    color: rgba(255, 255, 255, 0.9);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    position: relative;
-  }
+.music-table td {
+  padding: 12px 15px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: relative;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.15);
+}
 
-  tr {
-    cursor: pointer;
-    transition: background-color 0.2s;
+.music-table tr {
+  cursor: default;
+  transition: background-color 0.2s;
+}
 
-    &:hover {
-      background-color: rgba(255, 255, 255, 0.05);
+.music-table tr:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
 
-      .song-actions {
-        display: flex;
-      }
-    }
+.music-table tr:hover .song-actions {
+  display: flex;
+}
 
-    &.current-row {
-      background-color: rgba(255, 255, 255, 0.08);
-    }
-  }
+.music-table tr.current-row {
+  background-color: rgba(24, 144, 255, 0.1);
 }
 
 /* 行操作按钮 */
@@ -297,10 +297,11 @@ button:focus-visible {
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
+}
 
-  &:hover {
-    background-color: rgba(255, 255, 255, 0.2);
-  }
+.action-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
 }
 
 /* 右侧歌曲详情 */
@@ -569,30 +570,38 @@ button:focus-visible {
 .search-results {
   flex: 1;
   overflow-y: auto;
+}
 
-  table {
-    width: 100%;
-    border-collapse: collapse;
+.search-results table {
+  width: 100%;
+  border-collapse: collapse;
+}
 
-    th {
-      text-align: left;
-      padding: 12px 15px;
-      color: rgba(255, 255, 255, 0.7);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      font-weight: normal;
-      font-size: 14px;
-    }
+.search-results table th {
+  text-align: left;
+  padding: 12px 15px;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: normal;
+  font-size: 14px;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.15);
+}
 
-    td {
-      padding: 12px 15px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      font-size: 14px;
-    }
+.search-results table td {
+  padding: 12px 15px;
+  font-size: 14px;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.15);
+}
 
-    tr:hover {
-      background-color: rgba(255, 255, 255, 0.05);
-    }
-  }
+.search-results table tr:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.search-results table tr:hover .song-actions {
+  display: flex;
+}
+
+.search-results table tr.current-row {
+  background-color: rgba(24, 144, 255, 0.1);
 }
 
 .icon-btn {

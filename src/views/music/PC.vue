@@ -4,26 +4,7 @@
         <div class="main-container">
             <!-- 头部 -->
             <div class="music-header">
-                <!-- 添加宇宙主题导航栏 -->
-                <div class="cosmic-nav">
-                    <div class="nav-left">
-                        <router-link to="/" class="nav-btn">
-                            <home-outlined /> 首页
-                        </router-link>
-                        <router-link to="/share" class="nav-btn">
-                            <share-alt-outlined /> 源码分享
-                        </router-link>
-                        <router-link to="/music" class="nav-btn">
-                            <customer-service-outlined /> 在线音乐
-                        </router-link>
-                        <router-link to="/nav" class="nav-btn">
-                            <rocket-outlined /> 快捷导航
-                        </router-link>
-                    </div>
-                    <router-link to="/user" class="nav-btn user-btn">
-                        <user-outlined />
-                    </router-link>
-                </div>
+                <HeadComponent />
             </div>
 
             <!-- 控制按钮区域 -->
@@ -48,9 +29,9 @@
             <div class="main-content">
                 <div v-if="activeTab === 'playing'" class="now-playing">
                     <!-- 双栏布局：左侧歌曲列表，右侧歌曲详情和歌词 -->
-                    <div class="music-content-layout">
+                    <div class="music-content-layout" :class="{ 'full-width': !currentSong }">
                         <!-- 左侧歌曲列表 -->
-                        <div class="music-list-container">
+                        <div class="music-list-container" :class="{ 'full-width': !currentSong }">
                             <div class="music-list">
                                 <table class="music-table">
                                     <thead>
@@ -63,8 +44,7 @@
                                     </thead>
                                     <tbody>
                                         <tr v-for="(song, index) in songs" :key="song.id"
-                                            :class="{ 'current-row': currentSong && song.id === currentSong.id }"
-                                            @click="handleRowClick(song)">
+                                            :class="{ 'current-row': currentSong && song.id === currentSong.id }">
                                             <td>{{ index + 1 }}</td>
                                             <td>
                                                 {{ song.title }}
@@ -86,7 +66,7 @@
                         </div>
 
                         <!-- 右侧歌曲详情和歌词 -->
-                        <div class="song-detail-container">
+                        <div class="song-detail-container" v-if="currentSong">
                             <!-- 专辑封面 -->
                             <div class="album-cover-area">
                                 <div class="album-cover-container">
@@ -140,9 +120,17 @@
 
                 <!-- 在线歌单页面 -->
                 <div v-if="activeTab === 'online'" class="playlist-grid-container">
+                    <div class="playlist-header">
+                        <h2>在线歌单</h2>
+                        <button class="clear-cache-btn" @click="clearLoadedPlaylists" title="清除缓存，重新加载歌单">
+                            <reload-outlined />
+                            清除缓存
+                        </button>
+                    </div>
                     <div class="playlist-grid">
                         <div v-for="playlist in playlists" :key="playlist.id" class="playlist-card"
-                            :class="{ 'loading': playlist.loading }" @click="loadPlaylist(playlist.id)">
+                            :class="{ 'loading': playlist.loading, 'loaded': loadedPlaylistIds.includes(playlist.id) }"
+                            @click="loadPlaylist(playlist.id)">
                             <div class="playlist-cover"
                                 :style="playlist.cover ? { backgroundImage: `url(${playlist.cover})` } : {}">
                                 <div v-if="!playlist.cover" class="playlist-cover-text">
@@ -169,30 +157,32 @@
                     </div>
 
                     <div class="search-results" v-if="searchResults.length > 0">
-                        <table>
+                        <table class="music-table">
                             <thead>
                                 <tr>
                                     <th width="50">#</th>
-                                    <th width="280">歌曲</th>
+                                    <th>歌曲</th>
                                     <th>歌手</th>
                                     <th>专辑</th>
-                                    <th width="80">操作</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="(song, index) in searchResults" :key="song.id">
+                                <tr v-for="(song, index) in searchResults" :key="song.id"
+                                    :class="{ 'current-row': currentSong && song.id === currentSong.id }">
                                     <td>{{ index + 1 }}</td>
-                                    <td>{{ song.title }}</td>
+                                    <td>
+                                        {{ song.title }}
+                                        <div class="song-actions">
+                                            <button class="action-btn"
+                                                @click.stop="playSongDirectly(song)"><play-circle-outlined /></button>
+                                            <button class="action-btn"
+                                                @click.stop="addToPlaylist(song)"><plus-outlined /></button>
+                                            <button class="action-btn"
+                                                @click.stop="toggleFavorite(song)"><heart-outlined /></button>
+                                        </div>
+                                    </td>
                                     <td>{{ song.artist }}</td>
                                     <td>{{ song.album }}</td>
-                                    <td>
-                                        <button class="icon-btn" @click="addToPlaylist(song)">
-                                            <plus-outlined />
-                                        </button>
-                                        <button class="icon-btn" @click="playSongDirectly(song)">
-                                            <play-circle-outlined />
-                                        </button>
-                                    </td>
                                 </tr>
                             </tbody>
                         </table>
@@ -228,17 +218,17 @@
                 <div class="player-controls">
                     <!-- 左侧控制区 -->
                     <div class="controls-left">
-                        <div class="control-button" @click="prevSong">
+                        <div class="control-button" @click="prevSong" :class="{ 'disabled': !currentSong }">
                             <step-backward-outlined />
                         </div>
-                        <div class="control-button" @click="togglePlay">
+                        <div class="control-button" @click="togglePlay" :class="{ 'disabled': !currentSong }">
                             <pause-outlined v-if="isPlaying" />
                             <caret-right-outlined v-else />
                         </div>
-                        <div class="control-button" @click="nextSong">
+                        <div class="control-button" @click="nextSong" :class="{ 'disabled': !currentSong }">
                             <step-forward-outlined />
                         </div>
-                        <div class="control-button" @click="togglePlayMode">
+                        <div class="control-button" @click="togglePlayMode" :class="{ 'disabled': !currentSong }">
                             <ordered-list-outlined v-if="playMode === 'sequence'" />
                             <redo-outlined v-else-if="playMode === 'repeat'" />
                             <swap-outlined v-else />
@@ -247,12 +237,12 @@
 
                     <!-- 中间进度条 -->
                     <div class="progress-container" ref="progressTrack" @click="handleProgressClick">
-                        <div class="current-time">{{ formatTime(currentTime) }}</div>
+                        <div class="current-time">{{ currentSong ? formatTime(currentTime) : '00:00' }}</div>
                         <div class="progress-bar">
                             <div class="progress-current" :style="{ width: progress + '%' }"></div>
                             <div class="progress-handle" :style="{ left: progress + '%' }" v-show="progress > 0"></div>
                         </div>
-                        <div class="total-time">{{ formatTime(duration) }}</div>
+                        <div class="total-time">{{ currentSong ? formatTime(duration) : '00:00' }}</div>
                     </div>
 
                     <!-- 右侧音量控制 -->
@@ -277,7 +267,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import { message } from 'ant-design-vue';
 import {
     SearchOutlined,
@@ -300,12 +290,10 @@ import {
     AudioOutlined,
     AudioMutedOutlined,
     HeartOutlined,
-    HomeOutlined,
-    ShareAltOutlined,
-    RocketOutlined,
-    UserOutlined
+    ReloadOutlined,
 } from '@ant-design/icons-vue';
 import musicService from '@/services/music';
+import HeadComponent from '@/components/PC/HeadComponent.vue';
 
 // 类型定义
 interface Song {
@@ -334,20 +322,8 @@ interface ParsedLyric {
 // 基本状态
 const isVisible = ref(true);
 const activeTab = ref('playing');
-const songs = ref<Song[]>([
-    { id: '1', title: '有些', artist: '颜人中', cover: '', url: '', duration: 280, album: '失眠症候群' },
-    { id: '2', title: '我想要你的爱', artist: '邓紫棋', cover: '', url: '', duration: 260, album: '我想要你的爱' },
-    { id: '3', title: '填不满的空白', artist: 'KAZE高瑗亥', cover: '', url: '', duration: 245, album: '填不满的空白' },
-    { id: '4', title: '从前以后PT.1', artist: '盖于D-SHINE', cover: '', url: '', duration: 310, album: '参壹' },
-    { id: '5', title: '伤城2025', artist: '张远', cover: '', url: '', duration: 290, album: '伤城2025' },
-    { id: '6', title: 'Viva La Vida', artist: 'Coldplay', cover: '', url: '', duration: 240, album: 'Viva La Vida or Death...' },
-    { id: '7', title: '死亡赞', artist: '纳豆ISTAR', cover: '', url: '', duration: 230, album: '死亡赞' },
-    { id: '8', title: 'sweet and sour', artist: 'GTR88', cover: '', url: '', duration: 275, album: 'sweet and sour' },
-    { id: '9', title: '烟圈', artist: '万乐体', cover: '', url: '', duration: 265, album: '泡笑小姐 什么是真爱' },
-    { id: '10', title: 'IN THE RAIN', artist: 'XG', cover: '', url: '', duration: 215, album: 'IN THE RAIN' },
-    { id: '11', title: 'keep your eyes on me', artist: '三枝橋', cover: '', url: '', duration: 255, album: 'keep your eyes on me' }
-]);
-const currentSong = ref<Song | null>(songs.value[0]);
+const songs = ref<Song[]>([]);
+const currentSong = ref<Song | null>(null);
 const isPlaying = ref(false);
 const volume = ref(80);
 const currentTime = ref(0);
@@ -366,22 +342,19 @@ const albumCoverStyle = computed(() => {
 
 // 播放列表相关
 const playlists = ref<Playlist[]>([
-    { id: '1', name: '热歌榜', cover: '', loading: false },
-    { id: '2', name: '新歌榜', cover: '', loading: false },
-    { id: '3', name: '飙升榜', cover: '', loading: false },
-    { id: '4', name: '原创榜', cover: '', loading: false },
-    { id: '5', name: '流行', cover: '', loading: false },
-    { id: '6', name: '摇滚', cover: '', loading: false }
+    { id: '19723756', name: '飙升榜', cover: '', loading: false },
+    { id: '3779629', name: '新歌榜', cover: '', loading: false },
+    { id: '3778678', name: '热歌榜', cover: '', loading: false },
+    { id: '2884035', name: '原创版', cover: '', loading: false },
+    { id: '12204283642', name: '欧美热播2019 | 来自Doja Cat的2019粉色浪潮', cover: '', loading: false },
+    { id: '8408330200', name: '粤语专属 | 你的粤语歌曲专属推荐', cover: '', loading: false },
+    { id: '6886768100', name: '中文慢摇DJ榜', cover: '', loading: false },
 ]);
+// 记录已加载的歌单ID
+const loadedPlaylistIds = ref<string[]>([]);
 
 // 歌词相关
-const parsedLyrics = ref<ParsedLyric[]>([
-    { time: 0, content: '这是第一行歌词' },
-    { time: 5, content: '这是第二行歌词示例' },
-    { time: 10, content: '这是演示用的歌词内容' },
-    { time: 15, content: '可以通过API获取真实歌词' },
-    { time: 20, content: '这是第五行歌词示例文本' }
-]);
+const parsedLyrics = ref<ParsedLyric[]>([]);
 const currentLyricIndex = ref(0);
 
 // 搜索相关
@@ -411,6 +384,16 @@ onMounted(() => {
     progressTrack.value = document.querySelector('.progress-container');
     volumeTrack.value = document.querySelector('.volume-track');
     lyricsContainer.value = document.querySelector('.dynamic-lyrics');
+
+    // 从localStorage中获取已加载歌单ID
+    const storedPlaylistIds = localStorage.getItem('loadedPlaylistIds');
+    if (storedPlaylistIds) {
+        try {
+            loadedPlaylistIds.value = JSON.parse(storedPlaylistIds);
+        } catch (e) {
+            console.error('解析已加载歌单ID失败:', e);
+        }
+    }
 
     // 设置音频事件监听
     if (audioRef.value) {
@@ -497,6 +480,8 @@ const loadSong = (index: number): void => {
 };
 
 const playSong = (): void => {
+    if (!currentSong.value) return;
+
     isPlaying.value = true;
     if (audioRef.value) {
         audioRef.value.play()
@@ -510,6 +495,8 @@ const playSong = (): void => {
 };
 
 const pauseSong = (): void => {
+    if (!currentSong.value) return;
+
     isPlaying.value = false;
     if (audioRef.value) {
         audioRef.value.pause();
@@ -517,6 +504,8 @@ const pauseSong = (): void => {
 };
 
 const togglePlay = (): void => {
+    if (!currentSong.value) return;
+
     if (isPlaying.value) {
         pauseSong();
     } else {
@@ -525,6 +514,8 @@ const togglePlay = (): void => {
 };
 
 const prevSong = (): void => {
+    if (!currentSong.value) return;
+
     let currentIndex = songs.value.findIndex(song => song.id === currentSong.value?.id);
     if (currentIndex === -1) currentIndex = 0;
 
@@ -533,6 +524,8 @@ const prevSong = (): void => {
 };
 
 const nextSong = (): void => {
+    if (!currentSong.value) return;
+
     let currentIndex = songs.value.findIndex(song => song.id === currentSong.value?.id);
     if (currentIndex === -1) currentIndex = 0;
 
@@ -541,17 +534,18 @@ const nextSong = (): void => {
 };
 
 const togglePlayMode = (): void => {
-    const modes = ['sequence', 'repeat', 'random'];
-    const currentIndex = modes.indexOf(playMode.value);
-    playMode.value = modes[(currentIndex + 1) % modes.length];
+    if (!currentSong.value) return;
 
-    const modeMessages = {
-        'sequence': '顺序播放',
-        'repeat': '单曲循环',
-        'random': '随机播放'
-    };
-
-    message.info(`已切换为${modeMessages[playMode.value as keyof typeof modeMessages]}`);
+    if (playMode.value === 'sequence') {
+        playMode.value = 'repeat';
+        message.info('单曲循环');
+    } else if (playMode.value === 'repeat') {
+        playMode.value = 'random';
+        message.info('随机播放');
+    } else {
+        playMode.value = 'sequence';
+        message.info('顺序播放');
+    }
 };
 
 const toggleMute = (): void => {
@@ -838,6 +832,14 @@ const loadPlaylist = async (playlistId: string): Promise<void> => {
     const playlist = playlists.value.find(item => item.id === playlistId);
     if (!playlist) return;
 
+    // 如果当前歌单已经加载过，只切换到播放列表页面
+    if (loadedPlaylistIds.value.includes(playlistId)) {
+        // 切换到播放列表页面
+        activeTab.value = 'playing';
+        message.info(`已切换到歌单: ${playlist.name}`);
+        return;
+    }
+
     playlist.loading = true;
 
     try {
@@ -848,6 +850,10 @@ const loadPlaylist = async (playlistId: string): Promise<void> => {
 
             // 检查歌单数据是否有效
             if (musicList && musicList.songId && musicList.songId.length > 0) {
+                // 记录正在播放的歌曲ID，用于恢复播放状态
+                const currentPlayingSongId = currentSong.value?.id;
+                const wasPlaying = isPlaying.value;
+
                 // 转换歌单数据到Song[]
                 const playlistSongs: Song[] = [];
 
@@ -864,8 +870,31 @@ const loadPlaylist = async (playlistId: string): Promise<void> => {
                 }
 
                 songs.value = playlistSongs;
-                if (playlistSongs.length > 0) {
+
+                // 如果是首次加载此歌单，则默认播放第一首
+                if (!loadedPlaylistIds.value.includes(playlistId) && playlistSongs.length > 0) {
+                    // 记录已加载歌单ID
+                    loadedPlaylistIds.value.push(playlistId);
+
+                    // 如果是首次加载，默认播放第一首
                     currentSong.value = songs.value[0];
+                    // 尝试播放第一首歌曲
+                    if (currentSong.value) {
+                        playSongDirectly(currentSong.value);
+                    }
+                } else if (currentPlayingSongId) {
+                    // 恢复之前的播放状态
+                    const songIndex = songs.value.findIndex(s => s.id === currentPlayingSongId);
+                    if (songIndex !== -1) {
+                        currentSong.value = songs.value[songIndex];
+                        // 如果之前在播放，则继续播放
+                        if (wasPlaying && audioRef.value) {
+                            audioRef.value.play().catch(error => {
+                                console.error('恢复播放失败:', error);
+                                isPlaying.value = false;
+                            });
+                        }
+                    }
                 }
 
                 message.success(`已加载 ${playlist.name} 歌单，共 ${playlistSongs.length} 首歌曲`);
@@ -883,10 +912,6 @@ const loadPlaylist = async (playlistId: string): Promise<void> => {
     } finally {
         playlist.loading = false;
     }
-};
-
-const handleRowClick = (song: Song): void => {
-    playSongDirectly(song);
 };
 
 // 进度条和音量控制
@@ -965,7 +990,7 @@ const handleLyricsScroll = (): void => {
 };
 
 const handleProgressClick = (event: MouseEvent): void => {
-    if (!progressTrack.value || !audioRef.value) return;
+    if (!progressTrack.value || !audioRef.value || !currentSong.value) return;
 
     const rect = progressTrack.value.getBoundingClientRect();
     const clickPosition = event.clientX - rect.left;
@@ -1101,6 +1126,17 @@ const prepareLyrics = (rawLyrics: ParsedLyric[]): ParsedLyric[] => {
     }
     result.push(...rawLyrics);
     return result;
+};
+
+// 监听loadedPlaylistIds变化，保存到localStorage
+watch(loadedPlaylistIds, (newValue) => {
+    localStorage.setItem('loadedPlaylistIds', JSON.stringify(newValue));
+}, { deep: true });
+
+// 清除已加载歌单列表
+const clearLoadedPlaylists = (): void => {
+    loadedPlaylistIds.value = [];
+    message.success('已清除歌单缓存，可以重新加载歌单');
 };
 </script>
 <style lang="scss" scoped>
@@ -1317,6 +1353,11 @@ $hover-bg: rgba(255, 255, 255, 0.1);
 .music-content-layout {
     display: flex;
     height: calc(100vh - 165px);
+    transition: all 0.3s ease;
+
+    &.full-width {
+        display: block;
+    }
 }
 
 /* 左侧歌曲列表 */
@@ -1326,6 +1367,13 @@ $hover-bg: rgba(255, 255, 255, 0.1);
     height: 100%;
     padding-right: 15px;
     border-right: 1px solid rgba(255, 255, 255, 0.1);
+    transition: width 0.3s ease;
+
+    &.full-width {
+        width: 100%;
+        padding-right: 0;
+        border-right: none;
+    }
 }
 
 .music-list {
@@ -1343,7 +1391,7 @@ $hover-bg: rgba(255, 255, 255, 0.1);
     &::-webkit-scrollbar-thumb {
         background: rgba(180, 180, 180, 0.3);
         border-radius: 3px;
-        
+
         &:hover {
             background: rgba(180, 180, 180, 0.5);
         }
@@ -1360,33 +1408,33 @@ $hover-bg: rgba(255, 255, 255, 0.1);
         text-align: left;
         padding: 12px 15px;
         color: rgba(255, 255, 255, 0.7);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         font-size: 14px;
         font-weight: normal;
         position: sticky;
         top: 0;
-        background-color: rgba(0, 10, 30, 0.5);
+        background-color: transparent;
         z-index: 10;
+        border-bottom: 1px dashed rgba(255, 255, 255, 0.15);
     }
 
     td {
         padding: 12px 15px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         font-size: 14px;
         color: rgba(255, 255, 255, 0.9);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
         position: relative;
+        border-bottom: 1px dashed rgba(255, 255, 255, 0.15);
     }
 
     tr {
         position: relative;
         transition: background-color 0.2s, transform 0.1s;
-        cursor: pointer;
+        cursor: default;
 
         &:hover {
-            background-color: rgba(255, 255, 255, 0.1);
+            background-color: rgba(255, 255, 255, 0.05);
 
             .song-actions {
                 display: flex;
@@ -1395,7 +1443,7 @@ $hover-bg: rgba(255, 255, 255, 0.1);
         }
 
         &.current-row {
-            background-color: rgba(46, 253, 113, 0.15);
+            background-color: rgba(24, 144, 255, 0.1);
         }
     }
 }
@@ -1406,16 +1454,11 @@ $hover-bg: rgba(255, 255, 255, 0.1);
     right: 15px;
     top: 50%;
     transform: translateY(-50%);
-    display: flex;
+    display: none;
     align-items: center;
     gap: 6px;
     opacity: 0;
     transition: opacity 0.2s ease;
-}
-
-tr.current-row .song-actions {
-    display: flex;
-    opacity: 1;
 }
 
 .action-btn {
@@ -1540,7 +1583,7 @@ tr.current-row .song-actions {
     &::-webkit-scrollbar-thumb {
         background: rgba(180, 180, 180, 0.3);
         border-radius: 3px;
-        
+
         &:hover {
             background: rgba(180, 180, 180, 0.5);
         }
@@ -1626,6 +1669,7 @@ tr.current-row .song-actions {
     border-radius: 8px;
     overflow: hidden;
     cursor: pointer;
+    position: relative;
 
     &:hover {
         transform: translateY(-5px);
@@ -1636,6 +1680,21 @@ tr.current-row .song-actions {
     &.loading {
         pointer-events: none;
         opacity: 0.7;
+    }
+
+    &.loaded {
+        &::after {
+            content: '已加载';
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(0, 175, 255, 0.8);
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            opacity: 0.9;
+        }
     }
 }
 
@@ -1820,6 +1879,15 @@ tr.current-row .song-actions {
 
     &:hover {
         color: #fff;
+    }
+
+    &.disabled {
+        color: rgba(255, 255, 255, 0.3);
+        cursor: default;
+
+        &:hover {
+            color: rgba(255, 255, 255, 0.3);
+        }
     }
 }
 
@@ -2027,9 +2095,13 @@ tr.current-row .song-actions {
 }
 
 /* 优化特定区域滚动条 */
-.music-list-container, .playlist-grid-container, .search-container {
-    scrollbar-width: thin; /* Firefox */
-    scrollbar-color: rgba(180, 180, 180, 0.3) rgba(0, 0, 0, 0.1); /* Firefox */
+.music-list-container,
+.playlist-grid-container,
+.search-container {
+    scrollbar-width: thin;
+    /* Firefox */
+    scrollbar-color: rgba(180, 180, 180, 0.3) rgba(0, 0, 0, 0.1);
+    /* Firefox */
 }
 
 /* 覆盖原有的滚动条样式，保持一致性 */
@@ -2046,10 +2118,79 @@ tr.current-row .song-actions {
     &::-webkit-scrollbar-thumb {
         background: rgba(180, 180, 180, 0.3);
         border-radius: 3px;
-        
+
         &:hover {
             background: rgba(180, 180, 180, 0.5);
         }
+    }
+}
+
+/* 用户下拉菜单样式 */
+.user-dropdown-btn {
+    padding: 0;
+    min-width: auto;
+    height: auto;
+    display: none; // 默认隐藏按钮，只显示图标
+}
+
+.user-dropdown-content {
+    width: 220px;
+    padding: 5px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+
+    // 在暗黑模式下的样式
+    .dark-theme & {
+        background-color: #162035;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+    }
+}
+
+/* 隐藏多余的用户图标，只保留一个 */
+.nav-btn.user-btn {
+    position: relative;
+
+    .anticon {
+        font-size: 18px;
+    }
+
+    // 将按钮图标隐藏，只显示链接图标
+    .ant-btn-link .anticon {
+        display: none;
+    }
+}
+
+/* 歌单页面样式 */
+.playlist-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 0 10px;
+
+    h2 {
+        margin: 0;
+        color: #fff;
+        font-size: 18px;
+    }
+}
+
+.clear-cache-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: rgba(255, 255, 255, 0.8);
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+        background-color: rgba(255, 255, 255, 0.15);
+        color: #fff;
     }
 }
 </style>

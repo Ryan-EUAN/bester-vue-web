@@ -77,25 +77,27 @@
 .dark-theme table,
 .dark-theme .table {
   color: var(--primary-text, #e0e0e0) !important;
-  background-color: var(--forum-card-bg, #131c30) !important;
-  border-color: var(--border-color, rgba(255, 255, 255, 0.1)) !important;
+  background-color: transparent !important;
+  border-color: transparent !important;
 }
 
 .dark-theme th,
 .dark-theme .table-header {
-  background-color: var(--forum-header-bg, #0d1629) !important;
+  background-color: transparent !important;
   color: var(--primary-text, #e0e0e0) !important;
-  border-color: var(--border-color, rgba(255, 255, 255, 0.1)) !important;
+  border-color: transparent !important;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.15) !important;
 }
 
 .dark-theme td,
 .dark-theme .table-cell {
-  border-color: var(--border-color, rgba(255, 255, 255, 0.1)) !important;
+  border-color: transparent !important;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.15) !important;
 }
 
 .dark-theme tr:hover,
 .dark-theme .table-row:hover {
-  background-color: var(--forum-item-hover, #1f2c45) !important;
+  background-color: rgba(255, 255, 255, 0.05) !important;
 }
 
 /* 修正特定区域 */
