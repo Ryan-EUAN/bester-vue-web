@@ -1,3 +1,4 @@
+/* 全局样式 */
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -59,10 +60,11 @@ button:focus-visible {
 }
 
 #app {
-  max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem;
   text-align: center;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
 }
 
 @media (prefers-color-scheme: light) {
@@ -76,4 +78,692 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
+}
+
+/* 音乐播放器样式 */
+/* 全局样式变量 */
+@primary-color: #2efd71;
+@bg-color: rgba(30, 30, 40, 0.95);
+@bg-gradient: linear-gradient(to bottom, rgba(40, 40, 60, 0.95), rgba(20, 20, 30, 0.98));
+@text-color: #fff;
+@text-secondary: rgba(255, 255, 255, 0.7);
+@border-color: rgba(255, 255, 255, 0.15);
+@control-bg: rgba(255, 255, 255, 0.1);
+@active-bg: rgba(255, 255, 255, 0.15);
+@hover-bg: rgba(255, 255, 255, 0.1);
+
+/* 主容器样式 */
+#music-container {
+  width: 100%;
+  height: 100vh;
+  background-color: @bg-color;
+  background-image: @bg-gradient;
+  color: @text-color;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+
+  &.hidden {
+    display: none;
+  }
+}
+
+.main-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* 头部样式 */
+.music-header {
+  padding: 15px 20px;
+  border-bottom: 1px solid @border-color;
+  
+  h1 {
+    font-size: 18px;
+    font-weight: normal;
+    color: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    i {
+      color: rgba(255, 255, 255, 0.9);
+    }
+  }
+}
+
+/* 控制按钮区域 */
+.control-buttons {
+  padding: 12px 20px;
+  border-bottom: 1px solid @border-color;
+}
+
+.tab-group {
+  display: inline-flex;
+}
+
+.tab-button {
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid @border-color;
+  color: @text-secondary;
+  padding: 6px 15px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:not(:last-child) {
+    border-right: none;
+  }
+
+  &:first-child {
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+  }
+
+  &:last-child {
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+  }
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+  }
+
+  &.active {
+    background-color: rgba(255, 255, 255, 0.15);
+    color: #fff;
+  }
+
+  i {
+    margin-right: 4px;
+  }
+}
+
+/* 主体内容 */
+.main-content {
+  flex: 1;
+  overflow: hidden;
+  margin-bottom: 60px; /* 为底部播放器留出空间 */
+}
+
+/* 音乐内容布局 */
+.music-content-layout {
+  display: flex;
+  height: calc(100vh - 165px);
+}
+
+/* 左侧歌曲列表 */
+.music-list-container {
+  width: 70%;
+  overflow: hidden;
+  height: 100%;
+  padding-right: 15px;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.music-list {
+  height: 100%;
+  overflow-y: auto;
+  
+  &::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    
+    &:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+  }
+}
+
+/* 表格样式 */
+.music-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+
+  th {
+    text-align: left;
+    padding: 12px 15px;
+    color: rgba(255, 255, 255, 0.7);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 14px;
+    font-weight: normal;
+    position: sticky;
+    top: 0;
+    background-color: rgba(30, 30, 40, 0.95);
+    z-index: 10;
+  }
+
+  td {
+    padding: 12px 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.9);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    position: relative;
+  }
+
+  tr {
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+
+      .song-actions {
+        display: flex;
+      }
+    }
+
+    &.current-row {
+      background-color: rgba(255, 255, 255, 0.08);
+    }
+  }
+}
+
+/* 行操作按钮 */
+.song-actions {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: none;
+  align-items: center;
+  gap: 6px;
+}
+
+.action-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+}
+
+/* 右侧歌曲详情 */
+.song-detail-container {
+  width: 30%;
+  height: 100%;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* 专辑封面区域 */
+.album-cover-area {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 15px 0;
+}
+
+.album-cover-container {
+  width: 100px;
+  height: 100px;
+  position: relative;
+}
+
+.album-cover {
+  width: 100%;
+  height: 100%;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(40, 40, 60, 0.5);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  i {
+    font-size: 36px;
+    color: rgba(255, 255, 255, 0.3);
+  }
+}
+
+/* 歌词区域 */
+.lyrics-area {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.song-title-large {
+  font-size: 16px;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.song-artist-album {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dynamic-lyrics {
+  flex: 1;
+  overflow-y: auto;
+  padding: 5px 0;
+
+  &::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    
+    &:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+  }
+}
+
+.lyrics-wrapper {
+  padding: 20px 10px;
+}
+
+.lyric-line {
+  text-align: center;
+  padding: 6px 0;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  transition: all 0.3s;
+
+  &.active {
+    color: @primary-color;
+    font-size: 15px;
+    font-weight: bold;
+  }
+}
+
+/* 字符高亮效果 */
+.char-container {
+  display: inline-block;
+}
+
+.lyric-char {
+  position: relative;
+  display: inline-block;
+}
+
+.char-bg {
+  opacity: 0.6;
+}
+
+.char-highlight {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+}
+
+.no-lyrics {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 20px 0;
+  font-style: italic;
+}
+
+/* 播放列表页面 */
+.playlist-grid-container {
+  padding: 20px;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.playlist-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 20px;
+}
+
+.playlist-card {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.3s;
+
+  &:hover {
+    transform: translateY(-5px);
+  }
+
+  &.loading {
+    pointer-events: none;
+    opacity: 0.7;
+  }
+}
+
+.playlist-cover {
+  width: 100%;
+  height: 0;
+  padding-bottom: 100%;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.playlist-cover-text {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.playlist-name {
+  padding: 10px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 搜索页面 */
+.search-container {
+  padding: 20px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.search-box {
+  display: flex;
+  margin-bottom: 20px;
+}
+
+.search-input {
+  flex: 1;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-right: none;
+  color: #fff;
+  padding: 10px 15px;
+  font-size: 14px;
+  border-radius: 4px 0 0 4px;
+  outline: none;
+
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  &:focus {
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+}
+
+.search-btn {
+  background-color: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  padding: 0 15px;
+  border-radius: 0 4px 4px 0;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.25);
+  }
+}
+
+.search-results {
+  flex: 1;
+  overflow-y: auto;
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th {
+      text-align: left;
+      padding: 12px 15px;
+      color: rgba(255, 255, 255, 0.7);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      font-weight: normal;
+      font-size: 14px;
+    }
+
+    td {
+      padding: 12px 15px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 14px;
+    }
+
+    tr:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+  }
+}
+
+.icon-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin: 0 3px;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+}
+
+/* 底部播放器 */
+.music-player {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  background-color: rgba(20, 20, 30, 0.95);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  z-index: 100;
+}
+
+.player-controls {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.controls-left, .controls-right {
+  display: flex;
+  align-items: center;
+}
+
+.control-button {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  margin: 0 5px;
+  transition: color 0.2s;
+
+  &:hover {
+    color: #fff;
+  }
+}
+
+.progress-container {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  margin: 0 20px;
+}
+
+.current-time, .total-time {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  min-width: 40px;
+  text-align: center;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 4px;
+  background-color: rgba(255, 255, 255, 0.1);
+  margin: 0 10px;
+  position: relative;
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.progress-current {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background-color: #fff;
+  border-radius: 2px;
+}
+
+.progress-handle {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  background-color: #fff;
+  border-radius: 50%;
+  margin-left: -6px;
+}
+
+.volume-slider-custom {
+  width: 80px;
+  margin-left: 10px;
+}
+
+.volume-track {
+  height: 4px;
+  background-color: rgba(255, 255, 255, 0.1);
+  position: relative;
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.volume-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background-color: #fff;
+  border-radius: 2px;
+}
+
+.volume-handle {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  background-color: #fff;
+  border-radius: 50%;
+  margin-left: -6px;
+}
+
+/* 加载更多按钮和分页 */
+.load-more-container {
+  text-align: center;
+  margin: 15px 0;
+}
+
+.load-more-btn {
+  background-color: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #fff;
+  padding: 8px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+}
+
+.pagination-info {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+.no-results {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: rgba(255, 255, 255, 0.5);
 }

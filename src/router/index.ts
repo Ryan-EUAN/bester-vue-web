@@ -311,6 +311,15 @@ const routes: RouteRecordRaw[] = [
     path: '/websocket',
     name: 'WebSocket',
     component: () => import('@/components/WebSocketDemo.vue'),
+  },
+  {
+    path: '/music',
+    name: 'Music',
+    component: () => import('@/views/music/PC.vue'),
+    meta: {
+      title: '在线音乐 - 贝斯特网站',
+      requiresAuth: false
+    }
   }
 ];
 

@@ -11,9 +11,11 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import heartbeatService from './services/heartbeat';
+import { initTheme, applyThemeToNewComponents } from './utils/themeUtils';
 
 const loading = ref(true);
 let heartbeatTimer: number | null = null;
+let mutationObserver: MutationObserver | null = null;
 
 // 初始化心跳服务，如果失败则重试有限次数
 const initHeartbeatService = (retryCount = 0, maxRetries = 3) => {
@@ -51,12 +53,53 @@ onMounted(() => {
         document.head.appendChild(link);
     });
 
+    // 初始化主题
+    initTheme();
+    
+    // 设置MutationObserver监听DOM变化，以便对新添加的元素应用主题
+    mutationObserver = new MutationObserver((mutations) => {
+        let needsThemeUpdate = false;
+        
+        mutations.forEach(mutation => {
+            if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                // 检查添加的节点中是否包含需要主题适配的元素
+                mutation.addedNodes.forEach(node => {
+                    if (node.nodeType === Node.ELEMENT_NODE) {
+                        const element = node as Element;
+                        if (element.classList.contains('ant-table') || 
+                            element.classList.contains('el-table') ||
+                            element.classList.contains('ant-list') ||
+                            element.classList.contains('el-list') ||
+                            element.classList.contains('ant-card') ||
+                            element.classList.contains('el-card') ||
+                            element.querySelectorAll('.ant-table, .el-table, .ant-list, .el-list, .ant-card, .el-card').length > 0) {
+                            needsThemeUpdate = true;
+                        }
+                    }
+                });
+            }
+        });
+        
+        if (needsThemeUpdate) {
+            applyThemeToNewComponents();
+        }
+    });
+    
+    // 开始观察整个文档
+    mutationObserver.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+
     // 模拟初始加载完成的时间
     setTimeout(() => {
         loading.value = false;
         
         // 在加载完成后初始化心跳服务
         initHeartbeatService();
+        
+        // 确保应用主题到已加载的组件
+        applyThemeToNewComponents();
     }, 1000);
     
     // 初始化WebSocket连接
@@ -78,6 +121,11 @@ onBeforeUnmount(() => {
     if (heartbeatTimer !== null) {
         clearInterval(heartbeatTimer);
     }
+    
+    // 停止观察DOM变化
+    if (mutationObserver) {
+        mutationObserver.disconnect();
+    }
 });
 </script>
 
@@ -88,11 +136,14 @@ body {
     margin: 0;
     padding: 0;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .app-container {
     width: 100%;
     height: 100vh;
+    background-color: var(--secondary-bg, #f5f5f5);
+    color: var(--primary-text, #333);
 }
 
 /* 加载指示器样式 */
@@ -102,7 +153,7 @@ body {
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background-color: #f8f9fa;
+    background-color: var(--secondary-bg, #f5f5f5);
 }
 
 .loading-spinner {
@@ -110,14 +161,14 @@ body {
     height: 50px;
     border: 5px solid rgba(0, 174, 224, 0.2);
     border-radius: 50%;
-    border-top-color: #00aee0;
+    border-top-color: var(--primary-color);
     animation: spin 1s ease-in-out infinite;
 }
 
 .loading-text {
     margin-top: 20px;
     font-size: 16px;
-    color: #00aee0;
+    color: var(--primary-color);
     font-weight: 500;
 }
 
@@ -131,7 +182,36 @@ body {
 :root {
     --primary-color: #00aee0;
     --text-color: #333;
-    --light-bg: #f8f9fa;
+    --light-bg: #f5f5f5;
     --border-color: #e4e7ed;
+}
+
+/* 深色模式下的加载器样式 */
+.dark-theme .loading-container {
+    background-color: var(--secondary-bg, #0c1426);
+}
+
+.dark-theme .loading-text {
+    color: var(--primary-color, #00aee0);
+}
+
+.dark-theme .app-container {
+    background-color: var(--secondary-bg, #0c1426);
+    color: var(--primary-text, #e0e0e0);
+}
+
+/* 确保论坛主题列表使用正确的背景色 */
+.dark-theme .forum-list,
+.dark-theme .thread-list {
+    background-color: var(--forum-card-bg, #131c30);
+}
+
+/* 确保白底卡片在深色模式下正确显示 */
+.dark-theme .white-card,
+.dark-theme .white-bg,
+.dark-theme .bg-white {
+    background-color: var(--forum-card-bg, #131c30) !important;
+    color: var(--primary-text, #e0e0e0) !important;
+    border-color: var(--border-color, rgba(255, 255, 255, 0.1)) !important;
 }
 </style>

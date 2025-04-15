@@ -125,19 +125,19 @@ const handleLeave = (el: Element) => {
 <style lang="less" scoped>
 .module-area-wrapper {
     margin-top: 1vh;
-    border: 0.05vw solid #e8e8e8;
+    border: 0.05vw solid var(--border-color, #e8e8e8);
     border-radius: 0.4vw;
     margin-bottom: 1vh;
-    background: #fff;
+    background: var(--card-bg, #f5f5f5);
 
     .area-header {
         position: relative;
         padding: 1vh 1vw;
-        border-bottom: 0.05vw solid #e8e8e8;
+        border-bottom: 0.05vw solid var(--border-color, #e8e8e8);
         display: flex;
         justify-content: space-between;
         align-items: center;
-        background: #fafafa;
+        background: var(--secondary-bg, #fafafa);
         border-radius: 0.4vw 0.4vw 0 0;
 
         .title-line {
@@ -152,14 +152,14 @@ const handleLeave = (el: Element) => {
                 transform: translateY(-50%);
                 width: 0.2vw;
                 height: 2vh;
-                background: #1890ff;
+                background: var(--accent-color, #1890ff);
                 border-radius: 0 0.1vw 0.1vw 0;
             }
 
             .title-text {
                 font-size: 0.9vw;
                 font-weight: bold;
-                color: #333;
+                color: var(--primary-text, #333);
                 margin-left: 0.2vw;
             }
         }
@@ -170,9 +170,10 @@ const handleLeave = (el: Element) => {
             display: flex;
             align-items: center;
             justify-content: center;
+            color: var(--primary-text, #333);
 
             &:hover {
-                background: #e6f7ff;
+                background: rgba(0, 174, 224, 0.1);
             }
 
             :deep(.anticon) {
@@ -216,16 +217,16 @@ const handleLeave = (el: Element) => {
 
 .module-item {
     width: calc(25% - 12px); // 一行四个，考虑间距
-    background: #f8f8f8;
+    background: var(--list-item-bg, #f8f8f8);
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
     overflow: hidden;
 
     &:hover {
-        background: #f0f0f0;
+        background: var(--list-item-hover, #f0f0f0);
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 12px var(--shadow-color, rgba(0, 0, 0, 0.1));
     }
 
     .item-container {
@@ -255,7 +256,7 @@ const handleLeave = (el: Element) => {
             .module-name {
                 font-size: 0.9rem;
                 font-weight: 600;
-                color: #333;
+                color: var(--primary-text, #333);
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
@@ -270,14 +271,14 @@ const handleLeave = (el: Element) => {
 
         .info-row {
             font-size: 0.7rem;
-            color: #666;
+            color: var(--secondary-text, #666);
 
             .stats {
-                color: #888;
+                color: var(--secondary-text, #888);
             }
 
             .last-post {
-                color: #999;
+                color: var(--secondary-text, #999);
                 font-size: 0.65rem;
             }
         }

@@ -1,0 +1,114 @@
+/* 论坛主题列表和帖子的深色主题样式覆盖 */
+
+/* 主题列表项样式 */
+.dark-theme .topic-item,
+.dark-theme .post-item,
+.dark-theme .thread-item,
+.dark-theme .list-group-item {
+  background-color: var(--forum-item-bg, #182338) !important;
+  border-color: var(--border-color, rgba(255, 255, 255, 0.1)) !important;
+  color: var(--primary-text, #e0e0e0) !important;
+}
+
+.dark-theme .topic-item:hover,
+.dark-theme .post-item:hover,
+.dark-theme .thread-item:hover,
+.dark-theme .list-group-item:hover {
+  background-color: var(--forum-item-hover, #1f2c45) !important;
+}
+
+/* 数字标记和编号 */
+.dark-theme .circle-number,
+.dark-theme .number-badge,
+.dark-theme .badge {
+  background-color: var(--post-number-bg, #1c2940) !important;
+  color: var(--post-number-text, #00aee0) !important;
+}
+
+/* 卡片和面板 */
+.dark-theme .card,
+.dark-theme .panel,
+.dark-theme .box,
+.dark-theme .module-box {
+  background-color: var(--forum-card-bg, #131c30) !important;
+  border-color: var(--border-color, rgba(255, 255, 255, 0.1)) !important;
+}
+
+.dark-theme .card-header,
+.dark-theme .panel-header,
+.dark-theme .box-header,
+.dark-theme .module-header {
+  background-color: var(--forum-header-bg, #0d1629) !important;
+  border-color: var(--border-color, rgba(255, 255, 255, 0.1)) !important;
+  color: var(--primary-text, #e0e0e0) !important;
+}
+
+/* 顶部导航标签 */
+.dark-theme .nav-tab,
+.dark-theme .tab-nav,
+.dark-theme .tab-bar {
+  background-color: var(--forum-header-bg, #0d1629) !important;
+  border-color: var(--border-color, rgba(255, 255, 255, 0.1)) !important;
+}
+
+.dark-theme .nav-tab-item,
+.dark-theme .tab-item {
+  color: var(--secondary-text, #b0b0b0) !important;
+}
+
+.dark-theme .nav-tab-item.active,
+.dark-theme .tab-item.active,
+.dark-theme .nav-tab-item:hover,
+.dark-theme .tab-item:hover {
+  color: var(--primary-text, #e0e0e0) !important;
+  border-color: var(--accent-color, #00aee0) !important;
+  background-color: var(--forum-item-hover, #1f2c45) !important;
+}
+
+/* 帖子日期和时间 */
+.dark-theme .date,
+.dark-theme .time,
+.dark-theme .datetime,
+.dark-theme .timestamp {
+  color: var(--secondary-text, #b0b0b0) !important;
+}
+
+/* 表格样式 */
+.dark-theme table,
+.dark-theme .table {
+  color: var(--primary-text, #e0e0e0) !important;
+  background-color: var(--forum-card-bg, #131c30) !important;
+  border-color: var(--border-color, rgba(255, 255, 255, 0.1)) !important;
+}
+
+.dark-theme th,
+.dark-theme .table-header {
+  background-color: var(--forum-header-bg, #0d1629) !important;
+  color: var(--primary-text, #e0e0e0) !important;
+  border-color: var(--border-color, rgba(255, 255, 255, 0.1)) !important;
+}
+
+.dark-theme td,
+.dark-theme .table-cell {
+  border-color: var(--border-color, rgba(255, 255, 255, 0.1)) !important;
+}
+
+.dark-theme tr:hover,
+.dark-theme .table-row:hover {
+  background-color: var(--forum-item-hover, #1f2c45) !important;
+}
+
+/* 修正特定区域 */
+.dark-theme .white-row,
+.dark-theme .white-column,
+.dark-theme .white-container,
+.dark-theme [class*="white-"],
+.dark-theme [class*="bg-white"] {
+  background-color: var(--forum-card-bg, #131c30) !important;
+  color: var(--primary-text, #e0e0e0) !important;
+}
+
+/* 确保不透明度设置正确 */
+.dark-theme * {
+  --bg-opacity: 1 !important;
+} 

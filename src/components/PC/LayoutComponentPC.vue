@@ -1,6 +1,6 @@
 <template>
     <div class="layout-container">
-        <HeadComponent @openLogin="showLoginDialog" style="height: 15vh;" />
+        <HeadComponent @openLogin="showLoginDialog" />
         <div class="main-content">
             <router-view />
         </div>

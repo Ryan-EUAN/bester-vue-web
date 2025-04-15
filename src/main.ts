@@ -7,5 +7,7 @@ import App from './App.vue'
 import router from './router'
 import Vant from 'vant';
 import 'vant/lib/index.css';
+// 导入主题覆盖样式
+import './assets/styles/theme-overrides.css';
 
 createApp(App).use(router).use(ElementPlus).use(Antd).use(Vant).mount('#app')

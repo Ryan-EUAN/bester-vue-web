@@ -266,19 +266,19 @@ onBeforeUnmount(() => {
 <style scoped lang="scss">
 .online-membership-module {
     margin-top: 1vh;
-    border: 0.05vw solid #e8e8e8;
+    border: 0.05vw solid var(--border-color, #e8e8e8);
     border-radius: 0.4vw;
     margin-bottom: 1vh;
-    background: #fff;
+    background: var(--card-bg, #f5f5f5);
 
     .area-header {
         position: relative;
         padding: 1vh 1vw;
-        border-bottom: 0.05vw solid #e8e8e8;
+        border-bottom: 0.05vw solid var(--border-color, #e8e8e8);
         display: flex;
         justify-content: space-between;
         align-items: center;
-        background: #fafafa;
+        background: var(--secondary-bg, #fafafa);
         border-radius: 0.4vw 0.4vw 0 0;
 
         .title-line {
@@ -293,14 +293,14 @@ onBeforeUnmount(() => {
                 transform: translateY(-50%);
                 width: 0.2vw;
                 height: 2vh;
-                background: #1890ff;
+                background: var(--accent-color, #1890ff);
                 border-radius: 0 0.1vw 0.1vw 0;
             }
 
             .title-text {
                 font-size: 0.9vw;
                 font-weight: bold;
-                color: #333;
+                color: var(--primary-text, #333);
                 margin-left: 0.2vw;
             }
         }
@@ -311,9 +311,10 @@ onBeforeUnmount(() => {
             display: flex;
             align-items: center;
             justify-content: center;
+            color: var(--primary-text, #333);
 
             &:hover {
-                background: #e6f7ff;
+                background: rgba(0, 174, 224, 0.1);
             }
 
             :deep(.anticon) {
@@ -345,22 +346,25 @@ onBeforeUnmount(() => {
 
     .member-item {
         padding: 1vh 1vw;
-        border: 0.05vw solid #f0f0f0;
+        border: 0.05vw solid var(--border-color, #f0f0f0);
         border-radius: 0.2vw;
         width: 6vw;
         transition: all 0.3s;
+        background-color: var(--list-item-bg, #fff);
 
         &:hover {
             transform: translateY(-0.2vh);
-            box-shadow: 0 0.1vh 0.4vh rgba(0, 0, 0, 0.1);
+            box-shadow: 0 0.1vh 0.4vh var(--shadow-color, rgba(0, 0, 0, 0.1));
+            background-color: var(--list-item-hover, #f9f9f9);
         }
 
         span {
             margin-top: 0.5vh;
             font-size: 0.7vw;
+            color: var(--primary-text, #333);
 
             &:last-child {
-                color: #666;
+                color: var(--secondary-text, #666);
             }
         }
     }
@@ -368,11 +372,11 @@ onBeforeUnmount(() => {
     .statistics {
         margin-top: 1.5vh;
         padding: 1vh 1vw;
-        border-top: 0.05vw solid #f0f0f0;
+        border-top: 0.05vw solid var(--border-color, #f0f0f0);
 
         span {
             margin-right: 2vw;
-            color: #666;
+            color: var(--secondary-text, #666);
             font-size: 0.7vw;
         }
     }
