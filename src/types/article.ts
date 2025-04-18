@@ -14,10 +14,10 @@ export interface ArticleData {
     articles: number;
     isFollowed: boolean;
   };
-  likes: any[];
+  likes: number[];
   comments: any[];
   browse: number;
-  images: string[];
+  images: ImageInfo[];
 }
 
 // 二级评论接口
@@ -36,7 +36,7 @@ export interface SubComment {
 
 // 回复接口
 export interface Reply {
-  id: number;
+  id: number | string;
   username: string;
   avatar: string;
   content: string;
@@ -129,6 +129,68 @@ export interface UserPost {
  * 用户帖子列表返回结构
  */
 export interface UserPostsResponse {
-  posts: UserPost[];        // 帖子列表
+  list: UserPost[];        // 帖子列表
   total: number;            // 总数量
+}
+
+export interface Article {
+  id: string;
+  title: string;
+  content: string;
+  createTime: string;
+  updateTime: string;
+  author: {
+    id: string;
+    name: string;
+    avatar: string;
+  };
+  likes: number;
+  comments: number;
+  views: number;
+  images?: string[];
+  lastReply?: {
+    id: string;
+    content: string;
+    createTime: string;
+    author: {
+      id: string;
+      name: string;
+      avatar: string;
+    };
+  };
+}
+
+export interface ArticleListResponse {
+  total: number;
+  list: Article[];
+  pageSize: number;
+  pageNum: number;
+}
+
+export interface Reply {
+  id: number | string;
+  content: string;
+  createTime: string;
+  articleId: string;
+  articleTitle: string;
+  author: {
+    id: number | string;
+    name: string;
+    avatar: string;
+  };
+}
+
+export interface ReplyListResponse {
+  total: number;
+  list: Reply[];
+  pageSize: number;
+  pageNum: number;
+}
+
+// 图片类型定义
+export interface ImageInfo {
+  url: string;
+  name: string;
+  type: string;
+  key: string;
 } 

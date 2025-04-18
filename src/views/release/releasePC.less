@@ -1,0 +1,677 @@
+.release-container {
+    background-color: #fff;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+    min-height: 80vh;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+  
+    &.dark-mode {
+      background-color: #0d1117;
+      color: rgba(255, 255, 255, 0.85);
+  
+      .main-content {
+        .title-area {
+          border-bottom-color: #21262d;
+  
+          .title-input {
+            :deep(.ant-input) {
+              background-color: transparent;
+              color: rgba(255, 255, 255, 0.85);
+  
+              &::placeholder {
+                color: rgba(255, 255, 255, 0.45);
+              }
+  
+              &-show-count-suffix {
+                color: rgba(255, 255, 255, 0.45);
+              }
+            }
+          }
+        }
+  
+        .content-area {
+          .content-input {
+            background-color: #161b22;
+            color: rgba(255, 255, 255, 0.85);
+            border-color: #30363d;
+  
+            &::placeholder {
+              color: rgba(255, 255, 255, 0.45);
+            }
+  
+            &:hover {
+              border-color: #1f6feb;
+            }
+  
+            &:focus {
+              border-color: #2f81f7;
+              box-shadow: 0 0 0 2px rgba(47, 129, 247, 0.2);
+            }
+          }
+  
+          .image-preview {
+            .image-item {
+              background-color: #161b22;
+              border: 1px solid #30363d;
+  
+              .delete-icon {
+                background-color: rgba(13, 17, 23, 0.6);
+                color: rgba(255, 255, 255, 0.85);
+                border-radius: 50%;
+  
+                &:hover {
+                  background-color: rgba(13, 17, 23, 0.8);
+                }
+              }
+            }
+          }
+        }
+  
+        .toolbar {
+          border-top-color: #21262d;
+  
+          .tool-item {
+            color: rgba(255, 255, 255, 0.65);
+  
+            &:hover {
+              color: #2f81f7;
+              background-color: rgba(47, 129, 247, 0.1);
+            }
+  
+            &.selected {
+              color: #2f81f7;
+              background-color: rgba(47, 129, 247, 0.15);
+            }
+          }
+  
+          .publish-type-selector {
+            color: rgba(255, 255, 255, 0.85);
+          }
+  
+          :deep(.ant-btn) {
+            &.ant-btn-primary {
+              background-color: #238636;
+              border-color: #238636;
+  
+              &:hover {
+                background-color: #2ea043;
+                border-color: #2ea043;
+              }
+            }
+  
+            &.ant-btn-default {
+              background-color: #21262d;
+              border-color: #30363d;
+              color: rgba(255, 255, 255, 0.85);
+  
+              &:hover {
+                background-color: #30363d;
+                border-color: #8b949e;
+                color: rgba(255, 255, 255, 0.85);
+              }
+            }
+          }
+        }
+      }
+  
+      :deep(.ant-dropdown-menu) {
+        background-color: #161b22;
+        border: 1px solid #30363d;
+        
+        .ant-dropdown-menu-item {
+          color: rgba(255, 255, 255, 0.85);
+  
+          &:hover {
+            background-color: rgba(47, 129, 247, 0.1);
+          }
+        }
+      }
+  
+      .module-selector {
+        :deep(.ant-tabs-nav) {
+          &::before {
+            border-bottom-color: #21262d;
+          }
+  
+          .ant-tabs-tab {
+            color: rgba(255, 255, 255, 0.65);
+  
+            &:hover {
+              color: #2f81f7;
+            }
+  
+            &.ant-tabs-tab-active .ant-tabs-tab-btn {
+              color: #2f81f7;
+            }
+          }
+  
+          .ant-tabs-ink-bar {
+            background: #2f81f7;
+          }
+        }
+  
+        .module-grid {
+          .module-item {
+            background-color: #161b22;
+            border-color: #30363d;
+  
+            &:hover {
+              background-color: rgba(47, 129, 247, 0.1);
+              box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+              border-color: #8b949e;
+            }
+  
+            &.active {
+              background-color: rgba(47, 129, 247, 0.15);
+              border-color: #2f81f7;
+  
+              .module-name {
+                color: #2f81f7;
+              }
+            }
+  
+            .module-name {
+              color: rgba(255, 255, 255, 0.85);
+            }
+  
+            .module-info {
+              color: rgba(255, 255, 255, 0.45);
+            }
+          }
+        }
+      }
+  
+      :deep(.ant-modal-content) {
+        background-color: #161b22;
+        
+        .ant-modal-header {
+          background-color: #161b22;
+          border-bottom-color: #21262d;
+          
+          .ant-modal-title {
+            color: rgba(255, 255, 255, 0.85);
+          }
+        }
+  
+        .ant-modal-close {
+          color: rgba(255, 255, 255, 0.45);
+  
+          &:hover {
+            color: rgba(255, 255, 255, 0.85);
+          }
+        }
+      }
+  
+      :deep(.ant-picker) {
+        background-color: #161b22;
+        border-color: #30363d;
+  
+        input {
+          color: rgba(255, 255, 255, 0.85);
+  
+          &::placeholder {
+            color: rgba(255, 255, 255, 0.45);
+          }
+        }
+  
+        .ant-picker-suffix {
+          color: rgba(255, 255, 255, 0.45);
+        }
+  
+        &:hover {
+          border-color: #1f6feb;
+        }
+  
+        &.ant-picker-focused {
+          border-color: #2f81f7;
+          box-shadow: 0 0 0 2px rgba(47, 129, 247, 0.2);
+        }
+      }
+  
+      :deep(.emoji-popover) {
+        .ant-popover-inner {
+          background-color: #161b22;
+          border: 1px solid #30363d;
+        }
+  
+        .emoji-nav {
+          .nav-item {
+            color: rgba(255, 255, 255, 0.65);
+  
+            &:hover {
+              background-color: rgba(47, 129, 247, 0.1);
+            }
+  
+            &.active {
+              background-color: rgba(47, 129, 247, 0.15);
+              color: #2f81f7;
+            }
+          }
+        }
+  
+        .emoji-grid {
+          .emoji-item {
+            &:hover {
+              background-color: rgba(47, 129, 247, 0.1);
+            }
+          }
+        }
+      }
+  
+      // 滚动条样式
+      ::-webkit-scrollbar-thumb {
+        background-color: #30363d;
+  
+        &:hover {
+          background-color: #8b949e;
+        }
+      }
+  
+      ::-webkit-scrollbar-track {
+        background-color: #0d1117;
+      }
+    }
+  }
+  
+  .main-content {
+    width: 800px; // 使用固定宽度替代 60vw
+    max-width: 90%; // 在小屏幕上自适应
+  
+    .title-area {
+      padding: 20px 24px 0;
+      border-bottom: 1px solid #e8e8e8;
+  
+      .title-input {
+        font-size: 16px;
+        font-weight: 500;
+  
+        :deep(.ant-input) {
+          border: none;
+          padding: 8px 0;
+  
+          &:focus {
+            box-shadow: none;
+          }
+        }
+      }
+    }
+  
+    .content-area {
+      padding: 20px 24px;
+  
+      .content-input {
+        resize: none;
+        font-size: 16px;
+      }
+  
+      .image-preview {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); // 使用固定像素
+        gap: 12px;
+        margin-top: 16px;
+  
+        .image-item {
+          position: relative;
+          aspect-ratio: 1;
+          border-radius: 4px;
+          overflow: hidden;
+  
+          .delete-icon {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            padding: 4px;
+          }
+        }
+      }
+    }
+  
+    .toolbar {
+      border-top: 1px solid #e8e8e8;
+      padding: 12px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+  
+      .left-tools {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+  
+        .tool-item {
+          padding: 6px 8px;
+          font-size: 14px;
+          gap: 4px;
+        }
+      }
+  
+      .right-tools {
+        display: flex;
+        justify-content: flex-end;
+  
+        .time-picker-container {
+          display: flex;
+          gap: 8px;
+          align-items: center;
+  
+          .time-picker-footer {
+            display: flex;
+            gap: 8px;
+          }
+        }
+  
+        .publish-buttons {
+          display: flex;
+          gap: 12px;
+          align-items: center;
+        }
+  
+        .publish-type-selector {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          cursor: pointer;
+        }
+      }
+    }
+  }
+  
+  .emoji-container {
+    width: 480px;
+    height: 300px;
+    max-width: 90vw;
+  
+    .emoji-nav {
+      padding: 8px 12px;
+      display: flex;
+      gap: 4px;
+      justify-content: space-between;
+      width: 100%;
+  
+      .nav-item {
+        padding: 6px 12px;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: all 0.3s;
+        flex: 1;
+  
+        &:hover {
+          background-color: #f5f5f5;
+        }
+  
+        &:active {
+          background-color: #e6f7ff;
+          color: #1890ff;
+        }
+      }
+    }
+  
+    .emoji-content {
+      height: calc(100% - 48px);
+      overflow-y: auto;
+  
+      .emoji-grid {
+        display: grid;
+        grid-template-columns: repeat(10, 1fr);
+        gap: 8px;
+        padding: 12px;
+  
+        .emoji-item {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          cursor: pointer;
+          padding: 4px;
+          border-radius: 4px;
+          transition: all 0.3s;
+  
+          &:hover {
+            background-color: #f5f5f5;
+          }
+        }
+      }
+    }
+  }
+  
+  // 媒体查询优化
+  @media screen and (max-width: 768px) {
+    .main-content {
+      width: 100%;
+  
+      .toolbar {
+        .left-tools {
+          justify-content: flex-start; // 改为左对齐
+          gap: 8px; // 减小间距
+        }
+      }
+    }
+  
+    .emoji-container {
+      width: 320px; // 小屏幕下的固定宽度
+    }
+  }
+  
+  @media screen and (max-width: 480px) {
+    .main-content {
+      .toolbar {
+        .tool-item {
+          padding: 4px 6px; // 减小内边距
+  
+          span {
+            display: none; // 隐藏文字
+          }
+        }
+      }
+    }
+  }
+  
+  // 工具项样式优化
+  .tool-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #666;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 6px 8px;
+    white-space: nowrap;
+    border-radius: 4px;
+    transition: all 0.3s;
+  
+    .module-icon {
+      width: 18px;
+      height: 18px;
+    }
+  
+    &.selected {
+      color: #1890ff;
+      background-color: #e6f7ff;
+    }
+  
+    &:hover {
+      color: #1890ff;
+      background-color: #f5f5f5;
+    }
+  }
+  
+  :deep(.emoji-popover) {
+    .ant-popover-inner {
+      padding: 0;
+    }
+  
+    .ant-popover-inner-content {
+      padding: 0;
+    }
+  
+    .ant-popover-arrow {
+      display: none;
+    }
+  
+    &.ant-popover {
+      top: 40px !important;
+    }
+  }
+  
+  .module-selector {
+    .module-tabs {
+      :deep(.ant-tabs-nav) {
+        margin-bottom: 16px;
+  
+        &::before {
+          border-bottom: 1px solid #f0f0f0;
+        }
+  
+        .ant-tabs-tab {
+          padding: 12px 20px;
+          font-size: 1rem;
+          transition: all 0.3s;
+  
+          &:hover {
+            color: #1890ff;
+          }
+  
+          &.ant-tabs-tab-active {
+            .ant-tabs-tab-btn {
+              color: #1890ff;
+              font-weight: 500;
+            }
+          }
+        }
+  
+        .ant-tabs-ink-bar {
+          background: #1890ff;
+          height: 2px;
+        }
+      }
+    }
+  
+    .module-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      padding: 4px;
+  
+      .module-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 1px solid #e8e8e8;
+        background: #fff;
+        min-width: 0;
+  
+        &:hover {
+          background-color: #f5f5f5;
+          transform: translateY(-2px);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+  
+        &.active {
+          background-color: #e6f7ff;
+          border-color: #1890ff;
+  
+          .module-name {
+            color: #1890ff;
+          }
+        }
+  
+        .module-icon {
+          width: 48px;
+          height: 48px;
+          object-fit: cover;
+          border-radius: 8px;
+          margin-bottom: 12px;
+          transition: all 0.3s ease;
+        }
+  
+        .module-name {
+          font-size: 0.875rem;
+          font-weight: 500;
+          margin-bottom: 8px;
+          width: 100%;
+          text-align: center;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+  
+        .module-info {
+          width: 100%;
+          font-size: 12px;
+          color: #999;
+          display: flex;
+          justify-content: center;
+          gap: 12px;
+  
+          span {
+            white-space: nowrap;
+          }
+        }
+  
+        &:hover {
+          .module-icon {
+            transform: scale(1.1);
+          }
+        }
+      }
+    }
+  }
+  
+  :deep(.ant-modal-content) {
+    .ant-modal-header {
+      border-bottom: none;
+      padding: 24px 24px 0;
+  
+      .ant-modal-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+      }
+    }
+  
+    .ant-modal-body {
+      padding: 24px;
+    }
+  }
+  
+  // 添加滚动条的全局样式
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 3px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  :deep(.time-picker-popover) {
+    .ant-popover-inner-content {
+      padding: 12px;
+    }
+  
+    .ant-popover-arrow {
+      left: 50% !important;
+    }
+  }
+  
+  .time-picker-container {
+    .time-picker-footer {
+      margin-top: 12px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+  
+    .ant-picker {
+      width: 240px;
+    }
+  }

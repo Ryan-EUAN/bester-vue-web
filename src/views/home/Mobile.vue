@@ -19,7 +19,7 @@
         <!-- 轮播图 -->
         <van-swipe class="banner-swipe" :autoplay="3000" indicator-color="#1989fa">
             <van-swipe-item v-for="(image, index) in bannerImages" :key="index">
-                <img :src="image.imageUrl" class="banner-image" />
+                <img :src="image.url" class="banner-image" />
             </van-swipe-item>
         </van-swipe>
 

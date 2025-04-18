@@ -5,6 +5,19 @@
             <div class="loading-text">加载中，请稍候...</div>
         </div>
         <router-view v-else />
+        
+        <!-- 全局登录弹窗 -->
+        <a-modal 
+            :open="showLogin" 
+            :footer="null" 
+            :maskClosable="false"
+            @cancel="handleLoginCancel"
+            :destroyOnClose="true"
+            :zIndex="1001"
+            class="global-login-modal"
+        >
+            <login-pc @login-success="handleLoginSuccess" />
+        </a-modal>
     </div>
 </template>
 
@@ -12,10 +25,67 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import heartbeatService from './services/heartbeat';
 import { initTheme, applyThemeToNewComponents } from './utils/themeUtils';
+import LoginPc from '@/views/auth/loginPC.vue';
+import { useRouter } from 'vue-router';
+import eventBus from '@/utils/eventBus';
 
 const loading = ref(true);
+const showLogin = ref(false);
+const router = useRouter();
 let heartbeatTimer: number | null = null;
 let mutationObserver: MutationObserver | null = null;
+
+// 处理登录事件
+const handleShowLoginModal = (event: Event) => {
+    console.log('APP.VUE 收到登录事件: showLoginModal', event);
+    showLogin.value = true;
+    
+    // 安全访问detail属性
+    const customEvent = event as CustomEvent;
+    if (customEvent.detail && customEvent.detail.redirect) {
+        // 保存重定向路径
+        sessionStorage.setItem('redirectPath', customEvent.detail.redirect);
+        console.log('APP.VUE 保存重定向路径:', customEvent.detail.redirect);
+    }
+};
+
+// 使用事件总线处理登录事件
+const handleLoginEvent = (data: any) => {
+    console.log('APP.VUE 通过事件总线收到登录事件', data);
+    showLogin.value = true;
+    
+    if (data && data.redirect) {
+        sessionStorage.setItem('redirectPath', data.redirect);
+        console.log('APP.VUE 通过事件总线保存重定向路径:', data.redirect);
+    }
+};
+
+// 关闭登录框
+const handleLoginCancel = () => {
+    showLogin.value = false;
+};
+
+// 登录成功处理
+const handleLoginSuccess = () => {
+    console.log('App.vue - 登录成功，关闭模态框');
+    showLogin.value = false;
+    
+    // 获取重定向路径
+    const savedPath = sessionStorage.getItem('redirectPath');
+    if (savedPath) {
+        // 延迟一下再跳转，确保登录弹窗完全关闭
+        setTimeout(() => {
+            sessionStorage.removeItem('redirectPath'); // 使用后删除
+            router.push(savedPath);
+        }, 100);
+    }
+};
+
+// 添加全局登录成功事件监听
+const handleLoginSuccessEvent = () => {
+    console.log('App.vue - 收到全局登录成功事件');
+    showLogin.value = false;
+};
 
 // 初始化心跳服务，如果失败则重试有限次数
 const initHeartbeatService = (retryCount = 0, maxRetries = 3) => {
@@ -55,6 +125,14 @@ onMounted(() => {
 
     // 初始化主题
     initTheme();
+    
+    // 添加全局登录事件监听
+    console.log('App.vue - 注册全局登录事件监听器');
+    window.addEventListener('showLoginModal', handleShowLoginModal);
+    window.addEventListener('loginSuccess', handleLoginSuccessEvent);
+    window.addEventListener('userInfoUpdated', handleLoginSuccessEvent);
+    eventBus.on('showLoginModal', handleLoginEvent);
+    eventBus.on('loginSuccess', handleLoginSuccessEvent);
     
     // 设置MutationObserver监听DOM变化，以便对新添加的元素应用主题
     mutationObserver = new MutationObserver((mutations) => {
@@ -126,6 +204,13 @@ onBeforeUnmount(() => {
     if (mutationObserver) {
         mutationObserver.disconnect();
     }
+    
+    // 清理登录事件监听
+    window.removeEventListener('showLoginModal', handleShowLoginModal);
+    window.removeEventListener('loginSuccess', handleLoginSuccessEvent);
+    window.removeEventListener('userInfoUpdated', handleLoginSuccessEvent);
+    eventBus.off('showLoginModal', handleLoginEvent);
+    eventBus.off('loginSuccess', handleLoginSuccessEvent);
 });
 </script>
 

@@ -1,19 +1,32 @@
 <template>
     <a-flex gap="large">
         <ElCarousel class="banner-carousel" :interval="3000" :autoplay="true" indicator-position="outside" arrow="hover"
-            trigger="click">
+            trigger="click" @change="handleCarouselChange">
             <ElCarouselItem v-for="(item, index) in carouselList" :key="index"
                 @click="handleCarouselClick(item.link ? item.link : '')" class="carousel-item-wrapper">
                 <div class="carousel-item">
-                    <el-image :src="item.imageUrl ? item.imageUrl : ''" fit="cover" class="carousel-image">
-                        <template #error>
-                            <div class="image-error">
-                                <el-icon>
-                                    <Picture />
-                                </el-icon>
-                            </div>
-                        </template>
-                    </el-image>
+                    <div class="media-wrapper">
+                        <!-- 视频内容 -->
+                        <video v-if="item.type === 'video'" class="carousel-video" :src="item.url" preload="metadata"
+                            :loop="true" :muted="true" :playsinline="true" :webkit-playsinline="true"
+                            x5-video-player-type="h5" x5-video-player-fullscreen="false"
+                            :autoplay="currentIndex === index" :controls="false" ref="videoRefs"
+                            @loadedmetadata="handleVideoLoaded" @error="handleMediaError($event, item)"></video>
+                        <!-- 图片内容 -->
+                        <a-image v-else :src="item.url" :preview="{
+                            src: item.url,
+                            mask: false
+                        }" class="carousel-image" @error="handleMediaError($event, item)">
+                            <template #error>
+                                <div class="image-error">
+                                    <el-icon>
+                                        <Picture />
+                                    </el-icon>
+                                    <p>加载失败</p>
+                                </div>
+                            </template>
+                        </a-image>
+                    </div>
                     <div class="item-info">
                         <h3>{{ item.description }}</h3>
                         <p>{{ item.title }}</p>
@@ -41,12 +54,8 @@
             </a-tab-pane>
         </a-tabs>
     </a-flex>
-    <ModuleArea 
-        v-for="(moduleData, index) in moduleList" 
-        :key="index"
-        :titleText="moduleData.title"
-        :moduleList="moduleData.plateInfos"
-    />
+    <ModuleArea v-for="(moduleData, index) in moduleList" :key="index" :titleText="moduleData.title"
+        :moduleList="moduleData.plateInfos" />
     <OnlineMembershipModule />
 </template>
 <script setup lang="ts">
@@ -64,19 +73,45 @@ import ModuleApi from '../../services/module';
 import type { ModuleData } from '../../types/module';
 import { ElMessage } from 'element-plus';
 import articleApi from '@/services/article';
+import { generateSignedUrl } from '@/services/file';
 
 const carouselList = ref<CarouselItem[]>([]);
 const moduleList = ref<ModuleData[]>([]);
 
+// 处理 COS URL
+const processCOSUrl = async (url: string) => {
+    if (!url) return url;
+
+    try {
+        const urlObj = new URL(url);
+        if (urlObj.hostname.includes('myqcloud.com')) {
+            // 从 URL 中提取 key
+            const key = urlObj.pathname.startsWith('/') ? urlObj.pathname.slice(1) : urlObj.pathname;
+            // 获取带签名的 URL
+            return await generateSignedUrl(key);
+        }
+        return url;
+    } catch (error) {
+        console.error('处理 COS URL 失败:', error);
+        return url;
+    }
+};
+
 const getCarouselData = async () => {
     try {
         const res = await CarouselApi.GET_TOP_CAROUSEL_API();
-        if (res.code === 200 && res.data?.length > 0) {  // 确保有数据才更新
-            carouselList.value = res.data;
+        if (res.code === 200 && res.data?.length > 0) {
+            // 处理每个轮播项的 URL
+            const processedItems = await Promise.all(
+                res.data.map(async item => ({
+                    ...item,
+                    url: await processCOSUrl(item.url)
+                }))
+            );
+            carouselList.value = processedItems;
         }
     } catch (error) {
         console.error('获取轮播图数据出错:', error);
-        // 发生错误时保持使用默认数据
     }
 };
 
@@ -110,6 +145,30 @@ const userKey = ref(userTabsInfos.value[0].id || '');
 
 const router = useRouter();
 
+// 添加当前轮播索引
+const currentIndex = ref(0);
+
+// 视频引用数组
+const videoRefs = ref<HTMLVideoElement[]>([]);
+
+// 处理轮播切换
+const handleCarouselChange = (index: number) => {
+    currentIndex.value = index;
+
+    // 处理视频播放
+    carouselList.value.forEach((item, i) => {
+        if (item.type === 'video' && videoRefs.value[i]) {
+            const video = videoRefs.value[i];
+            if (i === index) {
+                video.currentTime = 0; // 重置视频时间
+                video.play();
+            } else {
+                video.pause();
+            }
+        }
+    });
+};
+
 // 处理轮播图点击
 const handleCarouselClick = async (link: string) => {
     if (link) {
@@ -122,10 +181,27 @@ const handleCarouselClick = async (link: string) => {
                 await articleApi.UPDATE_ARTICLE_VIEW_COUNT_API(articleId);
             } catch (error) {
                 console.error('更新文章查看次数失败:', error);
-                // 继续导航，不影响用户体验
             }
         }
-        router.push(link);
+        router.push("/article/" + link);
+    }
+};
+
+const handleMediaError = (event: Event, item: CarouselItem) => {
+    console.error('媒体加载失败:', event, item.url);
+    ElMessage.error('媒体加载失败，请检查访问权限');
+};
+
+const handleVideoLoaded = (event: Event) => {
+    const video = event.target as HTMLVideoElement;
+    const index = videoRefs.value.findIndex(v => v === video);
+    if (index === currentIndex.value) {
+        const playPromise = video.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(error => {
+                console.error('视频播放失败:', error);
+            });
+        }
     }
 };
 
@@ -139,8 +215,9 @@ onMounted(async () => {
 </script>
 <style lang="less" scoped>
 .banner-carousel {
-    width: 26vw;
-    height: 45vh;
+    width: 30vw;
+    height: 36vh;
+    background-color: #475669;
     border-radius: 0.3vw;
     overflow: hidden;
 }
@@ -150,7 +227,7 @@ onMounted(async () => {
     transition: transform 0.3s ease;
 
     &:hover {
-        transform: scale(1.01); // 添加轻微的悬浮效果
+        transform: scale(1.01);
     }
 }
 
@@ -161,13 +238,23 @@ onMounted(async () => {
     overflow: hidden;
     border-radius: 0.3vw;
 
-    .carousel-image {
+    .media-wrapper {
+        position: relative;
         width: 100%;
         height: 100%;
-        transition: transform 0.3s ease;
+        background: #000;
+        overflow: hidden;
 
-        &:hover {
-            transform: scale(1.05);
+        .carousel-image,
+        .carousel-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+
+            &:hover {
+                transform: scale(1.05);
+            }
         }
     }
 
@@ -211,11 +298,17 @@ onMounted(async () => {
     width: 100%;
     height: 100%;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     background: #f5f7fa;
     color: #909399;
     font-size: 2rem;
+
+    p {
+        margin-top: 8px;
+        font-size: 14px;
+    }
 }
 
 :deep(.el-carousel__indicators) {

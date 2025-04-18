@@ -1,5 +1,5 @@
 <template>
-  <div class="post-container">
+  <div class="post-container" :class="{ 'dark-theme': isDarkMode }">
     <!-- 左侧内容区 -->
     <div class="post-main">
       <!-- 帖子头部信息 -->
@@ -30,8 +30,39 @@
       <!-- 帖子内容 -->
       <div class="post-content">
         <p>{{ postData.content }}</p>
-        <div v-if="postData.images.length > 0" class="image-container">
-          <img v-for="(image, index) in postData.images" :key="index" :src="image" alt="帖子图片" />
+        <!-- 媒体内容区域 -->
+        <div class="media-preview" v-if="postData.images && postData.images.length > 0">
+          <div class="media-grid">
+            <template v-for="(media, index) in postData.images" :key="index">
+              <!-- 图片项 -->
+              <div v-if="media.type === 'image'" 
+                   :class="['media-item', 'image-item', getMediaItemClass(index, postData.images.length)]">
+                <div class="media-wrapper">
+                  <a-image 
+                    :src="media.url" 
+                    :alt="media.name"
+                    :preview="{
+                      src: media.url,
+                      mask: false
+                    }"
+                  />
+                </div>
+              </div>
+              <!-- 视频项 -->
+              <div v-else 
+                   :class="['media-item', 'video-item', getMediaItemClass(index, postData.images.length)]">
+                <div class="media-wrapper">
+                  <video 
+                    controls
+                    :src="media.url"
+                    class="video-player"
+                    preload="metadata"
+                    controlsList="nodownload"
+                  ></video>
+                </div>
+              </div>
+            </template>
+          </div>
         </div>
       </div>
 
@@ -228,6 +259,9 @@ import articleApi from '@/services/article';
 import type { ArticleData, Reply, SubComment } from '@/types/article';
 import router from '@/router';
 import FloatingActionButtons from '@/components/common/FloatingActionButtons.vue';
+import { useTheme } from '@/composables/useTheme';
+
+const { isDarkMode } = useTheme();
 
 const currentUserId = JSON.parse(localStorage.getItem('userInfo') || '{}').id || 0;
 const postData = ref<ArticleData>({
@@ -268,6 +302,14 @@ const replies = ref<Reply[]>([
     time: '2小时前',
     likes: 12,
     isLiked: false,
+    createTime: '2024-01-20 10:00:00',
+    articleId: '1',
+    articleTitle: '示例文章标题',
+    author: {
+      id: 1,
+      name: '用户A',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=1'
+    },
     subComments: [
       {
         id: 101,
@@ -295,6 +337,14 @@ const replies = ref<Reply[]>([
     time: '1小时前',
     likes: 5,
     isLiked: true,
+    createTime: '2024-01-20 11:00:00',
+    articleId: '1',
+    articleTitle: '示例文章标题',
+    author: {
+      id: 2,
+      name: '用户B',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=2'
+    },
     replyTo: {
       id: 1,
       username: '用户A'
@@ -365,9 +415,9 @@ const handleReply = async () => {
 const handleLike = async (reply: Reply) => {
   try {
     if (reply.isLiked) {
-      await articleApi.UNLIKE_REPLY_API(reply.id);
+      await articleApi.UNLIKE_REPLY_API(Number(reply.id));
     } else {
-      await articleApi.LIKE_REPLY_API(reply.id);
+      await articleApi.LIKE_REPLY_API(Number(reply.id));
     }
     reply.isLiked = !reply.isLiked;
     reply.likes += reply.isLiked ? 1 : -1;
@@ -592,6 +642,23 @@ const handleFollow = async () => {
     followLoading.value = false;
   }
 };
+
+// 获取媒体项的类名
+const getMediaItemClass = (index: number, total: number) => {
+  // 单个媒体项
+  if (total === 1) return 'full-width';
+  
+  // 两个媒体项
+  if (total === 2) return 'half-width';
+  
+  // 三个或更多媒体项
+  if (total >= 3) {
+    if (total === 3 && index === 2) return 'full-width-last';
+    return 'third-width';
+  }
+  
+  return '';
+};
 </script>
 
 <style lang="less" scoped>
@@ -663,6 +730,204 @@ const handleFollow = async () => {
     &:hover {
       transform: scale(1.1);
       box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    }
+  }
+}
+
+.post-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  background: #fff;
+  min-height: 100vh;
+
+  &.dark-theme {
+    background: #141414;
+    color: rgba(255, 255, 255, 0.85);
+
+    .post-header {
+      background: #1f1f1f;
+      border-color: #303030;
+
+      .post-title {
+        .title-text {
+          color: rgba(255, 255, 255, 0.85);
+        }
+
+        .title-tag {
+          background: #2a2a2a;
+          color: rgba(255, 255, 255, 0.65);
+        }
+
+        .title-badge {
+          background: #2a2a2a;
+          color: rgba(255, 255, 255, 0.65);
+        }
+      }
+
+      .post-meta {
+        .user-info {
+          .info-content {
+            .username {
+              color: rgba(255, 255, 255, 0.85);
+            }
+
+            .post-time {
+              color: rgba(255, 255, 255, 0.45);
+            }
+          }
+        }
+      }
+    }
+
+    .post-content {
+      color: rgba(255, 255, 255, 0.65);
+    }
+  }
+
+  .post-content {
+    padding: 20px;
+    line-height: 1.8;
+    font-size: 16px;
+    color: #333;
+
+    .media-preview {
+      margin-top: 16px;
+      width: 100%;
+      max-width: 800px;
+
+      .media-grid {
+        display: grid;
+        gap: 8px;
+        grid-template-columns: repeat(4, 1fr);
+        
+        .media-item {
+          position: relative;
+          width: 100%;
+          
+          &.full-width {
+            grid-column: span 2;
+            max-width: 400px;
+          }
+          
+          &.half-width {
+            grid-column: span 2;
+          }
+          
+          &.third-width {
+            grid-column: span 1;
+          }
+          
+          &.full-width-last {
+            grid-column: span 2;
+          }
+          
+          .media-wrapper {
+            position: relative;
+            width: 100%;
+            border-radius: 4px;
+            overflow: hidden;
+            aspect-ratio: 16/9;
+            background: #000;
+          }
+        }
+        
+        .image-item .media-wrapper {
+          :deep(.ant-image) {
+            width: 100%;
+            height: 100%;
+            
+            img {
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+            }
+          }
+        }
+        
+        .video-item .media-wrapper {
+          .video-player {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+          }
+        }
+      }
+    }
+  }
+}
+
+.media-preview {
+  margin-top: 16px;
+  width: 100%;
+  max-width: 800px;
+
+  .media-grid {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(4, 1fr);
+    
+    .media-item {
+      position: relative;
+      width: 100%;
+      
+      &.full-width {
+        grid-column: span 2;
+        max-width: 400px;
+      }
+      
+      &.half-width {
+        grid-column: span 2;
+      }
+      
+      &.third-width {
+        grid-column: span 1;
+      }
+      
+      &.full-width-last {
+        grid-column: span 2;
+      }
+      
+      .media-wrapper {
+        position: relative;
+        width: 100%;
+        border-radius: 4px;
+        overflow: hidden;
+        aspect-ratio: 16/9;
+        background: #000;
+      }
+    }
+    
+    .image-item .media-wrapper {
+      :deep(.ant-image) {
+        width: 100%;
+        height: 100%;
+        
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+      }
+    }
+    
+    .video-item .media-wrapper {
+      .video-player {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
+  }
+}
+
+/* 暗色模式样式 */
+.dark-mode {
+  .media-preview {
+    .media-grid {
+      .media-item .media-wrapper {
+        background: #141414;
+      }
     }
   }
 }

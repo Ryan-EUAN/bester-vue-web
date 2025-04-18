@@ -128,11 +128,11 @@ const updateDateTime = () => {
 
 // 快捷操作处理函数
 const handleViewPosts = () => {
-    router.push('/my-posts');
+    router.push('/my-articles');
 };
 
 const handleViewReplies = () => {
-    router.push('/latest-replies');
+    router.push('/my-replies');
 };
 
 // 检查用户登录状态

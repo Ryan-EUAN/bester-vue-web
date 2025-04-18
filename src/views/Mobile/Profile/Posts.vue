@@ -116,8 +116,8 @@ const loadPosts = async () => {
 
     // 确保我们可以正确访问到posts数组
     if (res.data && typeof res.data === 'object') {
-      if (Array.isArray(res.data.posts)) {
-        postsData = res.data.posts;
+      if (Array.isArray(res.data.list)) {
+        postsData = res.data.list;
       } else if (Array.isArray(res.data)) {
         postsData = res.data;
       }

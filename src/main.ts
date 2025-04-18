@@ -10,4 +10,11 @@ import 'vant/lib/index.css';
 // 导入主题覆盖样式
 import './assets/styles/theme-overrides.css';
 
-createApp(App).use(router).use(ElementPlus).use(Antd).use(Vant).mount('#app')
+// 初始化应用
+const app = createApp(App);
+app.use(router).use(ElementPlus).use(Antd).use(Vant).mount('#app');
+
+// 添加全局事件监听器，用于调试
+window.addEventListener('showLoginModal', (event) => {
+  console.log('全局捕获到登录事件: showLoginModal', event);
+});

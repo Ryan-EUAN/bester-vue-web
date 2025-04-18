@@ -1,20 +1,16 @@
-// @ts-ignore: 忽略隐式any类型错误
 <template>
   <div class="nav-wrapper" ref="boxRef" @mousemove="handleMouseMove" @mouseleave="handleMouseLeave"
     :class="{ 'dark-mode': isDarkMode }">
 
     <nav class="nav-container" :class="{ 'light-mode': !isDarkMode, 'dark-mode': isDarkMode }">
       <div class="nav-links">
-        <!-- 循环渲染导航项 -->
         <template v-for="(item, index) in navItems" :key="index">
-          <!-- 普通导航项 -->
           <router-link v-if="!item.children" :to="item.path" class="nav-link" :class="{ 'active-link': false }"
             @click="handleNavLinkClick(item.key)">
             <component :is="item.icon" />
             <span>{{ item.label }}</span>
           </router-link>
 
-          <!-- 使用a-dropdown实现的下拉菜单导航项 -->
           <div v-else class="nav-link dropdown-link" :class="{ 'active-link': false }">
             <a-dropdown :trigger="['hover']" placement="bottomCenter">
               <div class="dropdown-trigger">
@@ -38,8 +34,8 @@
       </div>
       <div class="user-section">
         <button class="theme-toggle" @click="toggleTheme">
-          <bulb-outlined v-if="!isDarkMode" />
-          <bulb-filled v-else />
+          <component :is="icons.BulbOutlined" v-if="!isDarkMode" />
+          <component :is="icons.BulbFilled" v-else />
         </button>
         <a-input-search v-model:value="searchValue" placeholder="搜索" class="search-input" @search="onSearch" />
         <a-popover placement="bottom" v-if="userInfo.id == 0">
@@ -52,11 +48,14 @@
                 <component :is="renderIcon(p.icon)" />
                 <div>{{ p.label }}</div>
               </a-space>
-              <el-button color="#00aee0" class="login-btn" @click="$emit('openLogin')">立即登录</el-button>
-              <a-flex class="register-text">首次使用？<span @click="$emit('openLogin')">点我注册</span></a-flex>
+              <el-button color="#00aee0" class="login-btn" @click="handleOpenLogin">立即登录</el-button>
+              <a-flex class="register-text">
+                <div>首次使用？</div>
+                <div class="register-text-btn" @click="handleOpenLogin">点我注册</div>
+              </a-flex>
             </a-flex>
           </template>
-          <a-avatar :src="userInfo.avatar" size="35" class="login-avatar" @click="$emit('openLogin')">
+          <a-avatar :src="userInfo.avatar" size="35" class="login-avatar" @click="handleOpenLogin">
             {{ userInfo.name }}
           </a-avatar>
         </a-popover>
@@ -101,20 +100,20 @@
                 </div>
                 <a-menu class="user-menu" v-model:selectedKeys="selectedMenuKeys">
                   <a-menu-item key="profile" @click="goToPersonal">
-                    <user-outlined />个人中心
-                    <right-outlined class="menu-arrow" />
+                    <component :is="icons.UserOutlined" />个人中心
+                    <component :is="icons.RightOutlined" class="menu-arrow" />
                   </a-menu-item>
                   <a-menu-item key="posts" @click="$router.push('/release')">
-                    <file-outlined />投稿管理
-                    <right-outlined class="menu-arrow" />
+                    <component :is="icons.FileOutlined" />发表文章
+                    <component :is="icons.RightOutlined" class="menu-arrow" />
                   </a-menu-item>
                   <a-menu-item key="recommend">
-                    <star-outlined />推荐服务
-                    <right-outlined class="menu-arrow" />
+                    <component :is="icons.StarOutlined" />推荐服务
+                    <component :is="icons.RightOutlined" class="menu-arrow" />
                   </a-menu-item>
                   <a-menu-divider />
                   <a-menu-item key="logout" danger @click="logOut">
-                    <logout-outlined />退出登录
+                    <component :is="icons.LogoutOutlined" />退出登录
                   </a-menu-item>
                 </a-menu>
               </div>
@@ -133,26 +132,13 @@
 import { onBeforeMount, onMounted, ref, h, onBeforeUnmount, watch } from 'vue';
 import * as icons from '@ant-design/icons-vue';
 import { ElButton, ElNotification } from 'element-plus';
-import type { HeadUserInfoModal } from '../../model/headInfo';
-import AuthApi from '../../services/auth';
-import {
-  UserOutlined,
-  FileOutlined,
-  StarOutlined,
-  LogoutOutlined,
-  TrophyOutlined,
-  HomeOutlined,
-  CodeOutlined,
-  CustomerServiceOutlined,
-  CompassOutlined,
-  BulbOutlined,
-  BulbFilled,
-  CalendarOutlined,
-  RightOutlined
-} from '@ant-design/icons-vue';
+import { message } from 'ant-design-vue';
+import type { HeadUserInfoModal } from '@/model/headInfo';
+import AuthApi from '@/services/auth';
 import { useRouter } from 'vue-router';
 import userStorage from '@/utils/userStorage';
 import { getCurrentTheme, toggleTheme as toggleGlobalTheme, initTheme as initGlobalTheme, onThemeChange } from '@/utils/themeUtils';
+import eventBus from '@/utils/eventBus';
 
 const emits = defineEmits(['openLogin']);
 const router = useRouter();
@@ -221,43 +207,43 @@ const navItems = ref([
   {
     label: '首页',
     key: 'menu-1',
-    icon: HomeOutlined,
+    icon: icons.HomeOutlined,
     path: '/'
   },
   {
     label: '源码分享',
     key: 'menu-2',
-    icon: CodeOutlined,
+    icon: icons.CodeOutlined,
     path: '/zjs'
   },
   {
     label: '文章',
     key: 'menu-3',
-    icon: CustomerServiceOutlined,
+    icon: icons.CustomerServiceOutlined,
     path: '/wz'
   },
   {
     label: '在线音乐',
     key: 'menu-4',
-    icon: CustomerServiceOutlined,
+    icon: icons.CustomerServiceOutlined,
     path: '/music'
   },
   {
     label: '快捷导航',
     key: 'menu-5',
-    icon: CompassOutlined,
+    icon: icons.CompassOutlined,
     path: '', // 父级不需要路径
     children: [
       {
         label: '排行榜',
         key: 'submenu-51',
-        icon: TrophyOutlined,
+        icon: icons.TrophyOutlined,
         path: '/ph'
       },
       {
         label: '每日签到',
         key: 'submenu-52',
-        icon: CalendarOutlined,
+        icon: icons.CalendarOutlined,
         path: '/qd'
       }
     ]
@@ -359,13 +345,43 @@ const handleNavLinkClick = (key: string) => {
 
 //搜索方法
 const onSearch = (value: string) => {
+  if (!value.trim()) {
+    message.warning('请输入搜索内容');
+    return;
+  }
+  
   console.log('搜索内容', value);
+  
+  // 跳转到搜索结果页面，无需登录验证
+  router.push({
+    path: '/search',
+    query: { keyword: value }
+  });
+};
+
+// 登录相关方法
+const handleOpenLogin = () => {
+  // 添加调试日志
+  console.log('触发登录事件: handleOpenLogin');
+
+  // 使用事件总线触发登录事件
+  eventBus.emit('showLoginModal', {
+    redirect: router.currentRoute.value.fullPath
+  });
+
+  // 同时仍保留原来的方式，确保兼容性
+  window.dispatchEvent(new CustomEvent('showLoginModal', {
+    detail: {
+      redirect: router.currentRoute.value.fullPath
+    }
+  }));
+
+  console.log('登录事件已触发，当前路径：', router.currentRoute.value.fullPath);
 };
 
 //退出登陆方法
 const logOut = async () => {
-  let res = await AuthApi.LOG_OUT_API();
-  if (res.code != 200) return alert(res.message);
+  // 先清除本地存储和更新UI，确保用户体验流畅
   userStorage.logOut();
   userInfo.value = {
     id: 0,
@@ -379,13 +395,28 @@ const logOut = async () => {
     followers: 0,
     posts: 0
   };
+
+  // 显示通知
   ElNotification({
     title: '鉴权系统',
     message: '您已退出登录',
     type: 'warning',
     duration: 2500,
   });
+
+  // 触发用户信息更新事件
+  window.dispatchEvent(new CustomEvent('userInfoUpdated'));
+
+  // 更新本地用户信息显示
   LoadUserInfo();
+
+  // 后台异步调用登出API，不阻塞UI
+  try {
+    await AuthApi.LOG_OUT_API();
+  } catch (error) {
+    console.error('登出API调用失败', error);
+    // 即使API调用失败，本地登出已经完成，不影响用户体验
+  }
 };
 
 //监听窗口大小变化判断是否是手机端
@@ -463,7 +494,7 @@ onMounted(() => {
   themeChangeUnsubscribe = onThemeChange((theme) => {
     isDarkMode.value = theme === 'dark';
   });
-  
+
   // 初始化菜单选中状态
   updateSelectedMenuKeys();
 });
@@ -1321,5 +1352,10 @@ body.dark-theme {
   align-items: center;
   color: #999;
   padding: 0 12px;
+}
+
+.register-text-btn:hover {
+  color: #00aee0;
+  cursor: pointer;
 }
 </style>

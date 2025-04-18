@@ -4,8 +4,9 @@
  * 轮播图数据项接口
  */
 export interface CarouselItem {
-    imageUrl: string
+    url: string
     title: string
     description: string
     link?: string
+    type?: 'image' | 'video'  // 新增类型字段
 } 

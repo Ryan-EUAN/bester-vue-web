@@ -242,6 +242,30 @@ const routes: RouteRecordRaw[] = [
         ]
       },
       {
+        path: '/content',
+        component: () => import('@/components/PC/ContentLayout.vue'),
+        children: [
+          {
+            path: '/my-articles',
+            name: 'MyArticles',
+            component: () => import('@/views/personal/MyArticles.vue'),
+            meta: {
+              title: '我的文章',
+              requiresAuth: true
+            }
+          },
+          {
+            path: '/my-replies',
+            name: 'MyReplies',
+            component: () => import('@/views/personal/MyReplies.vue'),
+            meta: {
+              title: '最新回复',
+              requiresAuth: true
+            }
+          }
+        ]
+      },
+      {
         path: 'release',
         name: 'Release',
         component: () => import('@/views/release/ReleasePC.vue'),
@@ -282,6 +306,15 @@ const routes: RouteRecordRaw[] = [
           requiresAuth: true,
           platform: 'mobile'
         }
+      },
+      {
+        path: '/music/mobile',
+        name: 'MusicMobile',
+        component: () => import('@/views/music/Mobile.vue'),
+        meta: {
+          title: '在线音乐',
+          platform: 'mobile'
+        }
       }
     ]
   },
@@ -313,11 +346,20 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/components/WebSocketDemo.vue'),
   },
   {
+    path: '/search',
+    name: 'search',
+    component: () => import('@/views/SearchResult.vue'),
+    meta: {
+      title: '搜索结果',
+      requiresAuth: false
+    }
+  },
+  {
     path: '/music',
     name: 'Music',
     component: () => import('@/views/music/PC.vue'),
     meta: {
-      title: '在线音乐 - 贝斯特网站',
+      title: '音乐',
       requiresAuth: false
     }
   }

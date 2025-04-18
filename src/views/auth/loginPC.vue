@@ -90,6 +90,7 @@ import { useRoute, useRouter } from 'vue-router'
 import Notification from '@/utils/notification'
 import storage from '@/utils/storage'
 import userStorage from '@/utils/userStorage'
+import eventBus from '@/utils/eventBus'
 const emits = defineEmits(["LoginSuccess"])
 
 const isEmail = ref<boolean>(false)
@@ -166,11 +167,9 @@ function startResultPolling(trackingId: string) {
                 return;
             }
             clearInterval(poll);
-            loading.value = false
-            loginStatusMessage.value = ''
-            localStorage.setItem('token', res.data.token)
-            console.log('信息',res.data.info);
             
+            // 保存登录信息
+            localStorage.setItem('token', res.data.token)
             userStorage.setUserInfo(res.data.info)
             if (res.data.expireTime) {
                 localStorage.setItem('tokenExpire', res.data.expireTime.toString())
@@ -179,25 +178,8 @@ function startResultPolling(trackingId: string) {
                 localStorage.setItem('tokenExpire', defaultExpireTime.toString())
             }
 
-            Notification.success('登录成功', '鉴权系统', 2000, false)
-
-            // 触发全局登录成功事件
-            window.dispatchEvent(new Event('userInfoUpdated'))
-
-            // 检查是否有重定向地址
-            const redirect = route.query.redirect as string
-            if (redirect) {
-                router.push(redirect)
-            } else {
-                // 检查会话存储中是否有重定向路径
-                const savedRedirectPath = sessionStorage.getItem('redirectPath');
-                if (savedRedirectPath) {
-                    sessionStorage.removeItem('redirectPath'); // 使用后删除
-                    router.push(savedRedirectPath);
-                } else {
-                    emits('LoginSuccess')
-                }
-            }
+            // 使用统一的登录成功处理函数
+            handleLoginSuccess(res.data);
         } catch (error: any) {
             clearInterval(poll);
             loading.value = false
@@ -228,49 +210,28 @@ async function loginEmailMethod() {
         let login_email_api = await AuthApi.LOGIN_EMAIL_API(loginParams);
         
         if(login_email_api.code != 200) {
-            return Notification.error(login_email_api.message, '鉴权系统', 2000, false)
+            loading.value = false;
+            loginStatusMessage.value = '';
+            return Notification.error(login_email_api.message, '鉴权系统', 2000, false);
         }
-        loading.value = false
-        loginStatusMessage.value = ''
-        localStorage.setItem('token', login_email_api.data.token)
-        localStorage.setItem('userInfo', JSON.stringify(login_email_api.data.info))
-        localStorage.removeItem('requestId')
+        
+        // 保存登录信息
+        localStorage.setItem('token', login_email_api.data.token);
+        localStorage.setItem('userInfo', JSON.stringify(login_email_api.data.info));
+        localStorage.removeItem('requestId');
         if (login_email_api.data.expireTime) {
-            localStorage.setItem('tokenExpire', login_email_api.data.expireTime.toString())
+            localStorage.setItem('tokenExpire', login_email_api.data.expireTime.toString());
         } else {
-            const defaultExpireTime = new Date().getTime() + 24 * 60 * 60 * 1000
-            localStorage.setItem('tokenExpire', defaultExpireTime.toString())
+            const defaultExpireTime = new Date().getTime() + 24 * 60 * 60 * 1000;
+            localStorage.setItem('tokenExpire', defaultExpireTime.toString());
         }
 
-        Notification.success('登录成功', '鉴权系统', 2000, false)
-
-        // 触发全局登录成功事件
-        window.dispatchEvent(new Event('userInfoUpdated'))
-
-        formEmail.value = {
-            email: '',
-            requestId: '',
-            code: ''
-        }
-
-        // 检查是否有重定向地址
-        const redirect = route.query.redirect as string
-        if (redirect) {
-            router.push(redirect)
-        } else {
-            // 检查会话存储中是否有重定向路径
-            const savedRedirectPath = sessionStorage.getItem('redirectPath');
-            if (savedRedirectPath) {
-                sessionStorage.removeItem('redirectPath'); // 使用后删除
-                router.push(savedRedirectPath);
-            } else {
-                emits('LoginSuccess')
-            }
-        }
+        // 使用统一的登录成功处理函数
+        handleLoginSuccess(login_email_api.data);
     } catch (error:any) {
-        loading.value = false
-        loginStatusMessage.value = ''
-        Notification.error(error.message, '鉴权系统', 2000, false)
+        loading.value = false;
+        loginStatusMessage.value = '';
+        Notification.error(error.message, '鉴权系统', 2000, false);
     }
 }
 
@@ -348,6 +309,47 @@ onMounted(() => {
 onBeforeUnmount(() => {
     stopTimer()
 })
+
+// 登录统一处理函数
+const handleLoginSuccess = (userData?: any) => {
+    console.log('登录成功处理', userData);
+    loading.value = false;
+    loginStatusMessage.value = '';
+    
+    // 显示成功通知
+    Notification.success('登录成功', '鉴权系统', 2000, false);
+    
+    // 触发全局登录成功事件
+    window.dispatchEvent(new Event('userInfoUpdated'));
+    window.dispatchEvent(new Event('loginSuccess'));
+    
+    // 使用事件总线触发登录成功事件
+    eventBus.emit('loginSuccess');
+    
+    // 触发组件的登录成功事件
+    emits('LoginSuccess');
+    
+    // 重置表单
+    if (isEmail.value) {
+        formEmail.value = {
+            email: '',
+            requestId: '',
+            code: ''
+        };
+    }
+    
+    // 处理重定向
+    const redirect = route.query.redirect as string;
+    if (redirect) {
+        router.push(redirect);
+    } else {
+        const savedRedirectPath = sessionStorage.getItem('redirectPath');
+        if (savedRedirectPath) {
+            sessionStorage.removeItem('redirectPath'); // 使用后删除
+            router.push(savedRedirectPath);
+        }
+    }
+};
 </script>
 <style lang="scss" scoped>
 .el-form {

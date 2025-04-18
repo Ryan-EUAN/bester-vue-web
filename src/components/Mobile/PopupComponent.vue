@@ -32,7 +32,13 @@
             <!-- 功能列表 -->
             <div class="feature-list">
                 <van-cell-group>
-                    <van-cell v-for="item in featureItems" :key="item.name" :title="item.text" is-link>
+                    <van-cell 
+                        v-for="item in featureItems" 
+                        :key="item.name" 
+                        :title="item.text" 
+                        is-link
+                        @click="handleFeatureClick(item.name)"
+                    >
                         <template #icon>
                             <div class="feature-icon" :style="{ backgroundColor: item.bgColor }">
                                 <van-icon :name="item.icon" color="#fff" size="18" />
@@ -178,6 +184,7 @@ const mainNavItems = ref([
 const featureItems = ref([
     { name: 'news', text: '新闻资讯', icon: 'newspaper-o', bgColor: '#3498db' },
     { name: 'forum', text: '论坛导读', icon: 'chat-o', bgColor: '#2ecc71' },
+    { name: 'music', text: '在线音乐', icon: 'music-o', bgColor: '#1abc9c' },
     { name: 'article', text: '勋章中心', icon: 'medal-o', bgColor: '#e67e22' },
     { name: 'tools', text: '道具中心', icon: 'gift-o', bgColor: '#9b59b6' },
     { name: 'tasks', text: '任务中心', icon: 'todo-list-o', bgColor: '#f1c40f' }
@@ -252,6 +259,32 @@ onMounted(() => {
 defineExpose({
     open
 });
+
+// 处理功能列表项点击事件
+const handleFeatureClick = (name: string) => {
+    // 关闭侧边栏
+    showPopup.value = false;
+    
+    // 根据功能名称进行不同的处理
+    switch (name) {
+        case 'music':
+            // 跳转到移动端音乐页面
+            router.push('/music/mobile');
+            break;
+        case 'news':
+            // 跳转到新闻页面
+            router.push('/news');
+            break;
+        case 'forum':
+            // 跳转到论坛页面
+            router.push('/forum');
+            break;
+        default:
+            // 其他功能暂未实现，显示提示
+            message.info(`${name}功能暂未开放，敬请期待`);
+            break;
+    }
+};
 </script>
 
 <style lang="scss" scoped>

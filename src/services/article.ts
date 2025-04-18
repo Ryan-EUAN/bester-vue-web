@@ -7,37 +7,40 @@ import type {
   ReplyRequest,
   ModuleArticleListResponse,
   UserPostStatus,
-  UserPostsResponse
+  UserPostsResponse,
+  ArticleListResponse,
+  ReplyListResponse
 } from '@/types/article';
-import { Result } from '@/model/result';
-import type { ListInfoType } from "@/model/listInfo";
+import type { Result } from '@/model/result';
+import type { ListInfoType as ListInfoTypeModel } from "@/model/listInfo";
 import type { PostData as PostCreateData } from '@/types/release';
+import UserInfoUtil from '@/utils/userInfo';
 
 // 发布文章
-const publishArticle = (data: PostCreateData) => {
+const publishArticle = (data: PostCreateData): Promise<Result<any>> => {
   return request({
     url: '/article/publish',
     method: 'post',
     data
-  });
+  }) as Promise<Result<any>>;
 };
 
 // 保存草稿
-const saveDraft = (data: ArticleData) => {
+const saveDraft = (data: ArticleData): Promise<Result<any>> => {
   return request({
     url: '/article/draft',
     method: 'post',
     data
-  });
+  }) as Promise<Result<any>>;
 };
 
 // 定时发布
-const scheduleArticle = (data: ArticleData) => {
+const scheduleArticle = (data: ArticleData): Promise<Result<any>> => {
   return request({
     url: '/article/schedule',
     method: 'post',
     data
-  });
+  }) as Promise<Result<any>>;
 };
 
 // 上传图片
@@ -69,11 +72,11 @@ const uploadVideo = (file: File) => {
 };
 
 // 获取文章列表
-const GET_ARTICLE_LIST_API = (name: string): Promise<Result<ListInfoType[]>> => {
+const GET_ARTICLE_LIST_API = (name: string): Promise<Result<ListInfoTypeModel[]>> => {
   return request({
     url: '/article/ranking/list?name=' + name,
     method: 'get'
-  }) as Promise<Result<ListInfoType[]>>;
+  }) as Promise<Result<ListInfoTypeModel[]>>;
 };
 
 // 获取文章详情
@@ -184,6 +187,13 @@ const UNFOLLOW_AUTHOR_API = (authorId: number): Promise<Result<void>> => {
  * @returns {Promise<Result<any>>} - 返回更新结果
  */
 async function UPDATE_ARTICLE_VIEW_COUNT_API(articleId: string): Promise<Result<any>> {
+  if (!UserInfoUtil.isLoggedIn()) {
+    return {
+      code: 200,
+      message: 'success',
+      data: null
+    } as Result<any>;
+  }
   return await request({
     url: `/web/article/view/${articleId}`,
     method: 'POST'
@@ -231,6 +241,33 @@ async function CANCEL_USER_POST_PUBLISH_API(postId: string): Promise<Result<null
   }) as Result<null>;
 }
 
+// 搜索文章API
+const SEARCH_ARTICLES_API = (params: PaginationParams): Promise<Result<ModuleArticleListResponse>> => {
+  return request({
+    url: '/article/search',
+    method: 'get',
+    params
+  }) as Promise<Result<ModuleArticleListResponse>>;
+};
+
+// 获取我的文章列表
+const GET_MY_ARTICLES_API = (params: { pageSize: number; pageNum: number }): Promise<Result<ArticleListResponse>> => {
+  return request({
+    url: '/article/my-articles',
+    method: 'get',
+    params
+  }) as Promise<Result<ArticleListResponse>>;
+};
+
+// 获取我的最新回复列表
+const GET_MY_REPLIES_API = (params: { pageSize: number; pageNum: number }): Promise<Result<ReplyListResponse>> => {
+  return request({
+    url: '/article/my-replies',
+    method: 'get',
+    params
+  }) as Promise<Result<ReplyListResponse>>;
+};
+
 export default {
   publishArticle,
   saveDraft,
@@ -238,13 +275,13 @@ export default {
   uploadImage,
   uploadVideo,
   GET_ARTICLE_LIST_API,
+  GET_ARTICLE_DETAIL_API,
   GET_ARTICLE_REPLIES_API,
   CREATE_REPLY_API,
+  CREATE_SUB_REPLY_API,
   LIKE_REPLY_API,
   UNLIKE_REPLY_API,
   GET_SUB_COMMENTS_API,
-  GET_ARTICLE_DETAIL_API,
-  CREATE_SUB_REPLY_API,
   LIKE_ARTICLE_API,
   UNLIKE_ARTICLE_API,
   GET_MODULE_ARTICLES_API,
@@ -253,5 +290,8 @@ export default {
   UPDATE_ARTICLE_VIEW_COUNT_API,
   GET_USER_POSTS_API,
   DELETE_USER_POST_API,
-  CANCEL_USER_POST_PUBLISH_API
-} 
+  CANCEL_USER_POST_PUBLISH_API,
+  SEARCH_ARTICLES_API,
+  GET_MY_ARTICLES_API,
+  GET_MY_REPLIES_API
+}; 

@@ -16,12 +16,20 @@ export interface CategoryData {
   plateInfos: ModuleInfo[];
 }
 
-// 发布帖子数据接口
+// 图片信息类型
+export interface ImageInfo {
+  url: string;
+  key: string;
+  name: string;
+  type: string;
+}
+
+// 发布数据类型
 export interface PostData {
   title: string;
   content: string;
-  images: string[];
+  images: ImageInfo[];
   timing: boolean;
-  publishTime?: number;
   plateId: number;
+  publishTime?: number;
 } 

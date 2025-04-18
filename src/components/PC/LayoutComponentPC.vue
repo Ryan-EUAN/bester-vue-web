@@ -1,6 +1,6 @@
 <template>
     <div class="layout-container">
-        <HeadComponent @openLogin="showLoginDialog" />
+        <HeadComponent />
         <div class="main-content">
             <router-view />
         </div>
@@ -12,6 +12,7 @@
             :maskClosable="false"
             @cancel="handleLoginCancel"
             :destroyOnClose="true"
+            :zIndex="1001"
         >
             <!-- <div v-if="loginMessage" class="login-message">{{ loginMessage }}</div> -->
             <login-pc @login-success="handleLoginSuccess" />
@@ -30,23 +31,24 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import HeadComponent from './HeadComponent.vue';
 import LoginPc from '@/views/auth/loginPC.vue';
 import { useRouter } from 'vue-router';
+import eventBus from '@/utils/eventBus';
 
 const router = useRouter();
 const showLogin = ref(false);
 
-// 显示登录弹窗
-const showLoginDialog = () => {
-    showLogin.value = true;
-};
 
 // 监听登录窗口事件
-const handleShowLoginModal = (event: CustomEvent) => {
+const handleShowLoginModal = (event: Event) => {
+    console.log('收到登录事件: showLoginModal', event);
     showLogin.value = true;
     
-    if (event.detail) {
-        if (event.detail.redirect) {
+    // 安全访问detail属性
+    const customEvent = event as CustomEvent;
+    if (customEvent.detail) {
+        if (customEvent.detail.redirect) {
             // 使用 sessionStorage 而不是组件变量，避免组件重新渲染时丢失
-            sessionStorage.setItem('redirectPath', event.detail.redirect);
+            sessionStorage.setItem('redirectPath', customEvent.detail.redirect);
+            console.log('保存重定向路径:', customEvent.detail.redirect);
         }
     }
 };
@@ -71,12 +73,32 @@ const handleLoginSuccess = () => {
     }
 };
 
+// 使用事件总线监听登录事件
+const handleLoginEvent = (data: any) => {
+    console.log('通过事件总线收到登录事件', data);
+    showLogin.value = true;
+    
+    if (data && data.redirect) {
+        // 使用 sessionStorage 而不是组件变量，避免组件重新渲染时丢失
+        sessionStorage.setItem('redirectPath', data.redirect);
+        console.log('通过事件总线保存重定向路径:', data.redirect);
+    }
+};
+
 onMounted(() => {
-    window.addEventListener('showLoginModal', handleShowLoginModal as EventListener);
+    console.log('LayoutComponentPC mounted - 添加事件监听器');
+    // 使用事件总线监听
+    eventBus.on('showLoginModal', handleLoginEvent);
+    // 同时保留原生事件监听，保证兼容性
+    window.addEventListener('showLoginModal', handleShowLoginModal);
 });
 
 onUnmounted(() => {
-    window.removeEventListener('showLoginModal', handleShowLoginModal as EventListener);
+    console.log('LayoutComponentPC unmounted - 移除事件监听器');
+    // 移除事件总线监听
+    eventBus.off('showLoginModal', handleLoginEvent);
+    // 同时移除原生事件监听
+    window.removeEventListener('showLoginModal', handleShowLoginModal);
 });
 </script>
 

@@ -1,5 +1,5 @@
 <template>
-  <div class="release-container">
+  <div class="release-container" :class="{ 'dark-mode': isDarkMode }">
     <div class="main-content">
       <!-- 标题输入区 -->
       <div class="title-area">
@@ -9,15 +9,50 @@
 
       <!-- 内容输入区 -->
       <div class="content-area">
-        <a-textarea v-model:value="content" placeholder="有什么新鲜事想分享给大家？" :auto-size="{ minRows: 6, maxRows: 10 }"
+        <a-textarea v-model:value="content" placeholder="有什么新鲜事想分享给大家？" :auto-size="{ minRows: 10, maxRows: 19 }"
           :maxLength="2000" class="content-input" />
-        <!-- 图片预览区 -->
-        <div class="image-preview" v-if="imageList.length">
-          <div v-for="(img, index) in imageList" :key="index" class="image-item">
-            <img :src="img" />
-            <div class="delete-icon" @click="removeImage(index)">
-              <close-outlined />
-            </div>
+        <!-- 媒体预览区 -->
+        <div class="media-preview">
+          <div class="media-grid">
+            <template v-for="(media, index) in sortedMediaList" :key="index">
+              <!-- 图片项 -->
+              <div v-if="media.type === 'image'" 
+                   :class="['media-item', 'image-item', getMediaItemClass(index)]">
+                <div class="media-wrapper">
+                  <a-image 
+                    :src="media.url" 
+                    :alt="media.name"
+                    :preview="{
+                      src: media.url,
+                      mask: false
+                    }"
+                  />
+                  <div class="delete-overlay">
+                    <a-button type="primary" danger shape="circle" @click.stop="handleMediaDelete(media)">
+                      <template #icon><icon.DeleteOutlined /></template>
+                    </a-button>
+                  </div>
+                </div>
+              </div>
+              <!-- 视频项 -->
+              <div v-else 
+                   :class="['media-item', 'video-item', getMediaItemClass(index)]">
+                <div class="media-wrapper">
+                  <video 
+                    controls
+                    :src="media.url"
+                    class="video-player"
+                    preload="metadata"
+                    controlsList="nodownload"
+                  ></video>
+                  <div class="delete-overlay">
+                    <a-button type="primary" danger shape="circle" @click="handleMediaDelete(media)">
+                      <template #icon><icon.DeleteOutlined /></template>
+                    </a-button>
+                  </div>
+                </div>
+              </div>
+            </template>
           </div>
         </div>
       </div>
@@ -43,7 +78,7 @@
                   <!-- 添加清空按钮，仅在最近使用分类且有数据时显示 -->
                   <div v-if="currentCategory === 'recent' && currentEmojis.length > 0" class="clear-recent">
                     <a-button type="link" size="small" @click="clearRecentEmojis">
-                      <delete-outlined />
+                      <icon.DeleteOutlined />
                       <span>清空最近使用</span>
                     </a-button>
                   </div>
@@ -58,29 +93,39 @@
               </div>
             </template>
             <div class="tool-item">
-              <smile-outlined />
+              <icon.SmileOutlined />
               <span>表情</span>
             </div>
           </a-popover>
-          <a-upload accept="image/*" :multiple="true" :max-count="9" :show-upload-list="false"
-            @change="handleImageUpload">
+          <a-upload 
+            accept="image/*" 
+            :multiple="true" 
+            :max-count="9" 
+            :show-upload-list="false"
+            :customRequest="handleCustomImageUpload"
+            :beforeUpload="beforeUpload">
             <div class="tool-item">
-              <picture-outlined />
+              <icon.PictureOutlined />
               <span>图片</span>
             </div>
           </a-upload>
-          <a-upload accept="video/*" :max-count="1" :show-upload-list="false" @change="handleVideoUpload">
+          <a-upload 
+            accept="video/*" 
+            :max-count="1" 
+            :show-upload-list="false"
+            :customRequest="handleCustomVideoUpload"
+            :beforeUpload="beforeUpload">
             <div class="tool-item">
-              <video-camera-outlined />
+              <icon.VideoCameraOutlined />
               <span>视频</span>
             </div>
           </a-upload>
           <div class="tool-item" @click="insertTopic">
-            <number-outlined />
+            <icon.NumberOutlined />
             <span>话题</span>
           </div>
           <div class="tool-item">
-            <thunderbolt-outlined />
+            <icon.ThunderboltOutlined />
             <span>头条文章</span>
           </div>
           <div class="tool-item" @click="showModuleModal" :class="toolItemStyle">
@@ -89,44 +134,45 @@
               <span>{{ selectedModule.name }}</span>
             </template>
             <template v-else>
-              <appstore-outlined />
+              <icon.AppstoreOutlined />
               <span>选择模块</span>
             </template>
           </div>
         </div>
         <div class="right-tools">
-          <a-dropdown v-model:open="dropdownVisible" trigger="click">
-            <div class="publish-type-selector">
-              <clock-circle-outlined />
-              <span>{{ getPublishTypeText }}</span>
-            </div>
-            <template #overlay>
-              <a-menu @click="handleMenuClick">
-                <a-menu-item key="now">
-                  <clock-circle-outlined />
-                  <span>立即发布</span>
-                </a-menu-item>
-                <a-menu-item key="timing">
-                  <clock-circle-outlined />
-                  <span>定时发布</span>
-                </a-menu-item>
-              </a-menu>
-            </template>
-          </a-dropdown>
-
-          <a-modal v-model:open="showTimePicker" title="选择发布时间" :footer="null" :width="300" :closable="false"
-            :maskClosable="false" destroyOnClose>
+          <template v-if="showTimePicker">
             <div class="time-picker-container">
-              <a-date-picker v-model:value="selectedDate" :show-time="{ format: 'HH:mm' }" format="YYYY-MM-DD HH:mm"
+              <a-date-picker style="width: 12vw;" v-model:value="selectedDate" :show-time="{ format: 'HH:mm' }" format="YYYY-MM-DD HH:mm"
                 :disabledDate="disabledDate" :disabledTime="disabledTime" @change="handleTimeChange" />
               <div class="time-picker-footer">
                 <a-button size="small" @click="cancelTimePicker">取消</a-button>
                 <a-button type="primary" size="small" @click="handleTimeConfirm">确定</a-button>
               </div>
             </div>
-          </a-modal>
-
-          <a-button type="primary" size="small" @click="publishPost">发送</a-button>
+          </template>
+          <template v-else>
+            <div class="publish-buttons">
+              <a-dropdown v-model:open="dropdownVisible" trigger="hover" placement="bottom">
+                <div class="publish-type-selector">
+                  <component :is="publishType === 'now' ? icon.SendOutlined : icon.ClockCircleOutlined" />
+                  <span>{{ getPublishTypeText }}</span>
+                </div>
+                <template #overlay>
+                  <a-menu @click="handleMenuClick">
+                    <a-menu-item key="now">
+                      <icon.SendOutlined />
+                      <span>立即发布</span>
+                    </a-menu-item>
+                    <a-menu-item key="timing">
+                      <icon.ClockCircleOutlined />
+                      <span>定时发布</span>
+                    </a-menu-item>
+                  </a-menu>
+                </template>
+              </a-dropdown>
+              <a-button type="primary" size="small" @click="publishPost">发送</a-button>
+            </div>
+          </template>
         </div>
       </div>
     </div>
@@ -159,17 +205,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { message } from 'ant-design-vue';
-import {
-  SmileOutlined,
-  PictureOutlined,
-  VideoCameraOutlined,
-  NumberOutlined,
-  ThunderboltOutlined,
-  CloseOutlined,
-  DeleteOutlined,
-  AppstoreOutlined,
-  ClockCircleOutlined,
-} from '@ant-design/icons-vue';
+import * as icon from '@ant-design/icons-vue';
 import { emojiCategories, emojiData } from '@/utils/emojiData';
 import moduleAPI from '@/services/module';
 import articleApi from '@/services/article';
@@ -178,10 +214,11 @@ import dayjs, { Dayjs } from 'dayjs';
 import type { ModuleInfo, CategoryData, PostData } from '@/types/release';
 import router from '@/router';
 import userStorage from '@/utils/userStorage';
+import { getCurrentTheme, onThemeChange } from '@/utils/themeUtils';
+import fileApi from '@/services/file';
 
 const title = ref('');
 const content = ref('');
-const imageList = ref<string[]>([]);
 const emojiVisible = ref(false);
 const publishType = ref<'now' | 'timing'>('now');
 const currentCategory = ref('emoji');
@@ -190,6 +227,9 @@ const MAX_RECENT = 20;
 const showTimePicker = ref(false);
 const selectedDate = ref<Dayjs | null>(null);
 const dropdownVisible = ref(false);
+
+// 主题相关
+const isDarkMode = ref(getCurrentTheme() === 'dark');
 
 // 从 localStorage 获取最近使用的表情
 const loadRecentEmojis = () => {
@@ -245,6 +285,24 @@ const currentEmojis = computed(() => {
   return emojiData[currentCategory.value] || [];
 });
 
+// 清理所有上传的媒体文件
+const cleanupMediaFiles = async () => {
+  try {
+    // 删除所有已上传的图片
+    const imagePromises = imageList.value.map(img => fileApi.DELETE_FILE_API(img.key));
+    // 删除所有已上传的视频
+    const videoPromises = videoList.value.map(video => fileApi.DELETE_FILE_API(video.key));
+    
+    await Promise.all([...imagePromises, ...videoPromises]);
+    
+    // 清空列表
+    imageList.value = [];
+    videoList.value = [];
+  } catch (error) {
+    console.error('清理媒体文件失败:', error);
+  }
+};
+
 // 组件挂载时加载最近使用的表情
 onMounted(() => {
   // 检查是否已登录
@@ -252,39 +310,163 @@ onMounted(() => {
   const userInfo = localStorage.getItem('userInfo');
 
   if (!token || !userInfo) {
-    // 未登录，触发显示登录窗口事件
     window.dispatchEvent(new CustomEvent('showLoginModal', {
       detail: {
         redirect: '/release'
       }
     }));
-    // 不再强制跳转，与路由守卫行为保持一致
     return;
   }
   
-  // 已登录，继续正常加载
   loadRecentEmojis();
+
+  // 监听主题变化
+  const unsubscribe = onThemeChange((theme) => {
+    isDarkMode.value = theme === 'dark';
+  });
+
+  // 添加页面刷新和关闭事件监听
+  const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+    cleanupMediaFiles();
+    e.preventDefault();
+    e.returnValue = '';
+  };
+
+  window.addEventListener('beforeunload', handleBeforeUnload);
+
+  // 组件卸载时清理
+  onUnmounted(() => {
+    unsubscribe();
+    window.removeEventListener('beforeunload', handleBeforeUnload);
+    debouncedFetchModuleList.cancel();
+    // 如果不是发布成功状态，清理文件
+    if (!isPublishSuccess.value) {
+      cleanupMediaFiles();
+    }
+  });
 });
 
-// 处理图片上传
-const handleImageUpload = (info: any) => {
-  if (info.file.status === 'done') {
-    const url = info.file.response.url; // 根据实际接口返回格式调整
-    imageList.value.push(url);
+// 修改视频信息类型定义
+interface VideoInfo {
+  url: string;    // 视频播放地址
+  key: string;    // 存储标识
+  name: string;   // 文件名
+  type: string;   // 媒体类型
+  poster?: string; // 可选：视频封面图
+}
+
+// 修改图片列表类型
+interface ImageItem {
+  url: string;
+  key: string;
+}
+
+// 修改图片列表的 ref 类型
+const imageList = ref<ImageItem[]>([]);
+
+// 修改视频列表的 ref 类型
+const videoList = ref<VideoInfo[]>([]);
+
+// 计算剩余可上传数量
+const remainingMediaCount = computed(() => {
+  const totalCount = 8; // 总共允许9个媒体文件
+  const currentCount = videoList.value.length + imageList.value.length;
+  return totalCount - currentCount;
+});
+
+// 计算剩余可上传视频数量
+const remainingVideoCount = computed(() => {
+  const maxVideos = 4; // 最多4个视频
+  return Math.min(maxVideos - videoList.value.length, remainingMediaCount.value);
+});
+
+// 计算剩余可上传图片数量
+const remainingImageCount = computed(() => {
+  const maxImages = 9 - videoList.value.length; // 根据视频数量动态调整
+  return Math.min(maxImages - imageList.value.length, remainingMediaCount.value);
+});
+
+// 修改视频上传前检查
+const beforeUpload = (file: File) => {
+  // 图片类型检查
+  if (file.type.startsWith('image/')) {
+    if (remainingImageCount.value <= 0) {
+      message.warning('已达到图片上传上限');
+      return false;
+    }
+    const isValidImage = file.type === 'image/jpeg' || 
+                        file.type === 'image/png' || 
+                        file.type === 'image/gif' ||
+                        file.type === 'image/webp';
+    if (!isValidImage) {
+      message.error('只支持 JPG/PNG/GIF/WEBP 格式的图片！');
+      return false;
+    }
+    const isLt5M = file.size / 1024 / 1024 < 5;
+    if (!isLt5M) {
+      message.error('图片大小不能超过 5MB！');
+      return false;
+    }
   }
+  // 视频类型检查
+  if (file.type.startsWith('video/')) {
+    if (remainingVideoCount.value <= 0) {
+      message.warning('已达到视频上传上限');
+      return false;
+    }
+    const isValidVideo = file.type === 'video/mp4' || 
+                        file.type === 'video/webm';
+    if (!isValidVideo) {
+      message.error('只支持 MP4/WEBM 格式的视频！');
+      return false;
+    }
+    const isLt50M = file.size / 1024 / 1024 < 50;
+    if (!isLt50M) {
+      message.error('视频大小不能超过 50MB！');
+      return false;
+    }
+  }
+  return true;
 };
 
-// 处理视频上传
-const handleVideoUpload = (info: any) => {
-  if (info.file.status === 'done') {
-    message.success('视频上传成功');
-    // 处理视频上传后的逻辑
-  }
-};
+// 修改视频上传处理函数
+const handleCustomVideoUpload = async (options: any) => {
+  // @ts-ignore
+  const { file, onSuccess, onError, onProgress } = options;
+  try {
+    console.log('开始上传视频:', file.name);
+    const res = await fileApi.UPLOAD_FILE_API(file, 'video');
+    if (res.code === 200 && res.data) {
+      console.log('视频上传成功，数据:', res.data);
+      // 检查返回的数据结构
+      if (!res.data.url || !res.data.key) {
+        message.error('视频上传返回数据格式错误');
+        onError();
+        return;
+      }
 
-// 移除图片
-const removeImage = (index: number) => {
-  imageList.value.splice(index, 1);
+      // 添加到视频列表
+      videoList.value.push({
+        url: res.data.url,      // 视频播放地址
+        key: res.data.key,      // 视频存储的唯一标识
+        name: res.data.key.split('/').pop() || '',  // 从key中提取文件名
+        type: 'video',           // 标记为视频类型
+        poster: res.data.url.replace(/\.[^.]+$/, '.jpg')  // 可选：视频封面图，如果后端支持的话
+      });
+      
+      console.log('当前视频列表:', videoList.value);
+      onSuccess(res.data);
+      message.success('视频上传成功');
+    } else {
+      console.error('视频上传失败:', res);
+      onError();
+      message.error('视频上传失败');
+    }
+  } catch (error) {
+    console.error('视频上传出错:', error);
+    onError();
+    message.error('视频上传失败');
+  }
 };
 
 // 插入话题
@@ -313,13 +495,11 @@ const handleMenuClick = (e: { key: string }) => {
     publishType.value = 'now';
     selectedDate.value = null;
   } else if (e.key === 'timing') {
-    publishType.value = 'timing';
     // 设置默认时间为一小时后
     selectedDate.value = dayjs().add(1, 'hour');
-    // 显示时间选择器
     showTimePicker.value = true;
+    dropdownVisible.value = false;
   }
-  dropdownVisible.value = false;
 };
 
 // 处理时间变更
@@ -333,6 +513,7 @@ const handleTimeConfirm = () => {
     message.warning('请选择发布时间');
     return;
   }
+  publishType.value = 'timing';
   showTimePicker.value = false;
 };
 
@@ -431,6 +612,9 @@ const handleModalCancel = () => {
   moduleModalVisible.value = false;
 };
 
+// 添加发布状态标记
+const isPublishSuccess = ref(false);
+
 // 修改发布帖子函数
 const publishPost = async () => {
   // 检查模块选择
@@ -439,9 +623,10 @@ const publishPost = async () => {
     return;
   }
 
-  // 检查内容
-  if (!content.value.trim()) {
-    message.warning('请输入内容');
+  // 检查内容：当没有图片和视频时，必须有文字内容
+  const hasMedia = imageList.value.length > 0 || videoList.value.length > 0;
+  if (!hasMedia && !content.value.trim()) {
+    message.warning('请输入内容或上传图片/视频');
     return;
   }
 
@@ -452,25 +637,44 @@ const publishPost = async () => {
   }
 
   try {
+    // 处理所有媒体信息
+    const media = [
+      ...imageList.value.map(img => ({
+        url: img.url,
+        key: img.key,
+        name: img.key.split('/').pop() || '',
+        type: 'image'
+      })),
+      ...videoList.value.map(video => ({
+        url: video.url,
+        key: video.key,
+        name: video.name,
+        type: 'video',
+        poster: video.url.replace(/\.[^.]+$/, '.jpg')
+      }))
+    ];
+
     const postData: PostData = {
       title: title.value,
-      content: content.value,
-      images: imageList.value,
+      content: content.value.trim(),
+      images: media,
       timing: publishType.value === 'timing',
       plateId: selectedModule.value.plateId
     };
 
-    // 只有在定时发布时才添加发布时间
     if (publishType.value === 'timing' && selectedDate.value) {
       postData.publishTime = selectedDate.value.valueOf();
     }
 
-    console.log('postData', postData); // 添加日志
     const res = await articleApi.publishArticle(postData);
-    console.log('res', res);
-    message.success('发布成功');
-    userStorage.addPosts();
-    router.push('/')
+    if (res.code === 200) {
+      isPublishSuccess.value = true;
+      message.success('发布成功');
+      userStorage.addPosts();
+      router.push('/');
+    } else {
+      message.error('发布失败');
+    }
   } catch (error) {
     message.error('发布失败');
   }
@@ -508,386 +712,314 @@ const clearRecentEmojis = () => {
   emojiData.recent = [];
   saveRecentEmojis([]);
 };
+
+// 自定义图片上传处理函数
+const handleCustomImageUpload = async (options: any) => {
+  const { file, onSuccess, onError } = options;
+  
+  try {
+    const response = await fileApi.UPLOAD_FILE_API(file, 'image');
+    console.log('上传响应:', response); // 添加日志
+    
+    if (response && response.code === 200 && response.data) { // 修改判断条件
+      // 添加到图片列表
+      imageList.value.push({
+        url: response.data.url,
+        key: response.data.key
+      });
+      
+      // 调用成功回调
+      onSuccess(response.data);
+      message.success('图片上传成功');
+    } else {
+      console.error('上传失败，响应数据:', response); // 添加错误日志
+      throw new Error(response?.message || '上传失败');
+    }
+  } catch (error: any) {
+    console.error('图片上传失败:', error);
+    onError(error);
+    message.error(typeof error === 'string' ? error : (error.message || '图片上传失败，请重试'));
+  }
+};
+
+// 合并并排序媒体列表
+const sortedMediaList = computed(() => {
+  const allMedia = [
+    ...imageList.value.map(img => ({
+      ...img,
+      type: 'image',
+      name: img.key.split('/').pop() || ''
+    })),
+    ...videoList.value.map(video => ({
+      url: video.url,
+      key: video.key,
+      type: 'video',
+      name: video.name
+    }))
+  ];
+  
+  return allMedia;
+});
+
+// 获取媒体项的类名
+const getMediaItemClass = (index: number) => {
+  const totalCount = sortedMediaList.value.length;
+  
+  // 单个媒体项
+  if (totalCount === 1) return 'full-width';
+  
+  // 两个媒体项
+  if (totalCount === 2) return 'half-width';
+  
+  // 三个或更多媒体项
+  if (totalCount >= 3) {
+    if (totalCount === 3 && index === 2) return 'full-width-last';
+    return 'third-width';
+  }
+  
+  return '';
+};
+
+// 统一的媒体删除处理函数
+const handleMediaDelete = async (media: any) => {
+  try {
+    const res = await fileApi.DELETE_FILE_API(media.key);
+    if (res.code === 200) {
+      if (media.type === 'image') {
+        imageList.value = imageList.value.filter(item => item.key !== media.key);
+      } else {
+        videoList.value = videoList.value.filter(item => item.key !== media.key);
+      }
+      message.success('删除成功');
+    } else {
+      message.error('删除失败');
+    }
+  } catch (error) {
+    console.error('删除出错:', error);
+    message.error('删除失败');
+  }
+};
 </script>
 
 <style lang="less" scoped>
-.release-container {
-  background-color: #fff;
-  display: flex;
-  justify-content: center;
-  padding: 20px;
-  min-height: 100vh;
-}
+@import './releasePC.less';
 
-.main-content {
-  width: 800px; // 使用固定宽度替代 60vw
-  max-width: 90%; // 在小屏幕上自适应
+.image-preview {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  width: 100%;
 
-  .title-area {
-    padding: 20px 24px 0;
-    border-bottom: 1px solid #e8e8e8;
-
-    .title-input {
-      font-size: 16px;
-      font-weight: 500;
-
-      :deep(.ant-input) {
-        border: none;
-        padding: 8px 0;
-
-        &:focus {
-          box-shadow: none;
-        }
-      }
-    }
-  }
-
-  .content-area {
-    padding: 20px 24px;
-
-    .content-input {
-      resize: none;
-      font-size: 16px;
-    }
-
-    .image-preview {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); // 使用固定像素
-      gap: 12px;
-      margin-top: 16px;
-
-      .image-item {
-        position: relative;
-        aspect-ratio: 1;
-        border-radius: 4px;
-        overflow: hidden;
-
-        .delete-icon {
-          position: absolute;
-          top: 8px;
-          right: 8px;
-          padding: 4px;
-        }
-      }
-    }
-  }
-
-  .toolbar {
-    border-top: 1px solid #e8e8e8;
-    padding: 12px 24px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 12px;
-
-    .left-tools {
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-
-      .tool-item {
-        padding: 6px 8px;
-        font-size: 14px;
-        gap: 4px;
-      }
-    }
-
-    .right-tools {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-    }
-  }
-}
-
-.emoji-container {
-  width: 420px; // 使用固定宽度
-  height: 360px;
-  max-width: 90vw; // 在小屏幕上自适应
-
-  .emoji-nav {
-    padding: 8px 12px;
-    display: flex; // 添加横向布局
-    gap: 4px; // 添加间距
-    justify-content: space-between; // 均匀分布
-    width: 100%; // 占满整行
-
-    .nav-item {
-      padding: 6px 12px;
-      cursor: pointer;
-      border-radius: 4px;
-      transition: all 0.3s;
-      flex: 1; // 平均分配空间
-
-      &:hover {
-        background-color: #f5f5f5;
-      }
-
-      &.active {
-        background-color: #e6f7ff;
-        color: #1890ff;
-      }
-    }
-  }
-
-  .emoji-content {
-    height: calc(100% - 48px); // 减去导航的高度
-    overflow-y: auto;
-
-    .emoji-grid {
-      display: grid;
-      grid-template-columns: repeat(8, 1fr); // 固定8列布局
-      gap: 8px;
-      padding: 12px;
-
-      .emoji-item {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        cursor: pointer;
-        padding: 4px;
-        border-radius: 4px;
-        transition: all 0.3s;
-
-        &:hover {
-          background-color: #f5f5f5;
-        }
-      }
-    }
-  }
-}
-
-// 媒体查询优化
-@media screen and (max-width: 768px) {
-  .main-content {
-    width: 100%;
-
-    .toolbar {
-      .left-tools {
-        justify-content: flex-start; // 改为左对齐
-        gap: 8px; // 减小间距
-      }
-    }
-  }
-
-  .emoji-container {
-    width: 320px; // 小屏幕下的固定宽度
-  }
-}
-
-@media screen and (max-width: 480px) {
-  .main-content {
-    .toolbar {
-      .tool-item {
-        padding: 4px 6px; // 减小内边距
-
-        span {
-          display: none; // 隐藏文字
-        }
-      }
-    }
-  }
-}
-
-// 工具项样式优化
-.tool-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  color: #666;
-  cursor: pointer;
-  font-size: 14px;
-  padding: 6px 8px;
-  white-space: nowrap;
-  border-radius: 4px;
-  transition: all 0.3s;
-
-  .module-icon {
-    width: 18px;
-    height: 18px;
-  }
-
-  &.selected {
-    color: #1890ff;
-    background-color: #e6f7ff;
-  }
-
-  &:hover {
-    color: #1890ff;
-    background-color: #f5f5f5;
-  }
-}
-
-:deep(.emoji-popover) {
-  .ant-popover-inner {
-    padding: 0;
-  }
-
-  .ant-popover-inner-content {
-    padding: 0;
-  }
-}
-
-.module-selector {
-  .module-tabs {
-    :deep(.ant-tabs-nav) {
-      margin-bottom: 16px;
-
-      &::before {
-        border-bottom: 1px solid #f0f0f0;
-      }
-
-      .ant-tabs-tab {
-        padding: 12px 20px;
-        font-size: 1rem;
-        transition: all 0.3s;
-
-        &:hover {
-          color: #1890ff;
-        }
-
-        &.ant-tabs-tab-active {
-          .ant-tabs-tab-btn {
-            color: #1890ff;
-            font-weight: 500;
-          }
-        }
-      }
-
-      .ant-tabs-ink-bar {
-        background: #1890ff;
-        height: 2px;
-      }
-    }
-  }
-
-  .module-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 20px;
-    padding: 4px;
-
-    .module-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 20px;
+  .image-item {
+    position: relative;
+    aspect-ratio: 1;
+    
+    .image-wrapper {
+      position: relative;
+      width: 100%;
+      height: 100%;
       border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      border: 1px solid #e8e8e8;
-      background: #fff;
-      min-width: 0;
+      overflow: hidden;
 
-      &:hover {
-        background-color: #f5f5f5;
-        transform: translateY(-2px);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      }
-
-      &.active {
-        background-color: #e6f7ff;
-        border-color: #1890ff;
-
-        .module-name {
-          color: #1890ff;
+      :deep(.ant-image) {
+        width: 100%;
+        height: 100%;
+        
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
         }
       }
-
-      .module-icon {
-        width: 48px;
-        height: 48px;
-        object-fit: cover;
-        border-radius: 8px;
-        margin-bottom: 12px;
-        transition: all 0.3s ease;
-      }
-
-      .module-name {
-        font-size: 0.875rem;
-        font-weight: 500;
-        margin-bottom: 8px;
-        width: 100%;
-        text-align: center;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .module-info {
-        width: 100%;
-        font-size: 12px;
-        color: #999;
+      
+      .delete-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.45);
         display: flex;
+        align-items: center;
         justify-content: center;
-        gap: 12px;
-
-        span {
-          white-space: nowrap;
-        }
+        opacity: 0;
+        transition: opacity 0.3s;
       }
 
       &:hover {
-        .module-icon {
-          transform: scale(1.1);
+        .delete-overlay {
+          opacity: 1;
         }
       }
     }
   }
 }
 
-:deep(.ant-modal-content) {
-  .ant-modal-header {
-    border-bottom: none;
-    padding: 24px 24px 0;
+.image-preview a-image-group {
+  display: contents;
+}
 
-    .ant-modal-title {
-      font-size: 1.125rem;
-      font-weight: 600;
+// 暗色模式样式
+.dark-mode {
+  .image-preview {
+    .image-item {
+      .delete-overlay {
+        background: rgba(0, 0, 0, 0.65);
+      }
     }
   }
+}
 
-  .ant-modal-body {
-    padding: 24px;
+.video-preview {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  width: 100%;
+  
+  .video-item {
+    position: relative;
+    width: 100%;
+    
+    .video-wrapper {
+      position: relative;
+      width: 100%;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #000;
+      aspect-ratio: 16/9;
+      
+      .video-player {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      
+      .delete-overlay {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+
+      &:hover {
+        .delete-overlay {
+          opacity: 1;
+        }
+      }
+    }
   }
 }
 
-// 添加滚动条的全局样式
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #ccc;
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-:deep(.time-picker-popover) {
-  .ant-popover-inner-content {
-    padding: 12px;
-  }
-
-  .ant-popover-arrow {
-    left: 50% !important;
+// 暗色模式样式
+.dark-mode {
+  .video-preview {
+    .video-item {
+      .video-wrapper {
+        background: #141414;
+      }
+    }
   }
 }
 
-.time-picker-container {
-  .time-picker-footer {
-    margin-top: 12px;
-    display: flex;
-    justify-content: flex-end;
+.media-preview {
+  margin-top: 16px;
+  width: 100%;
+  max-width: 800px;
+
+  .media-grid {
+    display: grid;
     gap: 8px;
+    grid-template-columns: repeat(4, 1fr);
+    
+    .media-item {
+      position: relative;
+      width: 100%;
+      
+      &.full-width {
+        grid-column: span 2;
+        max-width: 400px;
+      }
+      
+      &.half-width {
+        grid-column: span 2;
+      }
+      
+      &.third-width {
+        grid-column: span 1;
+      }
+      
+      &.full-width-last {
+        grid-column: span 2;
+      }
+      
+      .media-wrapper {
+        position: relative;
+        width: 100%;
+        border-radius: 4px;
+        overflow: hidden;
+        aspect-ratio: 16/9;
+        background: #000;
+        
+        &:hover .delete-overlay {
+          opacity: 1;
+        }
+      }
+    }
+    
+    .image-item .media-wrapper {
+      :deep(.ant-image) {
+        width: 100%;
+        height: 100%;
+        
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+      }
+    }
+    
+    .video-item .media-wrapper {
+      .video-player {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
+    
+    .delete-overlay {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      background: rgba(0, 0, 0, 0.45);
+      border-radius: 50%;
+      padding: 2px;
+      
+      .ant-btn {
+        width: 24px;
+        height: 24px;
+        font-size: 12px;
+      }
+    }
   }
+}
 
-  .ant-picker {
-    width: 240px;
+// 暗色模式样式
+.dark-mode {
+  .media-preview {
+    .media-grid {
+      .media-item .media-wrapper {
+        background: #141414;
+      }
+      
+      .delete-overlay {
+        background: rgba(0, 0, 0, 0.65);
+      }
+    }
   }
 }
 </style>
