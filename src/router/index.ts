@@ -341,6 +341,15 @@ const routes: RouteRecordRaw[] = [
     ]
   },
   {
+    path: '/bester-frame',
+    name: 'BesterFrame',
+    component: () => import('@/views/besterFrame/index.vue'),
+    meta: {
+      title: 'Bester低代码开发框架',
+      requiresAuth: false
+    }
+  },
+  {
     path: '/websocket',
     name: 'WebSocket',
     component: () => import('@/components/WebSocketDemo.vue'),
@@ -376,6 +385,10 @@ let lastCheckTime = 0;
 
 // 路由守卫
 router.beforeEach(async (to, from, next) => {
+  // 设置页面标题
+  const title = to.meta.title ? `${to.meta.title} - Bester` : 'Bester';
+  document.title = title;
+
   // 对于不需要认证的页面，直接放行
   if (!to.matched.some(record => record.meta.requiresAuth)) {
     next();

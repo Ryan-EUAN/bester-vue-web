@@ -1,7 +1,7 @@
 <template>
-    <a-flex gap="medium" style="width: 100%; height: 30vh;">
+    <a-flex gap="medium" style="width: 100%; height: 40vh;">
         <!-- 左侧大图轮播，修改宽度为30vw -->
-        <div class="carousel-container" style="width: 30vw;">
+        <div class="carousel-container" style="width: 40vw;">
             <el-carousel 
                 ref="mainCarousel" 
                 height="100%" 
@@ -21,7 +21,7 @@
         </div>
 
         <!-- 右侧缩略图容器宽度调整 -->
-        <div class="thumbnail-container" style="width: 5vw;">
+        <div class="thumbnail-container" style="width: 6vw;">
             <a-flex vertical gap="small">
                 <div v-for="(item, index) in visibleThumbnails" :key="index" class="thumbnail-item"
                     :class="{ 'active': activeIndex === item.index }" @mouseenter="handleThumbnailHover(item.index)">

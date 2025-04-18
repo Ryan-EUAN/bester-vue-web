@@ -1,65 +1,69 @@
 <template>
-    <a-flex gap="large">
-        <ElCarousel class="banner-carousel" :interval="3000" :autoplay="true" indicator-position="outside" arrow="hover"
-            trigger="click" @change="handleCarouselChange">
-            <ElCarouselItem v-for="(item, index) in carouselList" :key="index"
-                @click="handleCarouselClick(item.link ? item.link : '')" class="carousel-item-wrapper">
-                <div class="carousel-item">
-                    <div class="media-wrapper">
-                        <!-- 视频内容 -->
-                        <video v-if="item.type === 'video'" class="carousel-video" :src="item.url" preload="metadata"
-                            :loop="true" :muted="true" :playsinline="true" :webkit-playsinline="true"
-                            x5-video-player-type="h5" x5-video-player-fullscreen="false"
-                            :autoplay="currentIndex === index" :controls="false" ref="videoRefs"
-                            @loadedmetadata="handleVideoLoaded" @error="handleMediaError($event, item)"></video>
-                        <!-- 图片内容 -->
-                        <a-image v-else :src="item.url" :preview="{
-                            src: item.url,
-                            mask: false
-                        }" class="carousel-image" @error="handleMediaError($event, item)">
-                            <template #error>
-                                <div class="image-error">
-                                    <el-icon>
-                                        <Picture />
-                                    </el-icon>
-                                    <p>加载失败</p>
-                                </div>
-                            </template>
-                        </a-image>
+    <div class="pc-container" :class="{ 'dark-theme': isDarkMode }">
+        <a-flex gap="large">
+            <ElCarousel class="banner-carousel" :interval="3000" :autoplay="true" indicator-position="outside" arrow="hover"
+                trigger="click" @change="handleCarouselChange">
+                <ElCarouselItem v-for="(item, index) in carouselList" :key="index"
+                    @click="handleCarouselClick(item.link ? item.link : '')" class="carousel-item-wrapper">
+                    <div class="carousel-item">
+                        <div class="media-wrapper">
+                            <!-- 视频内容 -->
+                            <video v-if="item.type === 'video'" class="carousel-video" :src="item.url" preload="metadata"
+                                :loop="true" :muted="true" :playsinline="true" :webkit-playsinline="true"
+                                x5-video-player-type="h5" x5-video-player-fullscreen="false"
+                                :autoplay="currentIndex === index" :controls="false" ref="videoRefs"
+                                @loadedmetadata="handleVideoLoaded" @error="handleMediaError($event, item)"></video>
+                            <!-- 图片内容 -->
+                            <a-image v-else :src="item.url" :preview="{
+                                src: item.url,
+                                mask: false
+                            }" class="carousel-image" @error="handleMediaError($event, item)">
+                                <template #error>
+                                    <div class="image-error">
+                                        <el-icon>
+                                            <Picture />
+                                        </el-icon>
+                                        <p>加载失败</p>
+                                    </div>
+                                </template>
+                            </a-image>
+                        </div>
+                        <div class="item-info">
+                            <h3>{{ item.description }}</h3>
+                            <p>{{ item.title }}</p>
+                        </div>
                     </div>
-                    <div class="item-info">
-                        <h3>{{ item.description }}</h3>
-                        <p>{{ item.title }}</p>
-                    </div>
-                </div>
-            </ElCarouselItem>
-        </ElCarousel>
-        <a-tabs v-model:activeKey="blogKey" type="card" size="small">
-            <a-tab-pane v-for="blog in blogTabsInfos" :key="blog.id" :tab="blog.label">
-                <PostListColumnComponent :tabsId="blog.id" type="blog" />
-            </a-tab-pane>
-        </a-tabs>
-        <a-tabs v-model:activeKey="userKey" type="card" size="small" style="width: 15vw;">
-            <a-tab-pane v-for="user in userTabsInfos" :key="user.id" :tab="user.label">
-                <PostListColumnComponent :tabsId="user.id" type="user" />
-            </a-tab-pane>
-        </a-tabs>
-    </a-flex>
-    <WebsiteInformation />
-    <a-flex gap="small" style="margin-top: 1vh;">
-        <VerticalRunningLantern style="width: 30vw;" />
-        <a-tabs v-model:activeKey="blogKey" type="card" size="small">
-            <a-tab-pane v-for="blog in blogTabsInfos" :key="blog.id" :tab="blog.label">
-                <PostListColumnComponent :tabsId="blog.id" type="blog" />
-            </a-tab-pane>
-        </a-tabs>
-    </a-flex>
-    <ModuleArea v-for="(moduleData, index) in moduleList" :key="index" :titleText="moduleData.title"
-        :moduleList="moduleData.plateInfos" />
-    <OnlineMembershipModule />
+                </ElCarouselItem>
+            </ElCarousel>
+            <a-tabs v-model:activeKey="blogKey" type="card" size="small">
+                <a-tab-pane v-for="blog in blogTabsInfos" :key="blog.id" :tab="blog.label">
+                    <PostListColumnComponent :tabsId="blog.id" type="blog" />
+                </a-tab-pane>
+            </a-tabs>
+            <a-tabs v-model:activeKey="userKey" type="card" size="small" style="width: 15vw;">
+                <a-tab-pane v-for="user in userTabsInfos" :key="user.id" :tab="user.label">
+                    <PostListColumnComponent :tabsId="user.id" type="user" />
+                </a-tab-pane>
+            </a-tabs>
+        </a-flex>
+        <WebsiteInformation />
+        <a-flex gap="small" style="margin-top: 1vh;" class="content-section">
+            <VerticalRunningLantern style="width: 40vw;" />
+            <a-tabs v-model:activeKey="blogKey" type="card" size="small" class="blog-tabs">
+                <a-tab-pane v-for="blog in blogTabsInfos" :key="blog.id" :tab="blog.label">
+                    <PostListColumnComponent :tabsId="blog.id" type="blog"/>
+                </a-tab-pane>
+            </a-tabs>
+        </a-flex>
+        <div class="module-section">
+            <ModuleArea v-for="(moduleData, index) in moduleList" :key="index" :titleText="moduleData.title"
+                :moduleList="moduleData.plateInfos" />
+            <OnlineMembershipModule />
+        </div>
+    </div>
 </template>
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, onBeforeUnmount } from 'vue';
 import PostListColumnComponent from '@/components/PC/PostListColumnComponent.vue';
 import VerticalRunningLantern from '@/components/PC/VerticalRunningLantern.vue';
 import ModuleArea from '@/components/PC/ModuleArea.vue';
@@ -74,9 +78,27 @@ import type { ModuleData } from '../../types/module';
 import { ElMessage } from 'element-plus';
 import articleApi from '@/services/article';
 import { generateSignedUrl } from '@/services/file';
+import { getCurrentTheme, onThemeChange } from '@/utils/themeUtils';
 
 const carouselList = ref<CarouselItem[]>([]);
 const moduleList = ref<ModuleData[]>([]);
+
+const isDarkMode = ref(getCurrentTheme() === 'dark');
+let themeChangeUnsubscribe: (() => void) | null = null;
+
+onMounted(() => {
+    // 监听主题变化
+    themeChangeUnsubscribe = onThemeChange((theme) => {
+        isDarkMode.value = theme === 'dark';
+    });
+});
+
+onBeforeUnmount(() => {
+    // 清理主题监听器
+    if (themeChangeUnsubscribe) {
+        themeChangeUnsubscribe();
+    }
+});
 
 // 处理 COS URL
 const processCOSUrl = async (url: string) => {
@@ -213,8 +235,77 @@ onMounted(async () => {
     })
 })
 </script>
-<style lang="less" scoped>
+<style lang="scss" scoped>
+.pc-container {
+    min-height: 100vh;
+    transition: all 0.3s ease;
+
+    &.dark-theme {
+        background-color: var(--secondary-bg, #06101f);
+        color: var(--primary-text, #e0e0e0);
+
+        .content-section {
+            .blog-tabs {
+                :deep(.ant-tabs-nav) {
+                    background-color: var(--card-bg, #0c1426);
+                    border-color: var(--border-color, rgba(255, 255, 255, 0.1));
+                    
+                    .ant-tabs-tab {
+                        background-color: var(--secondary-bg, #06101f);
+                        border-color: var(--border-color, rgba(255, 255, 255, 0.1));
+                        color: var(--secondary-text, #b0b0b0);
+
+                        &.ant-tabs-tab-active {
+                            background-color: var(--primary-color, #177ddc);
+                            color: #fff;
+                        }
+
+                        &:hover {
+                            color: var(--primary-color, #177ddc);
+                        }
+                    }
+                }
+
+                :deep(.ant-tabs-content-holder) {
+                    background-color: var(--card-bg, #0c1426);
+                    border-color: var(--border-color, rgba(255, 255, 255, 0.1));
+                }
+            }
+        }
+
+        .module-section {
+            :deep(.module-area),
+            :deep(.online-membership) {
+                background-color: var(--card-bg, #0c1426);
+                border-color: var(--border-color, rgba(255, 255, 255, 0.1));
+                color: var(--primary-text, #e0e0e0);
+
+                .module-title,
+                .title {
+                    color: var(--primary-text, #e0e0e0);
+                    border-bottom-color: var(--border-color, rgba(255, 255, 255, 0.1));
+                }
+
+                .module-content {
+                    background-color: var(--secondary-bg, #06101f);
+                }
+            }
+        }
+    }
+}
+
+.content-section {
+    margin-bottom: 1vh;
+}
+
+.module-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1vh;
+}
+
 .banner-carousel {
+    margin-top: 5vh;
     width: 30vw;
     height: 36vh;
     background-color: #475669;

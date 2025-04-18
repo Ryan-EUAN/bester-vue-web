@@ -211,26 +211,20 @@ const navItems = ref([
     path: '/'
   },
   {
-    label: '源码分享',
+    label: 'Bester低代码开发框架',
     key: 'menu-2',
     icon: icons.CodeOutlined,
-    path: '/zjs'
-  },
-  {
-    label: '文章',
-    key: 'menu-3',
-    icon: icons.CustomerServiceOutlined,
-    path: '/wz'
+    path: '/bester-frame'
   },
   {
     label: '在线音乐',
-    key: 'menu-4',
+    key: 'menu-3',
     icon: icons.CustomerServiceOutlined,
     path: '/music'
   },
   {
     label: '快捷导航',
-    key: 'menu-5',
+    key: 'menu-4',
     icon: icons.CompassOutlined,
     path: '', // 父级不需要路径
     children: [
@@ -349,9 +343,9 @@ const onSearch = (value: string) => {
     message.warning('请输入搜索内容');
     return;
   }
-  
+
   console.log('搜索内容', value);
-  
+
   // 跳转到搜索结果页面，无需登录验证
   router.push({
     path: '/search',

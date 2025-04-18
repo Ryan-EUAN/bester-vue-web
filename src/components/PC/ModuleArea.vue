@@ -1,5 +1,5 @@
 <template>
-    <div class="module-area-wrapper">
+    <div class="module-area-wrapper" :class="{ 'dark-theme': isDarkMode }">
         <!-- 标题栏 -->
         <div class="area-header">
             <div class="title-line">
@@ -49,13 +49,30 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { PlusOutlined, MinusOutlined } from '@ant-design/icons-vue';
 import { useRouter } from 'vue-router';
-import { Tooltip as ATooltip } from 'ant-design-vue';  // 新增导入
+import { Tooltip as ATooltip } from 'ant-design-vue';
+import { getCurrentTheme, onThemeChange } from '@/utils/themeUtils';
 
 const router = useRouter();
-const props = defineProps(["titleText", "moduleList"])
+const props = defineProps(["titleText", "moduleList"]);
+const isDarkMode = ref(getCurrentTheme() === 'dark');
+let themeChangeUnsubscribe: (() => void) | null = null;
+
+onMounted(() => {
+    // 监听主题变化
+    themeChangeUnsubscribe = onThemeChange((theme) => {
+        isDarkMode.value = theme === 'dark';
+    });
+});
+
+onBeforeUnmount(() => {
+    // 清理主题监听器
+    if (themeChangeUnsubscribe) {
+        themeChangeUnsubscribe();
+    }
+});
 
 // 折叠状态
 const isCollapsed = ref(false);
@@ -124,21 +141,76 @@ const handleLeave = (el: Element) => {
 
 <style lang="less" scoped>
 .module-area-wrapper {
-    margin-top: 1vh;
-    border: 0.05vw solid var(--border-color, #e8e8e8);
-    border-radius: 0.4vw;
-    margin-bottom: 1vh;
-    background: var(--card-bg, #f5f5f5);
+    border-radius: 0.8vw;
+    background: var(--card-bg, #fff);
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+    &.dark-theme {
+        background: var(--forum-card-bg, #182338);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+
+        .area-header {
+            background: var(--forum-header-bg, #1f2c45);
+            border: none;
+
+            .title-text {
+                color: var(--primary-text, #e0e0e0);
+            }
+
+            .collapse-btn {
+                color: var(--primary-text, #e0e0e0);
+
+                &:hover {
+                    background: rgba(255, 255, 255, 0.08);
+                }
+            }
+
+            .title-line {
+                &::before {
+                    background: var(--accent-color, #00aee0);
+                    box-shadow: 0 0 8px rgba(0, 174, 224, 0.4);
+                }
+            }
+        }
+
+        .module-item {
+            background: var(--list-item-bg, #131c30);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            
+            &:hover {
+                background: var(--list-item-hover, #1c2940);
+                transform: translateY(-2px);
+                box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+                border-color: rgba(255, 255, 255, 0.1);
+            }
+
+            .module-name {
+                color: var(--primary-text, #e0e0e0);
+            }
+
+            .count {
+                color: #ff6b6b;
+            }
+
+            .info-row {
+                .stats,
+                .last-post {
+                    color: var(--secondary-text, #a7a7a7);
+                }
+            }
+        }
+    }
 
     .area-header {
         position: relative;
-        padding: 1vh 1vw;
-        border-bottom: 0.05vw solid var(--border-color, #e8e8e8);
+        padding: 1.2vh 1.5vw;
+        border: none;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        background: var(--secondary-bg, #fafafa);
-        border-radius: 0.4vw 0.4vw 0 0;
+        background: var(--secondary-bg, #f8f9fa);
+        border-radius: 0.8vw 0.8vw 0 0;
 
         .title-line {
             position: relative;
@@ -147,55 +219,50 @@ const handleLeave = (el: Element) => {
             &::before {
                 content: '';
                 position: absolute;
-                left: -1vw;
+                left: -1.2vw;
                 top: 50%;
                 transform: translateY(-50%);
-                width: 0.2vw;
-                height: 2vh;
+                width: 0.25vw;
+                height: 2.2vh;
                 background: var(--accent-color, #1890ff);
-                border-radius: 0 0.1vw 0.1vw 0;
+                border-radius: 0 0.2vw 0.2vw 0;
+                box-shadow: 0 0 8px rgba(24, 144, 255, 0.2);
             }
 
             .title-text {
-                font-size: 0.9vw;
-                font-weight: bold;
+                font-size: 1vw;
+                font-weight: 600;
                 color: var(--primary-text, #333);
-                margin-left: 0.2vw;
+                margin-left: 0.3vw;
             }
         }
 
         .collapse-btn {
-            padding: 0.4vh 0.4vw;
-            font-size: 1rem;
+            padding: 0.5vh 0.5vw;
+            font-size: 1.1rem;
             display: flex;
             align-items: center;
             justify-content: center;
             color: var(--primary-text, #333);
+            border-radius: 0.4vw;
 
             &:hover {
-                background: rgba(0, 174, 224, 0.1);
+                background: rgba(0, 174, 224, 0.08);
             }
 
             :deep(.anticon) {
-                font-size: 1rem;
+                font-size: 1.1rem;
             }
         }
     }
 
     .module-content {
-        padding: 16px;
+        padding: 20px;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
         :deep(.ant-flex) {
             width: 100%;
-        }
-
-        .module-card {
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-
-            &:hover {
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            }
+            gap: 20px !important;
         }
     }
 }
@@ -216,21 +283,23 @@ const handleLeave = (el: Element) => {
 }
 
 .module-item {
-    width: calc(25% - 12px); // 一行四个，考虑间距
-    background: var(--list-item-bg, #f8f8f8);
-    border-radius: 8px;
+    width: calc(25% - 15px); // 一行四个，增加间距
+    background: var(--list-item-bg, #fff);
+    border-radius: 12px;
     cursor: pointer;
     transition: all 0.3s ease;
     overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.05);
 
     &:hover {
-        background: var(--list-item-hover, #f0f0f0);
+        background: var(--list-item-hover, #f8f9fa);
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px var(--shadow-color, rgba(0, 0, 0, 0.1));
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+        border-color: rgba(0, 0, 0, 0.08);
     }
 
     .item-container {
-        padding: 12px;
+        padding: 16px;
     }
 
     .icon-wrapper {

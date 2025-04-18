@@ -21,6 +21,7 @@ export const setTheme = (theme: 'dark' | 'light'): void => {
   if (theme === 'dark') {
     document.documentElement.classList.add('dark-theme');
     document.body.classList.add('dark-theme');
+    document.body.style.backgroundColor = '#0c1426';
     
     // 针对特定UI库组件设置深色主题
     document.querySelectorAll('.ant-table, .el-table').forEach(table => {
@@ -37,6 +38,7 @@ export const setTheme = (theme: 'dark' | 'light'): void => {
   } else {
     document.documentElement.classList.remove('dark-theme');
     document.body.classList.remove('dark-theme');
+    document.body.style.backgroundColor = '#f5f5f5';
     
     // 移除特定UI库组件的深色主题
     document.querySelectorAll('.dark-table').forEach(table => {

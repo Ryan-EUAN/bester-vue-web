@@ -35,30 +35,20 @@
           <div class="media-grid">
             <template v-for="(media, index) in postData.images" :key="index">
               <!-- 图片项 -->
-              <div v-if="media.type === 'image'" 
-                   :class="['media-item', 'image-item', getMediaItemClass(index, postData.images.length)]">
+              <div v-if="media.type === 'image'"
+                :class="['media-item', 'image-item', getMediaItemClass(index, postData.images.length)]">
                 <div class="media-wrapper">
-                  <a-image 
-                    :src="media.url" 
-                    :alt="media.name"
-                    :preview="{
-                      src: media.url,
-                      mask: false
-                    }"
-                  />
+                  <a-image :src="media.url" :alt="media.name" :preview="{
+                    src: media.url,
+                    mask: false
+                  }" @error="() => handleMediaError(media)" />
                 </div>
               </div>
               <!-- 视频项 -->
-              <div v-else 
-                   :class="['media-item', 'video-item', getMediaItemClass(index, postData.images.length)]">
+              <div v-else :class="['media-item', 'video-item', getMediaItemClass(index, postData.images.length)]">
                 <div class="media-wrapper">
-                  <video 
-                    controls
-                    :src="media.url"
-                    class="video-player"
-                    preload="metadata"
-                    controlsList="nodownload"
-                  ></video>
+                  <video controls :src="media.url" class="video-player" preload="metadata"
+                    controlsList="nodownload"></video>
                 </div>
               </div>
             </template>
@@ -242,7 +232,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, onUnmounted } from 'vue';
 import {
   TagOutlined,
   EyeOutlined,
@@ -260,6 +250,8 @@ import type { ArticleData, Reply, SubComment } from '@/types/article';
 import router from '@/router';
 import FloatingActionButtons from '@/components/common/FloatingActionButtons.vue';
 import { useTheme } from '@/composables/useTheme';
+import { MediaAuth } from '@/types/article'
+import fileApi from '@/services/file';
 
 const { isDarkMode } = useTheme();
 
@@ -368,6 +360,76 @@ const modalLoading = ref(false);
 
 // 添加关注状态loading
 const followLoading = ref(false);
+
+// 媒体授权管理
+const mediaAuthMap = ref<Map<string, MediaAuth>>(new Map());
+
+// 获取授权URL
+const getAuthorizedUrl = async (originalUrl: string): Promise<string> => {
+  try {
+    // 从URL中提取文件key
+    const urlObj = new URL(originalUrl);
+    const key = urlObj.pathname.startsWith('/') ? urlObj.pathname.slice(1) : urlObj.pathname;
+
+    // 检查缓存
+    const auth = mediaAuthMap.value.get(originalUrl);
+    if (auth && !needReauthorize(originalUrl)) {
+      return auth.authorizedUrl;
+    }
+
+    // 获取临时访问链接
+    const res = await fileApi.GET_FILE_TEMP_URL_API(key, 7200); // 2小时有效期
+    if (res.code === 200) {
+      const expireTime = Date.now() + 7200 * 1000; // 2小时后过期
+      mediaAuthMap.value.set(originalUrl, {
+        url: originalUrl,
+        authorizedUrl: res.data,
+        expireTime: expireTime
+      });
+      return res.data;
+    }
+
+    return originalUrl;
+  } catch (error) {
+    console.error('获取媒体授权失败:', error);
+    return originalUrl;
+  }
+};
+
+// 定时刷新授权
+let authRefreshTimer: NodeJS.Timeout | null = null;
+
+const startAuthRefreshTimer = () => {
+  if (authRefreshTimer) {
+    clearInterval(authRefreshTimer);
+  }
+
+  // 每隔1小时检查一次授权状态
+  authRefreshTimer = setInterval(async () => {
+    if (postData.value.images && postData.value.images.length > 0) {
+      const needsUpdate = postData.value.images.some(media => needReauthorize(media.url));
+      if (needsUpdate) {
+        const updatedMedia = await Promise.all(
+          postData.value.images.map(async (media: any) => ({
+            ...media,
+            url: await getAuthorizedUrl(media.url)
+          }))
+        );
+        postData.value.images = updatedMedia;
+      }
+    }
+  }, 60 * 60 * 1000); // 1小时
+};
+
+// 检查URL是否需要重新授权
+const needReauthorize = (originalUrl: string): boolean => {
+  const auth = mediaAuthMap.value.get(originalUrl);
+  if (!auth) return true;
+
+  // 提前10分钟更新授权
+  const preRenewTime = 10 * 60 * 1000;
+  return Date.now() + preRenewTime >= auth.expireTime;
+};
 
 // 加载回复列表
 const loadReplies = async () => {
@@ -564,7 +626,20 @@ const loadPostData = async (postId: string) => {
       router.push("/")
       return;
     }
+
+    // 处理图片和视频的授权
+    if (response.data.images && response.data.images.length > 0) {
+      const authorizedMedia = await Promise.all(
+        response.data.images.map(async (media: any) => ({
+          ...media,
+          url: await getAuthorizedUrl(media.url)
+        }))
+      );
+      response.data.images = authorizedMedia;
+    }
+
     postData.value = response.data;
+    startAuthRefreshTimer(); // 启动定时刷新
   } catch (error) {
     throw error;
   }
@@ -647,18 +722,39 @@ const handleFollow = async () => {
 const getMediaItemClass = (index: number, total: number) => {
   // 单个媒体项
   if (total === 1) return 'full-width';
-  
+
   // 两个媒体项
   if (total === 2) return 'half-width';
-  
+
   // 三个或更多媒体项
   if (total >= 3) {
     if (total === 3 && index === 2) return 'full-width-last';
     return 'third-width';
   }
-  
+
   return '';
 };
+
+// 媒体加载错误处理
+const handleMediaError = async (media: any) => {
+  try {
+    const authorizedUrl = await getAuthorizedUrl(media.url);
+    if (authorizedUrl !== media.url) {
+      media.url = authorizedUrl;
+    }
+  } catch (error) {
+    console.error('媒体加载失败:', error);
+    message.error('媒体加载失败，请刷新重试');
+  }
+};
+
+// 组件卸载时清理
+onUnmounted(() => {
+  if (authRefreshTimer) {
+    clearInterval(authRefreshTimer);
+    authRefreshTimer = null;
+  }
+});
 </script>
 
 <style lang="less" scoped>
@@ -800,28 +896,28 @@ const getMediaItemClass = (index: number, total: number) => {
         display: grid;
         gap: 8px;
         grid-template-columns: repeat(4, 1fr);
-        
+
         .media-item {
           position: relative;
           width: 100%;
-          
+
           &.full-width {
             grid-column: span 2;
             max-width: 400px;
           }
-          
+
           &.half-width {
             grid-column: span 2;
           }
-          
+
           &.third-width {
             grid-column: span 1;
           }
-          
+
           &.full-width-last {
             grid-column: span 2;
           }
-          
+
           .media-wrapper {
             position: relative;
             width: 100%;
@@ -831,12 +927,12 @@ const getMediaItemClass = (index: number, total: number) => {
             background: #000;
           }
         }
-        
+
         .image-item .media-wrapper {
           :deep(.ant-image) {
             width: 100%;
             height: 100%;
-            
+
             img {
               width: 100%;
               height: 100%;
@@ -844,7 +940,7 @@ const getMediaItemClass = (index: number, total: number) => {
             }
           }
         }
-        
+
         .video-item .media-wrapper {
           .video-player {
             width: 100%;
@@ -866,28 +962,28 @@ const getMediaItemClass = (index: number, total: number) => {
     display: grid;
     gap: 8px;
     grid-template-columns: repeat(4, 1fr);
-    
+
     .media-item {
       position: relative;
       width: 100%;
-      
+
       &.full-width {
         grid-column: span 2;
         max-width: 400px;
       }
-      
+
       &.half-width {
         grid-column: span 2;
       }
-      
+
       &.third-width {
         grid-column: span 1;
       }
-      
+
       &.full-width-last {
         grid-column: span 2;
       }
-      
+
       .media-wrapper {
         position: relative;
         width: 100%;
@@ -897,12 +993,12 @@ const getMediaItemClass = (index: number, total: number) => {
         background: #000;
       }
     }
-    
+
     .image-item .media-wrapper {
       :deep(.ant-image) {
         width: 100%;
         height: 100%;
-        
+
         img {
           width: 100%;
           height: 100%;
@@ -910,7 +1006,7 @@ const getMediaItemClass = (index: number, total: number) => {
         }
       }
     }
-    
+
     .video-item .media-wrapper {
       .video-player {
         width: 100%;

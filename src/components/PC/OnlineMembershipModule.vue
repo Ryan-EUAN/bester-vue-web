@@ -1,5 +1,5 @@
 <template>
-    <div class="online-membership-module">
+    <div class="online-membership-module" :class="{ 'dark-theme': isDarkMode }">
         <div class="area-header">
             <div class="title-line">
                 <span class="title-text">{{ titleText }}</span>
@@ -28,7 +28,7 @@
         </transition>
 
         <!-- 统计信息部分，不参与折叠 -->
-        <div class="statistics">
+        <div class="statistics" style="user-select: none;">
             <span v-for="(stat, index) in statistics" :key="index">
                 {{ stat.label }}：{{ stat.value }}
             </span>
@@ -46,6 +46,7 @@ import statisticsApi from '../../services/statistics';
 import { formatRunningTime } from '../../utils/timeUtils';
 import type { HeartbeatVO } from '../../types/online';
 import { message } from 'ant-design-vue';
+import { getCurrentTheme, onThemeChange } from '@/utils/themeUtils';
 
 const isCollapsed = ref(false);
 const titleText = ref('在线会员');
@@ -98,6 +99,9 @@ let syncTimerInterval: number | null = null;
 let updateTimerInterval: number | null = null;
 let onlineMembersInterval: number | null = null;
 
+const isDarkMode = ref(getCurrentTheme() === 'dark');
+let themeChangeUnsubscribe: (() => void) | null = null;
+
 // 获取在线会员数据的两种方式
 // 1. 通过ModuleApi获取
 const getOnlineMembers = async () => {
@@ -131,13 +135,13 @@ const getOnlineMembersViaHeartbeat = async () => {
         const res = await heartbeatService.SEND_HEARTBEAT_API();
         if (res.code === 200 && res.data) {
             const heartbeatData = res.data as HeartbeatVO;
-            
+
             // 直接更新总数值
             totalOnlineCount.value = heartbeatData.totalOnline;
             membersCount.value = heartbeatData.members;
             guestCount.value = heartbeatData.guests;
             invisibleCount.value = heartbeatData.invisible;
-            
+
             // 更新会员类型数据
             if (heartbeatData.userGroups) {
                 memberTypes.value.forEach(memberType => {
@@ -161,13 +165,13 @@ const syncSystemRunningTime = async () => {
         if (res.code === 200 && typeof res.data === 'number') {
             // 存储服务器返回的运行时间（毫秒）
             const serverRunningTime = res.data;
-            
+
             // 计算服务器启动时间 = 当前时间 - 运行时间
             serverStartTime.value = Date.now() - serverRunningTime;
-            
+
             // 更新本地时间偏移量
             localOffset.value = Date.now();
-            
+
             // 立即更新显示
             updateRunningTimeDisplay();
         } else {
@@ -185,10 +189,10 @@ const updateRunningTimeDisplay = () => {
     if (serverStartTime.value === null) {
         return;
     }
-    
+
     // 计算当前的运行时间 = 当前时间 - 服务器启动时间
     const currentRunningTime = Date.now() - serverStartTime.value;
-    
+
     // 使用时间工具格式化显示
     runningTime.value = formatRunningTime(currentRunningTime);
 };
@@ -220,30 +224,35 @@ const toggleCollapse = () => {
 onMounted(async () => {
     // 首先尝试通过心跳服务获取数据
     await getOnlineMembersViaHeartbeat();
-    
+
     // 如果心跳服务不可用或数据不完整，使用传统方式获取
     if (totalOnlineCount.value === 0) {
         await getOnlineMembers();
     }
-    
+
     // 获取系统运行时间
     await syncSystemRunningTime();
-    
+
     // 设置定时同步服务器时间（每5分钟同步一次）
     syncTimerInterval = window.setInterval(async () => {
         await syncSystemRunningTime();
     }, 5 * 60 * 1000);
-    
+
     // 设置定时更新显示（每秒更新一次）
     updateTimerInterval = window.setInterval(() => {
         updateRunningTimeDisplay();
     }, 1000);
-    
+
     // 设置定时获取在线会员数据（每分钟更新一次）
     onlineMembersInterval = window.setInterval(async () => {
         // 优先使用心跳服务获取数据
         await getOnlineMembersViaHeartbeat();
     }, 60 * 1000);
+
+    // 监听主题变化
+    themeChangeUnsubscribe = onThemeChange((theme) => {
+        isDarkMode.value = theme === 'dark';
+    });
 });
 
 // 组件卸载前清理资源
@@ -252,34 +261,102 @@ onBeforeUnmount(() => {
     if (syncTimerInterval !== null) {
         clearInterval(syncTimerInterval);
     }
-    
+
     if (updateTimerInterval !== null) {
         clearInterval(updateTimerInterval);
     }
-    
+
     if (onlineMembersInterval !== null) {
         clearInterval(onlineMembersInterval);
+    }
+
+    // 清理主题监听器
+    if (themeChangeUnsubscribe) {
+        themeChangeUnsubscribe();
     }
 });
 </script>
 
 <style scoped lang="scss">
 .online-membership-module {
-    margin-top: 1vh;
-    border: 0.05vw solid var(--border-color, #e8e8e8);
-    border-radius: 0.4vw;
-    margin-bottom: 1vh;
-    background: var(--card-bg, #f5f5f5);
+    border-radius: 0.8vw;
+    background: var(--card-bg, #fff);
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+    &.dark-theme {
+        background: var(--forum-card-bg, #182338);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+
+        .area-header {
+            background: var(--forum-header-bg, #1f2c45);
+            border: none;
+
+            .title-text {
+                color: var(--primary-text, #fff);
+                text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            }
+
+            .collapse-btn {
+                color: var(--primary-text, #fff);
+
+                &:hover {
+                    background: rgba(255, 255, 255, 0.08);
+                }
+            }
+
+            .title-line {
+                &::before {
+                    background: var(--accent-color, #00aee0);
+                    box-shadow: 0 0 8px rgba(0, 174, 224, 0.4);
+                }
+            }
+        }
+
+        .module-content {
+            .member-item {
+                background: var(--list-item-bg, #131c30);
+                border: 1px solid rgba(255, 255, 255, 0.05);
+
+                &:hover {
+                    background: var(--list-item-hover, #1c2940);
+                    transform: translateY(-2px);
+                    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+                    border-color: rgba(255, 255, 255, 0.1);
+                }
+
+                span {
+                    color: var(--primary-text, #fff);
+                    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+
+                    &:last-child {
+                        color: var(--secondary-text, #b0b0b0);
+                    }
+                }
+            }
+        }
+
+        .statistics {
+            background: var(--forum-header-bg, #1f2c45);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 0 0 0.8vw 0.8vw;
+
+            span {
+                color: var(--secondary-text, #b0b0b0);
+                text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            }
+        }
+    }
 
     .area-header {
         position: relative;
-        padding: 1vh 1vw;
-        border-bottom: 0.05vw solid var(--border-color, #e8e8e8);
+        padding: 1.2vh 1.5vw;
+        border: none;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        background: var(--secondary-bg, #fafafa);
-        border-radius: 0.4vw 0.4vw 0 0;
+        background: var(--secondary-bg, #f8f9fa);
+        border-radius: 0.8vw 0.8vw 0 0;
 
         .title-line {
             position: relative;
@@ -288,105 +365,126 @@ onBeforeUnmount(() => {
             &::before {
                 content: '';
                 position: absolute;
-                left: -1vw;
+                left: -1.2vw;
                 top: 50%;
                 transform: translateY(-50%);
-                width: 0.2vw;
-                height: 2vh;
+                width: 0.25vw;
+                height: 2.2vh;
                 background: var(--accent-color, #1890ff);
-                border-radius: 0 0.1vw 0.1vw 0;
+                border-radius: 0 0.2vw 0.2vw 0;
+                box-shadow: 0 0 8px rgba(24, 144, 255, 0.2);
             }
 
             .title-text {
-                font-size: 0.9vw;
-                font-weight: bold;
+                font-size: 1.1vw;
+                font-weight: 600;
                 color: var(--primary-text, #333);
-                margin-left: 0.2vw;
+                margin-left: 0.3vw;
             }
         }
 
         .collapse-btn {
-            padding: 0.4vh 0.4vw;
-            font-size: 1rem;
+            padding: 0.5vh 0.5vw;
+            font-size: 1.1rem;
             display: flex;
             align-items: center;
             justify-content: center;
             color: var(--primary-text, #333);
+            border-radius: 0.4vw;
 
             &:hover {
-                background: rgba(0, 174, 224, 0.1);
+                background: rgba(0, 174, 224, 0.08);
             }
 
             :deep(.anticon) {
-                font-size: 1rem;
+                font-size: 1.1rem;
             }
         }
     }
 
     .module-content {
-        padding: 1vh 1vw;
-        transition: all 0.3s ease;
-    }
+        padding: 20px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-    // 动画效果
-    .module-slide-enter-active,
-    .module-slide-leave-active {
-        transition: all 0.3s ease;
-        max-height: 500px;
-        overflow: hidden;
-    }
-
-    .module-slide-enter-from,
-    .module-slide-leave-to {
-        opacity: 0;
-        max-height: 0;
-        padding-top: 0;
-        padding-bottom: 0;
+        :deep(.ant-flex) {
+            gap: 20px !important;
+        }
     }
 
     .member-item {
-        padding: 1vh 1vw;
-        border: 0.05vw solid var(--border-color, #f0f0f0);
-        border-radius: 0.2vw;
-        width: 6vw;
+        padding: 16px;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        border-radius: 12px;
+        width: calc(20% - 16px);
         transition: all 0.3s;
         background-color: var(--list-item-bg, #fff);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
 
         &:hover {
-            transform: translateY(-0.2vh);
-            box-shadow: 0 0.1vh 0.4vh var(--shadow-color, rgba(0, 0, 0, 0.1));
-            background-color: var(--list-item-hover, #f9f9f9);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+            background-color: var(--list-item-hover, #f8f9fa);
+        }
+
+        :deep(.anticon) {
+            font-size: 28px !important;
         }
 
         span {
-            margin-top: 0.5vh;
-            font-size: 0.7vw;
+            font-size: 0.9vw;
             color: var(--primary-text, #333);
+            font-weight: 500;
 
             &:last-child {
+                font-size: 0.8vw;
                 color: var(--secondary-text, #666);
             }
         }
     }
 
     .statistics {
-        margin-top: 1.5vh;
-        padding: 1vh 1vw;
-        border-top: 0.05vw solid var(--border-color, #f0f0f0);
+        margin-top: 0;
+        padding: 16px 24px;
+        background: var(--secondary-bg, #f8f9fa);
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+        border-radius: 0 0 0.8vw 0.8vw;
 
         span {
-            margin-right: 2vw;
+            margin-right: 24px;
             color: var(--secondary-text, #666);
-            font-size: 0.7vw;
+            font-size: 0.85vw;
+            font-weight: 500;
+
+            &:last-child {
+                margin-right: 0;
+            }
         }
     }
+}
+
+// 动画效果
+.module-slide-enter-active,
+.module-slide-leave-active {
+    transition: all 0.3s ease;
+    max-height: 500px;
+    overflow: hidden;
+}
+
+.module-slide-enter-from,
+.module-slide-leave-to {
+    opacity: 0;
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
 }
 
 // 折叠状态下的样式
 .online-membership-module:has(.module-content[style*="display: none"]) {
     .area-header {
-        border-bottom: none;
-        border-radius: 0.4vw;
+        border-radius: 0.8vw;
     }
 }
 </style>

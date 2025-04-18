@@ -1,5 +1,5 @@
 <template>
-    <div class="website-info">
+    <div class="website-info" :class="{ 'dark-theme': isDarkMode, 'light-theme': !isDarkMode }">
         <a-flex align="center" justify="space-between" class="info-container">
             <!-- 日期信息 -->
             <div class="date-info">
@@ -50,6 +50,10 @@ import { useRouter } from 'vue-router';
 import statisticsApi from '@/services/statistics';
 import Notification from '@/utils/notification';
 import type { WebsiteStatistics } from '@/model/statistics';
+import { getCurrentTheme, onThemeChange } from '@/utils/themeUtils';
+
+const isDarkMode = ref(getCurrentTheme() === 'dark');
+let themeChangeUnsubscribe: (() => void) | null = null;
 
 const router = useRouter();
 
@@ -139,13 +143,13 @@ const handleViewReplies = () => {
 const checkLoginStatus = () => {
     const userInfoStr = localStorage.getItem('userInfo');
     const tokenStr = localStorage.getItem('token');
-    
+
     // 如果token不存在，表示用户已退出登录
     if (!tokenStr) {
         userInfo.value.nickname = '';
         return;
     }
-    
+
     // 如果用户信息存在，更新昵称
     if (userInfoStr) {
         try {
@@ -167,14 +171,19 @@ onMounted(() => {
     updateDateTime();
     fetchStatisticsData();
     setupRefreshTimer();
-    checkLoginStatus(); // 初始化时检查登录状态
-    
+    checkLoginStatus();
+
+    // 监听主题变化
+    themeChangeUnsubscribe = onThemeChange((theme) => {
+        isDarkMode.value = theme === 'dark';
+    });
+
     // 添加用户登录事件监听，以便在用户登录后刷新统计数据和用户信息
     window.addEventListener('userInfoUpdated', () => {
         fetchStatisticsData();
         checkLoginStatus(); // 登录后更新用户信息
     });
-    
+
     // 每10秒检查一次登录状态，以处理退出登录的情况
     userStatusCheckTimer = window.setInterval(() => {
         checkLoginStatus();
@@ -186,41 +195,71 @@ onBeforeUnmount(() => {
     if (statsRefreshTimer.value) {
         clearInterval(statsRefreshTimer.value);
     }
-    
+
     // 清除用户状态检查定时器
     if (userStatusCheckTimer) {
         clearInterval(userStatusCheckTimer);
     }
-    
+
     // 移除事件监听器
     window.removeEventListener('userInfoUpdated', () => {
         fetchStatisticsData();
         checkLoginStatus();
     });
+
+    // 移除主题变化监听器
+    if (themeChangeUnsubscribe) {
+        themeChangeUnsubscribe();
+    }
 });
 </script>
 
 <style scoped lang="scss">
 .website-info {
-    background: #fff;
-    border-radius: 8px;
-    padding: 12px 20px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    height: 8vh;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+    padding: 0 1vw;
+    display: flex;
+    align-items: center;
+    margin-top: 1vh;
+
+    // 浅色主题（默认）
+    &.light-theme {
+        background: #fff;
+        --text-primary: #333;
+        --text-secondary: #666;
+        --border-color: #eee;
+        --primary-color: #1890ff;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    // 深色主题
+    &.dark-theme {
+        background: var(--card-bg, #0c1426);
+        --text-primary: #e1e1e1;
+        --text-secondary: #a7a7a7;
+        --border-color: rgba(255, 255, 255, 0.1);
+        --primary-color: #177ddc;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
 
     .info-container {
         width: 100%;
+        height: 100%;
+        align-items: center;
     }
 
     .date-info {
         .date {
             font-size: 1.1rem;
             font-weight: 600;
-            color: #333;
+            color: var(--text-primary);
         }
 
         .weekday {
             font-size: 0.8rem;
-            color: #666;
+            color: var(--text-secondary);
             margin-top: 2px;
         }
     }
@@ -239,18 +278,18 @@ onBeforeUnmount(() => {
                 transform: translateY(-50%);
                 height: 70%;
                 width: 1px;
-                background: #eee;
+                background: var(--border-color);
             }
 
             .value {
                 font-size: 1.2rem;
                 font-weight: 600;
-                color: #1890ff;
+                color: var(--primary-color);
             }
 
             .label {
                 font-size: 0.8rem;
-                color: #666;
+                color: var(--text-secondary);
                 margin-top: 2px;
             }
         }
@@ -263,13 +302,13 @@ onBeforeUnmount(() => {
 
         .username {
             font-size: 0.9rem;
-            color: #1890ff;
+            color: var(--primary-color);
             font-weight: 500;
         }
 
         .label {
             font-size: 0.8rem;
-            color: #666;
+            color: var(--text-secondary);
             margin-top: 2px;
         }
     }
@@ -279,13 +318,14 @@ onBeforeUnmount(() => {
             padding: 4px 0;
             height: auto;
             font-size: 0.9rem;
+            color: var(--text-primary);
 
             .anticon {
                 font-size: 1rem;
             }
 
             &:hover {
-                color: #1890ff;
+                color: var(--primary-color);
             }
         }
     }

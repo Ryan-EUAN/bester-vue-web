@@ -1,6 +1,6 @@
 <template>
     <a-flex justify="space-between" v-for="(list, index) in listInfo" :key="index" v-if="listInfo.length > 0">
-        <a-flex gap="small" style="margin-bottom: 0.6vh;">
+        <a-flex gap="small">
             <div :class="type == 'user' ? 'star' : 'index'" :style="{ backgroundColor: GetBackgroundColor(index + 1) }">
                 {{ GetIndex(index + 1) }}
             </div>
@@ -115,6 +115,7 @@ onMounted(() => {
 .tabsList_css {
     cursor: pointer;
     font-size: 0.9rem;
+    text-align: left;
 }
 
 .tabsList_css:hover {

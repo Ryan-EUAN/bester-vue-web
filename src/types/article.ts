@@ -1,3 +1,8 @@
+// 媒体授权接口
+export interface MediaAuthResponse {
+  authorizedUrl: string;
+  expireTime: number;
+}
 // 文章详情数据接口
 export interface ArticleData {
   id: string;
@@ -193,4 +198,10 @@ export interface ImageInfo {
   name: string;
   type: string;
   key: string;
+}
+
+export interface MediaAuth {
+  url: string;
+  authorizedUrl: string;
+  expireTime: number;
 } 

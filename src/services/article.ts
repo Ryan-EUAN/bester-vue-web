@@ -9,7 +9,8 @@ import type {
   UserPostStatus,
   UserPostsResponse,
   ArticleListResponse,
-  ReplyListResponse
+  ReplyListResponse,
+  MediaAuthResponse
 } from '@/types/article';
 import type { Result } from '@/model/result';
 import type { ListInfoType as ListInfoTypeModel } from "@/model/listInfo";
@@ -268,6 +269,15 @@ const GET_MY_REPLIES_API = (params: { pageSize: number; pageNum: number }): Prom
   }) as Promise<Result<ReplyListResponse>>;
 };
 
+// 获取媒体授权
+const GET_MEDIA_AUTH_API = (mediaUrl: string): Promise<Result<MediaAuthResponse>> => {
+  return request({
+    url: '/file/media/auth',
+    method: 'post',
+    data: { url: mediaUrl }
+  }) as Promise<Result<MediaAuthResponse>>;
+};
+
 export default {
   publishArticle,
   saveDraft,
@@ -293,5 +303,6 @@ export default {
   CANCEL_USER_POST_PUBLISH_API,
   SEARCH_ARTICLES_API,
   GET_MY_ARTICLES_API,
-  GET_MY_REPLIES_API
+  GET_MY_REPLIES_API,
+  GET_MEDIA_AUTH_API
 }; 

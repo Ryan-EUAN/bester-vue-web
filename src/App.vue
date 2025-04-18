@@ -224,10 +224,22 @@ body {
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+body.dark-theme {
+    background-color: var(--secondary-bg, #0c1426) !important;
+    color: var(--primary-text, #e0e0e0);
+}
+
+#app {
+    margin: 0;
+    min-height: 100vh;
+    width: 100%;
+    background-color: inherit;
+}
+
 .app-container {
     width: 100%;
-    height: 100vh;
-    background-color: var(--secondary-bg, #f5f5f5);
+    min-height: 100vh;
+    background-color: inherit;
     color: var(--primary-text, #333);
 }
 
@@ -281,7 +293,7 @@ body {
 }
 
 .dark-theme .app-container {
-    background-color: var(--secondary-bg, #0c1426);
+    background-color: inherit;
     color: var(--primary-text, #e0e0e0);
 }
 
